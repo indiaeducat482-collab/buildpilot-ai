@@ -1,25 +1,68 @@
 # BuildPilot AI
 
-AI-powered website/app project builder MVP.
+Describe it. Build it. Deploy it.
 
-## What it does
-- Collects a plain-language project idea
-- Lets the user select Next.js/React/HTML and Supabase/Firebase/GitHub-only
-- Uses a server-side AI route to create a structured project blueprint
-- Generates a downloadable ZIP with README, setup guide, environment template and project plan
+Static GitHub Pages frontend + Supabase Auth/Database + Supabase Edge Function + OpenAI.
 
-## Run
-```bash
-npm install
-cp .env.example .env.local
-# add OPENAI_API_KEY to .env.local
-npm run dev
+## Included
+
+- User sign up / login / logout
+- Chat-style BuildPilot interface
+- Typing `admin login` opens the Admin Login page
+- Admin dashboard
+- User block / reactivate
+- Project count and limits
+- Free plan: 5 projects
+- Free plan: 2 GitHub-file generation actions
+- Upgrade request workflow
+- Admin approve/reject upgrade requests
+- Supabase project history
+- Secure OpenAI call through Edge Function
+- No Vercel
+
+## GitHub Pages
+
+1. Upload all files to `indiaeducat482-collab/buildpilot-ai`.
+2. Enable GitHub Pages from the repository's Settings > Pages.
+3. The frontend uses the Supabase publishable key in `config.js`. A publishable key is designed for browser use when RLS is enabled.
+4. Never put an OpenAI key, Supabase secret key, service-role key, Firebase private key, or GitHub token in this repository.
+
+## Supabase setup
+
+The `supabase/migrations/001_buildpilot_limits.sql` file adds:
+- profiles role/status/plan/limits
+- upgrade_requests
+- admin/user RLS policies
+- helper functions
+
+The `supabase/functions/buildpilot-generate/index.ts` file is the updated AI function. It enforces the project and GitHub-file quotas before calling OpenAI.
+
+The already-deployed function must be updated/redeployed with that file. The dashboard editor can be used.
+
+## First admin
+
+Create your normal account in BuildPilot AI first. Then in Supabase SQL Editor run:
+
+```sql
+update public.profiles
+set role = 'admin',
+    status = 'active'
+where id = (
+  select id from auth.users
+  where email = 'YOUR_ADMIN_EMAIL'
+);
 ```
 
-Open http://localhost:3000.
+Replace `YOUR_ADMIN_EMAIL` with the admin account email.
 
-## Security
-Never put OPENAI_API_KEY, Supabase service-role keys, Firebase private keys, or GitHub tokens into client-side code. Use server-side environment variables and least-privilege credentials.
+## Upgrade flow
 
-## Roadmap
-GitHub OAuth/push, Supabase automation, Firebase automation, live code editor, preview sandbox, Vercel deployment and project history.
+User reaches a quota -> clicks Request Upgrade -> submits a request.
+
+Admin Dashboard -> Upgrade Requests -> Verify -> Approve or Reject.
+
+On approval, the admin can set the new project/file limits.
+
+## Important
+
+The frontend is only the UI. Real authorization is enforced by Supabase RLS and the Edge Function. Do not rely on hiding admin links.

@@ -1,25 +1,19 @@
-# BuildPilot AI - Full Fixed Package
+# BuildPilot AI — Final Fixed Package
 
 ## GitHub Pages
-The package root contains:
-- index.html
-- favicon.ico
+Upload the **contents of this package** to the root of the `buildpilot-ai` repository.
 
-The favicon is included to prevent:
-GET /favicon.ico 404
+Required root files include `index.html`, `app.js`, `config.js`, `styles.css`, `favicon.ico`, `favicon.svg`, `.nojekyll`, and `404.html`.
 
 ## Supabase Edge Function
-- supabase/functions/buildpilot-generate/index.ts
-- supabase/functions/buildpilot-generate/README.md
+Deploy `supabase/functions/buildpilot-generate/index.ts` as the function named `buildpilot-generate`.
 
-Required Supabase Edge Function secret:
-- OPENAI_API_KEY
+In Supabase Edge Function Secrets, keep `OPENAI_API_KEY` server-side. Do not place it in `config.js` or any browser file.
 
-Optional:
-- OPENAI_MODEL
+The function uses Supabase's `withSupabase({ auth: "user" })` authentication flow and expects the logged-in user's bearer token.
 
-Never commit OpenAI keys, Supabase service-role keys, Firebase private keys, or GitHub tokens.
+## Database
+Run `supabase/migrations/001_buildpilot_limits.sql` in Supabase SQL Editor if the migration has not already been applied.
 
-IMPORTANT:
-The existing BuildPilot AI frontend should remain your actual application entry point.
-If your GitHub repository already has its own index.html, keep that application index.html and copy only favicon.ico to the repository root. The sample index.html in this package is only a self-contained fallback.
+## Important
+This package preserves the existing static BuildPilot UI from the project package and fixes the GitHub Pages favicon/404 packaging issues. It does not replace the UI with a placeholder page.

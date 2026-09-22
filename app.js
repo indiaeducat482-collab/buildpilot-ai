@@ -1,140 +1,100 @@
 (function () {
   "use strict";
 
-  /*
-   * ============================================================
-   * BUILDPILOT AI
-   * Frontend Application
-   * ============================================================
-   */
+  /* =========================================================
+     BUILDPILOT AI
+     Complete Frontend
+     ========================================================= */
 
   const CONFIG = window.BUILDPILOT_CONFIG || {};
 
-  const SUPABASE_URL = CONFIG.SUPABASE_URL;
+  const SUPABASE_URL =
+    CONFIG.SUPABASE_URL || "";
+
   const SUPABASE_KEY =
-    CONFIG.SUPABASE_PUBLISHABLE_KEY;
+    CONFIG.SUPABASE_PUBLISHABLE_KEY || "";
 
   const GENERATE_FUNCTION =
-    CONFIG.FUNCTION_NAME || "super-function";
+    CONFIG.FUNCTION_NAME ||
+    "super-function";
 
   const PUBLIC_FUNCTION =
     CONFIG.PUBLIC_FUNCTION_NAME ||
     "public-project";
 
-  const PUBLIC_BASE_URL =
-    window.location.origin +
-    window.location.pathname;
-
-  if (!window.supabase) {
-    document.body.innerHTML = `
-      <div style="
-        padding:40px;
-        font-family:Arial,sans-serif;
-        text-align:center;
-      ">
-        <h2>BuildPilot AI</h2>
-        <p>Supabase library load नहीं हुई।</p>
-        <button onclick="location.reload()">Refresh</button>
-      </div>
-    `;
-
-    return;
-  }
-
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    document.body.innerHTML = `
-      <div style="
-        padding:40px;
-        font-family:Arial,sans-serif;
-        text-align:center;
-      ">
-        <h2>BuildPilot AI</h2>
-        <p>Supabase configuration missing है।</p>
-        <p>config.js check करें।</p>
-      </div>
-    `;
-
-    return;
-  }
-
-  const sb = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+  const root = document.getElementById("app");
 
   let activeUser = null;
   let activeSession = null;
+
   let activeProject = null;
   let activeFiles = [];
-  let currentView = "home";
-  let previewTimer = null;
 
-  const $ = (selector) =>
-    document.querySelector(selector);
+  let selectedFileId = null;
 
-  const escapeHtml = (value) =>
-    String(value ?? "")
+  /* =========================================================
+     BASIC HELPERS
+     ========================================================= */
+
+  function escapeHtml(value) {
+    return String(value ?? "")
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
-
-  function appRoot() {
-    let root = document.getElementById("app");
-
-    if (!root) {
-      root = document.createElement("div");
-      root.id = "app";
-      document.body.appendChild(root);
-    }
-
-    return root;
   }
 
-  function showMessage(message, type = "info") {
-    let box = document.getElementById(
-      "buildpilot-toast"
+  function escapeAttribute(value) {
+    return escapeHtml(value);
+  }
+
+  function showToast(
+    message,
+    type = "info"
+  ) {
+    let toast =
+      document.getElementById(
+        "bpToast"
+      );
+
+    if (!toast) {
+      toast =
+        document.createElement("div");
+
+      toast.id = "bpToast";
+
+      document.body.appendChild(toast);
+    }
+
+    toast.className =
+      "bp-toast bp-" + type;
+
+    toast.textContent = message;
+
+    clearTimeout(
+      toast._timer
     );
 
-    if (!box) {
-      box = document.createElement("div");
+    toast._timer =
+      setTimeout(() => {
+        toast.classList.remove(
+          "bp-toast-show"
+        );
+      }, 3500);
 
-      box.id = "buildpilot-toast";
-
-      box.style.position = "fixed";
-      box.style.right = "20px";
-      box.style.bottom = "20px";
-      box.style.zIndex = "99999";
-      box.style.maxWidth = "420px";
-      box.style.padding = "14px 18px";
-      box.style.borderRadius = "12px";
-      box.style.background = "#111827";
-      box.style.color = "#fff";
-      box.style.fontFamily = "Arial,sans-serif";
-      box.style.boxShadow =
-        "0 10px 30px rgba(0,0,0,.25)";
-
-      document.body.appendChild(box);
-    }
-
-    const prefix =
-      type === "success"
-        ? "✓ "
-        : type === "error"
-        ? "✕ "
-        : "";
-
-    box.textContent = prefix + message;
-
-    clearTimeout(box._timer);
-
-    box._timer = setTimeout(() => {
-      box.remove();
-    }, 4000);
+    requestAnimationFrame(() => {
+      toast.classList.add(
+        "bp-toast-show"
+      );
+    });
   }
 
-  function setLoading(button, loading, text) {
+  function setButtonLoading(
+    button,
+    loading,
+    loadingText
+  ) {
     if (!button) return;
 
     if (loading) {
@@ -144,7 +104,8 @@
       button.disabled = true;
 
       button.textContent =
-        text || "Please wait...";
+        loadingText ||
+        "Please wait...";
     } else {
       button.disabled = false;
 
@@ -154,16 +115,18 @@
     }
   }
 
-  /*
-   * ============================================================
-   * PUBLIC PROJECT MODE
-   * ============================================================
-   */
+  function currentPublicBase() {
+    return (
+      window.location.origin +
+      window.location.pathname
+    );
+  }
 
   function getPublicIdFromUrl() {
-    const params = new URLSearchParams(
-      window.location.search
-    );
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
 
     return (
       params.get("public") ||
@@ -172,120 +135,1260 @@
     ).trim();
   }
 
-  async function loadPublicProject(publicId) {
-    const root = appRoot();
+  function createPublicLink(
+    publicId
+  ) {
+    return (
+      currentPublicBase() +
+      "?public=" +
+      encodeURIComponent(
+        publicId
+      )
+    );
+  }
 
+  async function copyText(text) {
+    try {
+      if (
+        navigator.clipboard &&
+        window.isSecureContext
+      ) {
+        await navigator.clipboard.writeText(
+          text
+        );
+
+        return true;
+      }
+
+      const textarea =
+        document.createElement(
+          "textarea"
+        );
+
+      textarea.value = text;
+
+      textarea.style.position =
+        "fixed";
+
+      textarea.style.opacity =
+        "0";
+
+      document.body.appendChild(
+        textarea
+      );
+
+      textarea.select();
+
+      document.execCommand(
+        "copy"
+      );
+
+      textarea.remove();
+
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+
+  /* =========================================================
+     STYLES
+     ========================================================= */
+
+  function injectStyles() {
+    if (
+      document.getElementById(
+        "buildpilotStyles"
+      )
+    ) {
+      return;
+    }
+
+    const style =
+      document.createElement(
+        "style"
+      );
+
+    style.id =
+      "buildpilotStyles";
+
+    style.textContent = `
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+      }
+
+      body {
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+
+        background:
+          #f8fafc;
+
+        color:
+          #0f172a;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      button {
+        transition:
+          transform .15s ease,
+          box-shadow .15s ease,
+          background .15s ease,
+          border-color .15s ease;
+      }
+
+      button:not(:disabled):hover {
+        transform:
+          translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: .6;
+        cursor: not-allowed !important;
+      }
+
+      .bp-app {
+        min-height: 100vh;
+      }
+
+      .bp-topbar {
+        height: 70px;
+        background:
+          rgba(15,23,42,.96);
+
+        color: white;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        padding:
+          0 24px;
+
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .bp-brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-weight: 800;
+        letter-spacing: -.3px;
+      }
+
+      .bp-logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+
+        display: grid;
+        place-items: center;
+
+        background:
+          linear-gradient(
+            135deg,
+            #6366f1,
+            #06b6d4
+          );
+
+        box-shadow:
+          0 8px 25px
+          rgba(99,102,241,.35);
+      }
+
+      .bp-user-area {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .bp-user-email {
+        color:
+          #cbd5e1;
+
+        font-size:
+          13px;
+      }
+
+      .bp-main {
+        max-width: 1180px;
+        margin: auto;
+        padding:
+          45px 20px 70px;
+      }
+
+      .bp-hero {
+        text-align: center;
+        padding:
+          30px 0 35px;
+      }
+
+      .bp-hero h1 {
+        margin: 0;
+        font-size:
+          clamp(34px,6vw,58px);
+
+        line-height: 1.05;
+
+        letter-spacing:
+          -2.5px;
+      }
+
+      .bp-gradient-text {
+        background:
+          linear-gradient(
+            90deg,
+            #6366f1,
+            #06b6d4
+          );
+
+        -webkit-background-clip:
+          text;
+
+        background-clip:
+          text;
+
+        color:
+          transparent;
+      }
+
+      .bp-hero p {
+        max-width: 680px;
+        margin:
+          18px auto 0;
+
+        color:
+          #64748b;
+
+        font-size:
+          17px;
+
+        line-height:
+          1.7;
+      }
+
+      .bp-builder-grid {
+        display: grid;
+
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0,1fr)
+          );
+
+        gap: 20px;
+      }
+
+      .bp-card {
+        background:
+          white;
+
+        border:
+          1px solid #e2e8f0;
+
+        border-radius:
+          20px;
+
+        padding:
+          24px;
+
+        box-shadow:
+          0 10px 35px
+          rgba(15,23,42,.06);
+      }
+
+      .bp-card-hover {
+        cursor: pointer;
+      }
+
+      .bp-card-hover:hover {
+        border-color:
+          #818cf8;
+
+        box-shadow:
+          0 15px 45px
+          rgba(99,102,241,.13);
+      }
+
+      .bp-card-icon {
+        width: 52px;
+        height: 52px;
+
+        border-radius:
+          15px;
+
+        display: grid;
+        place-items: center;
+
+        font-size:
+          25px;
+
+        background:
+          #eef2ff;
+
+        margin-bottom:
+          15px;
+      }
+
+      .bp-card h3 {
+        margin:
+          0 0 8px;
+
+        font-size:
+          19px;
+      }
+
+      .bp-card p {
+        margin: 0;
+
+        color:
+          #64748b;
+
+        line-height:
+          1.6;
+      }
+
+      .bp-section {
+        margin-top:
+          45px;
+      }
+
+      .bp-section-header {
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          space-between;
+
+        gap: 15px;
+
+        margin-bottom:
+          15px;
+      }
+
+      .bp-section-header h2 {
+        margin: 0;
+      }
+
+      .bp-project {
+        background:
+          white;
+
+        border:
+          1px solid #e2e8f0;
+
+        border-radius:
+          17px;
+
+        padding:
+          19px;
+
+        margin-bottom:
+          12px;
+
+        box-shadow:
+          0 5px 20px
+          rgba(15,23,42,.04);
+      }
+
+      .bp-project-main {
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          space-between;
+
+        gap:
+          20px;
+      }
+
+      .bp-project-info {
+        min-width:
+          0;
+      }
+
+      .bp-project-title {
+        margin: 0 0 5px;
+        font-size: 17px;
+      }
+
+      .bp-project-description {
+        margin: 0;
+
+        color:
+          #64748b;
+
+        font-size:
+          14px;
+
+        line-height:
+          1.5;
+      }
+
+      .bp-actions {
+        display:
+          flex;
+
+        gap:
+          8px;
+
+        flex-wrap:
+          wrap;
+      }
+
+      .bp-btn {
+        border:
+          1px solid #e2e8f0;
+
+        background:
+          white;
+
+        color:
+          #0f172a;
+
+        border-radius:
+          10px;
+
+        padding:
+          10px 14px;
+
+        cursor:
+          pointer;
+
+        font-weight:
+          600;
+      }
+
+      .bp-btn-primary {
+        border-color:
+          transparent;
+
+        background:
+          #111827;
+
+        color:
+          white;
+
+        box-shadow:
+          0 6px 18px
+          rgba(15,23,42,.15);
+      }
+
+      .bp-btn-success {
+        border-color:
+          transparent;
+
+        background:
+          #16a34a;
+
+        color:
+          white;
+      }
+
+      .bp-btn-danger {
+        background:
+          #fee2e2;
+
+        border-color:
+          #fecaca;
+
+        color:
+          #b91c1c;
+      }
+
+      .bp-input,
+      .bp-textarea,
+      .bp-select {
+        width:
+          100%;
+
+        border:
+          1px solid #cbd5e1;
+
+        background:
+          white;
+
+        border-radius:
+          11px;
+
+        padding:
+          12px 13px;
+
+        outline:
+          none;
+      }
+
+      .bp-input:focus,
+      .bp-textarea:focus,
+      .bp-select:focus {
+        border-color:
+          #6366f1;
+
+        box-shadow:
+          0 0 0 3px
+          rgba(99,102,241,.12);
+      }
+
+      .bp-label {
+        display:
+          block;
+
+        font-size:
+          13px;
+
+        font-weight:
+          700;
+
+        margin-bottom:
+          7px;
+      }
+
+      .bp-field {
+        margin-bottom:
+          18px;
+      }
+
+      .bp-two-col {
+        display:
+          grid;
+
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0,1fr)
+          );
+
+        gap:
+          15px;
+      }
+
+      .bp-auth-page {
+        min-height:
+          100vh;
+
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          center;
+
+        padding:
+          20px;
+
+        background:
+          radial-gradient(
+            circle at top left,
+            #e0e7ff,
+            transparent 35%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            #cffafe,
+            transparent 35%
+          ),
+          #f8fafc;
+      }
+
+      .bp-auth-card {
+        width:
+          min(440px,100%);
+
+        background:
+          white;
+
+        border:
+          1px solid #e2e8f0;
+
+        border-radius:
+          24px;
+
+        padding:
+          30px;
+
+        box-shadow:
+          0 25px 80px
+          rgba(15,23,42,.12);
+      }
+
+      .bp-auth-logo {
+        width:
+          60px;
+
+        height:
+          60px;
+
+        border-radius:
+          18px;
+
+        display:
+          grid;
+
+        place-items:
+          center;
+
+        margin:
+          0 auto 15px;
+
+        background:
+          linear-gradient(
+            135deg,
+            #6366f1,
+            #06b6d4
+          );
+
+        color:
+          white;
+
+        font-size:
+          27px;
+      }
+
+      .bp-auth-title {
+        text-align:
+          center;
+
+        margin:
+          0;
+      }
+
+      .bp-auth-subtitle {
+        text-align:
+          center;
+
+        color:
+          #64748b;
+
+        margin:
+          8px 0 25px;
+      }
+
+      .bp-tabs {
+        display:
+          grid;
+
+        grid-template-columns:
+          repeat(2,1fr);
+
+        gap:
+          7px;
+
+        background:
+          #f1f5f9;
+
+        padding:
+          5px;
+
+        border-radius:
+          12px;
+
+        margin-bottom:
+          20px;
+      }
+
+      .bp-tab {
+        border:
+          0;
+
+        background:
+          transparent;
+
+        padding:
+          10px;
+
+        border-radius:
+          9px;
+
+        cursor:
+          pointer;
+
+        font-weight:
+          700;
+      }
+
+      .bp-tab-active {
+        background:
+          white;
+
+        box-shadow:
+          0 2px 8px
+          rgba(15,23,42,.08);
+      }
+
+      .bp-workspace {
+        min-height:
+          calc(100vh - 70px);
+
+        padding:
+          15px;
+      }
+
+      .bp-workspace-grid {
+        display:
+          grid;
+
+        grid-template-columns:
+          230px minmax(0,1fr);
+
+        gap:
+          15px;
+
+        min-height:
+          calc(100vh - 100px);
+      }
+
+      .bp-sidebar,
+      .bp-panel {
+        background:
+          white;
+
+        border:
+          1px solid #e2e8f0;
+
+        border-radius:
+          17px;
+
+        overflow:
+          hidden;
+      }
+
+      .bp-sidebar-header,
+      .bp-panel-header {
+        padding:
+          14px 16px;
+
+        border-bottom:
+          1px solid #e2e8f0;
+
+        font-weight:
+          800;
+
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          space-between;
+      }
+
+      .bp-files {
+        padding:
+          10px;
+      }
+
+      .bp-file {
+        display:
+          block;
+
+        width:
+          100%;
+
+        border:
+          0;
+
+        background:
+          transparent;
+
+        text-align:
+          left;
+
+        padding:
+          10px 11px;
+
+        border-radius:
+          9px;
+
+        cursor:
+          pointer;
+
+        color:
+          #334155;
+      }
+
+      .bp-file:hover,
+      .bp-file-active {
+        background:
+          #eef2ff;
+
+        color:
+          #4338ca;
+      }
+
+      .bp-workspace-main {
+        display:
+          grid;
+
+        grid-template-columns:
+          minmax(0,1.35fr)
+          minmax(320px,.65fr);
+
+        gap:
+          15px;
+
+        min-width:
+          0;
+      }
+
+      .bp-preview-frame {
+        width:
+          100%;
+
+        height:
+          650px;
+
+        border:
+          0;
+
+        display:
+          block;
+
+        background:
+          white;
+      }
+
+      .bp-chat {
+        height:
+          650px;
+
+        display:
+          flex;
+
+        flex-direction:
+          column;
+      }
+
+      .bp-chat-messages {
+        flex:
+          1;
+
+        overflow:
+          auto;
+
+        padding:
+          15px;
+      }
+
+      .bp-chat-message {
+        padding:
+          11px 12px;
+
+        border-radius:
+          11px;
+
+        margin-bottom:
+          10px;
+
+        line-height:
+          1.5;
+
+        white-space:
+          pre-wrap;
+
+        font-size:
+          14px;
+      }
+
+      .bp-chat-user {
+        background:
+          #e0f2fe;
+      }
+
+      .bp-chat-ai {
+        background:
+          #f1f5f9;
+      }
+
+      .bp-chat-error {
+        background:
+          #fee2e2;
+
+        color:
+          #991b1b;
+      }
+
+      .bp-chat-input {
+        border-top:
+          1px solid #e2e8f0;
+
+        padding:
+          12px;
+      }
+
+      .bp-preview-empty {
+        min-height:
+          650px;
+
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          center;
+
+        text-align:
+          center;
+
+        padding:
+          30px;
+
+        color:
+          #64748b;
+      }
+
+      .bp-editor-page {
+        min-height:
+          100vh;
+
+        padding:
+          20px;
+
+        background:
+          #f1f5f9;
+      }
+
+      .bp-editor {
+        width:
+          100%;
+
+        min-height:
+          680px;
+
+        resize:
+          vertical;
+
+        font-family:
+          "Courier New",
+          monospace;
+
+        font-size:
+          14px;
+
+        line-height:
+          1.55;
+
+        border:
+          1px solid #cbd5e1;
+
+        border-radius:
+          13px;
+
+        padding:
+          15px;
+
+        outline:
+          none;
+
+        background:
+          #0f172a;
+
+        color:
+          #e2e8f0;
+      }
+
+      .bp-modal {
+        position:
+          fixed;
+
+        inset:
+          0;
+
+        background:
+          rgba(15,23,42,.65);
+
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          center;
+
+        padding:
+          20px;
+
+        z-index:
+          1000;
+      }
+
+      .bp-modal-card {
+        width:
+          min(650px,100%);
+
+        background:
+          white;
+
+        border-radius:
+          20px;
+
+        padding:
+          25px;
+
+        box-shadow:
+          0 30px 100px
+          rgba(0,0,0,.3);
+      }
+
+      .bp-public-link {
+        width:
+          100%;
+
+        padding:
+          13px;
+
+        border:
+          1px solid #cbd5e1;
+
+        border-radius:
+          10px;
+
+        background:
+          #f8fafc;
+
+        word-break:
+          break-all;
+      }
+
+      .bp-toast {
+        position:
+          fixed;
+
+        right:
+          20px;
+
+        bottom:
+          20px;
+
+        z-index:
+          5000;
+
+        max-width:
+          420px;
+
+        padding:
+          13px 17px;
+
+        border-radius:
+          12px;
+
+        background:
+          #111827;
+
+        color:
+          white;
+
+        opacity:
+          0;
+
+        transform:
+          translateY(10px);
+
+        pointer-events:
+          none;
+
+        transition:
+          .2s ease;
+
+        box-shadow:
+          0 15px 40px
+          rgba(0,0,0,.2);
+      }
+
+      .bp-toast-show {
+        opacity:
+          1;
+
+        transform:
+          translateY(0);
+      }
+
+      .bp-success {
+        background:
+          #15803d;
+      }
+
+      .bp-error {
+        background:
+          #b91c1c;
+      }
+
+      @media (max-width: 950px) {
+        .bp-workspace-grid {
+          grid-template-columns:
+            1fr;
+        }
+
+        .bp-workspace-main {
+          grid-template-columns:
+            1fr;
+        }
+
+        .bp-sidebar {
+          max-height:
+            250px;
+          overflow:
+            auto;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .bp-builder-grid,
+        .bp-two-col {
+          grid-template-columns:
+            1fr;
+        }
+
+        .bp-project-main {
+          align-items:
+            flex-start;
+
+          flex-direction:
+            column;
+        }
+
+        .bp-user-email {
+          display:
+            none;
+        }
+
+        .bp-topbar {
+          padding:
+            0 14px;
+        }
+
+        .bp-main {
+          padding:
+            25px 14px 50px;
+        }
+      }
+    `;
+
+    document.head.appendChild(
+      style
+    );
+  }
+
+  /* =========================================================
+     CONFIG CHECK
+     ========================================================= */
+
+  if (
+    !SUPABASE_URL ||
+    !SUPABASE_KEY
+  ) {
     root.innerHTML = `
-      <div style="
-        min-height:100vh;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-family:Arial,sans-serif;
-        background:#f8fafc;
-      ">
-        <div style="
-          text-align:center;
-          padding:30px;
-        ">
-          <h2>BuildPilot Preview</h2>
-          <p>Public project load हो रहा है...</p>
+      <div class="bp-auth-page">
+        <div class="bp-auth-card">
+          <div class="bp-auth-logo">
+            ⚙
+          </div>
+
+          <h2 class="bp-auth-title">
+            Configuration Missing
+          </h2>
+
+          <p class="bp-auth-subtitle">
+            Please check config.js
+          </p>
         </div>
       </div>
     `;
 
-    try {
-      const url =
-        SUPABASE_URL +
-        "/functions/v1/" +
-        encodeURIComponent(
-          PUBLIC_FUNCTION
-        ) +
-        "?id=" +
-        encodeURIComponent(publicId);
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          apikey: SUPABASE_KEY,
-          "Content-Type":
-            "application/json",
-        },
-      });
-
-      const data =
-        await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.error ||
-            "Public project load failed"
-        );
-      }
-
-      const html = data.html || "";
-
-      /*
-       * Render published project.
-       * We intentionally don't copy the entire response object
-       * into the DOM.
-       */
-      document.open();
-
-      document.write(html);
-
-      document.close();
-    } catch (error) {
-      console.error(error);
-
-      root.innerHTML = `
-        <div style="
-          min-height:100vh;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          font-family:Arial,sans-serif;
-          background:#f8fafc;
-        ">
-          <div style="
-            width:min(600px,90%);
-            padding:30px;
-            border-radius:16px;
-            background:white;
-            box-shadow:0 10px 40px rgba(0,0,0,.1);
-          ">
-            <h2>Project unavailable</h2>
-            <p>
-              यह public project अभी available नहीं है
-              या publish नहीं किया गया है।
-            </p>
-
-            <p style="
-              color:#64748b;
-              word-break:break-word;
-            ">
-              ${escapeHtml(
-                error.message
-              )}
-            </p>
-          </div>
-        </div>
-      `;
-    }
+    return;
   }
 
-  /*
-   * ============================================================
-   * AUTH
-   * ============================================================
-   */
+  if (!window.supabase) {
+    root.innerHTML = `
+      <div class="bp-auth-page">
+        <div class="bp-auth-card">
+          <div class="bp-auth-logo">
+            !
+          </div>
+
+          <h2 class="bp-auth-title">
+            Supabase Library Missing
+          </h2>
+
+          <p class="bp-auth-subtitle">
+            Refresh the page and try again.
+          </p>
+        </div>
+      </div>
+    `;
+
+    return;
+  }
+
+  injectStyles();
+
+  const client =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY,
+      {
+        auth: {
+          persistSession:
+            true,
+
+          autoRefreshToken:
+            true,
+
+          detectSessionInUrl:
+            true,
+        },
+      }
+    );
+
+  /* =========================================================
+     AUTH
+     ========================================================= */
 
   async function getSession() {
-    const result =
-      await sb.auth.getSession();
+    const {
+      data,
+      error,
+    } = await client.auth.getSession();
+
+    if (error) {
+      console.error(error);
+    }
 
     activeSession =
-      result.data?.session || null;
+      data?.session || null;
 
     activeUser =
       activeSession?.user || null;
@@ -293,149 +1396,173 @@
     return activeSession;
   }
 
-  async function requireSession() {
-    await getSession();
-
-    if (!activeSession) {
-      renderLogin();
-
-      return false;
+  async function ensureProfile() {
+    if (!activeUser) {
+      return;
     }
 
-    return true;
+    const {
+      data,
+      error,
+    } = await client
+      .from("profiles")
+      .select("id")
+      .eq(
+        "id",
+        activeUser.id
+      )
+      .maybeSingle();
+
+    if (error) {
+      console.error(
+        "Profile check:",
+        error
+      );
+
+      return;
+    }
+
+    if (data) {
+      return;
+    }
+
+    const {
+      error: insertError,
+    } = await client
+      .from("profiles")
+      .insert({
+        id: activeUser.id,
+
+        full_name:
+          activeUser
+            .user_metadata
+            ?.full_name ||
+          activeUser.email ||
+          "User",
+      });
+
+    if (insertError) {
+      console.error(
+        "Profile create:",
+        insertError
+      );
+    }
   }
 
-  function renderLogin() {
-    currentView = "login";
+  /* =========================================================
+     AUTH SCREEN
+     ========================================================= */
 
-    appRoot().innerHTML = `
-      <div style="
-        min-height:100vh;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        background:#f1f5f9;
-        padding:20px;
-        font-family:Arial,sans-serif;
-      ">
+  function renderAuth(
+    mode = "login"
+  ) {
+    root.innerHTML = `
+      <div class="bp-auth-page">
 
-        <div style="
-          width:min(430px,100%);
-          background:white;
-          border-radius:20px;
-          padding:30px;
-          box-shadow:0 15px 50px rgba(0,0,0,.12);
-        ">
+        <div class="bp-auth-card">
 
-          <div style="text-align:center;">
-            <h1 style="margin-bottom:5px;">
-              BuildPilot AI
-            </h1>
-
-            <p style="color:#64748b;">
-              Describe it. Build it. Deploy it.
-            </p>
+          <div class="bp-auth-logo">
+            ⚡
           </div>
 
-          <div style="
-            display:flex;
-            gap:8px;
-            margin:25px 0;
-          ">
+          <h1 class="bp-auth-title">
+            BuildPilot AI
+          </h1>
+
+          <p class="bp-auth-subtitle">
+            Describe it. Build it. Deploy it.
+          </p>
+
+          <div class="bp-tabs">
+
             <button
               id="loginTab"
-              onclick="window.BuildPilot.showLoginForm()"
-              style="
-                flex:1;
-                padding:11px;
-                border:0;
-                border-radius:10px;
-                cursor:pointer;
-              "
+              class="bp-tab ${
+                mode === "login"
+                  ? "bp-tab-active"
+                  : ""
+              }"
+              onclick="window.BuildPilot.showLogin()"
             >
               Login
             </button>
 
             <button
               id="signupTab"
-              onclick="window.BuildPilot.showSignupForm()"
-              style="
-                flex:1;
-                padding:11px;
-                border:0;
-                border-radius:10px;
-                cursor:pointer;
-              "
+              class="bp-tab ${
+                mode === "signup"
+                  ? "bp-tab-active"
+                  : ""
+              }"
+              onclick="window.BuildPilot.showSignup()"
             >
-              Sign Up
+              Create Account
             </button>
+
           </div>
 
           <div id="authForm"></div>
 
         </div>
+
       </div>
     `;
 
-    showLoginForm();
+    if (mode === "signup") {
+      renderSignupForm();
+    } else {
+      renderLoginForm();
+    }
   }
 
-  function showLoginForm() {
-    const form = document.getElementById(
-      "authForm"
-    );
+  function renderLoginForm() {
+    const form =
+      document.getElementById(
+        "authForm"
+      );
 
     if (!form) return;
 
     form.innerHTML = `
       <form id="loginForm">
 
-        <label>Email</label>
+        <div class="bp-field">
 
-        <input
-          id="loginEmail"
-          type="email"
-          required
-          placeholder="you@example.com"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:13px;
-            margin:7px 0 16px;
-            border:1px solid #cbd5e1;
-            border-radius:10px;
-          "
-        />
+          <label class="bp-label">
+            Email
+          </label>
 
-        <label>Password</label>
+          <input
+            class="bp-input"
+            id="loginEmail"
+            type="email"
+            placeholder="you@example.com"
+            required
+          />
 
-        <input
-          id="loginPassword"
-          type="password"
-          required
-          placeholder="Password"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:13px;
-            margin:7px 0 16px;
-            border:1px solid #cbd5e1;
-            border-radius:10px;
-          "
-        />
+        </div>
+
+        <div class="bp-field">
+
+          <label class="bp-label">
+            Password
+          </label>
+
+          <input
+            class="bp-input"
+            id="loginPassword"
+            type="password"
+            placeholder="Your password"
+            required
+          />
+
+        </div>
 
         <button
-          type="submit"
           id="loginButton"
-          style="
-            width:100%;
-            padding:13px;
-            border:0;
-            border-radius:10px;
-            background:#111827;
-            color:white;
-            cursor:pointer;
-          "
+          class="bp-btn bp-btn-primary"
+          style="width:100%;padding:13px;"
+          type="submit"
         >
           Login
         </button>
@@ -444,87 +1571,80 @@
     `;
 
     document
-      .getElementById("loginForm")
+      .getElementById(
+        "loginForm"
+      )
       .addEventListener(
         "submit",
         loginUser
       );
   }
 
-  function showSignupForm() {
-    const form = document.getElementById(
-      "authForm"
-    );
+  function renderSignupForm() {
+    const form =
+      document.getElementById(
+        "authForm"
+      );
 
     if (!form) return;
 
     form.innerHTML = `
       <form id="signupForm">
 
-        <label>Full Name</label>
+        <div class="bp-field">
 
-        <input
-          id="signupName"
-          type="text"
-          required
-          placeholder="Your name"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:13px;
-            margin:7px 0 16px;
-            border:1px solid #cbd5e1;
-            border-radius:10px;
-          "
-        />
+          <label class="bp-label">
+            Full Name
+          </label>
 
-        <label>Email</label>
+          <input
+            class="bp-input"
+            id="signupName"
+            type="text"
+            placeholder="Your name"
+            required
+          />
 
-        <input
-          id="signupEmail"
-          type="email"
-          required
-          placeholder="you@example.com"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:13px;
-            margin:7px 0 16px;
-            border:1px solid #cbd5e1;
-            border-radius:10px;
-          "
-        />
+        </div>
 
-        <label>Password</label>
+        <div class="bp-field">
 
-        <input
-          id="signupPassword"
-          type="password"
-          required
-          minlength="6"
-          placeholder="Minimum 6 characters"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:13px;
-            margin:7px 0 16px;
-            border:1px solid #cbd5e1;
-            border-radius:10px;
-          "
-        />
+          <label class="bp-label">
+            Email
+          </label>
+
+          <input
+            class="bp-input"
+            id="signupEmail"
+            type="email"
+            placeholder="you@example.com"
+            required
+          />
+
+        </div>
+
+        <div class="bp-field">
+
+          <label class="bp-label">
+            Password
+          </label>
+
+          <input
+            class="bp-input"
+            id="signupPassword"
+            type="password"
+            minlength="6"
+            placeholder="Minimum 6 characters"
+            required
+          />
+
+        </div>
 
         <button
-          type="submit"
           id="signupButton"
-          style="
-            width:100%;
-            padding:13px;
-            border:0;
-            border-radius:10px;
-            background:#111827;
-            color:white;
-            cursor:pointer;
-          "
+          class="bp-btn bp-btn-primary"
+          style="width:100%;padding:13px;"
+          type="submit"
         >
           Create Account
         </button>
@@ -533,14 +1653,18 @@
     `;
 
     document
-      .getElementById("signupForm")
+      .getElementById(
+        "signupForm"
+      )
       .addEventListener(
         "submit",
         signupUser
       );
   }
 
-  async function loginUser(event) {
+  async function loginUser(
+    event
+  ) {
     event.preventDefault();
 
     const button =
@@ -548,7 +1672,7 @@
         "loginButton"
       );
 
-    setLoading(
+    setButtonLoading(
       button,
       true,
       "Logging in..."
@@ -556,9 +1680,11 @@
 
     try {
       const email =
-        document.getElementById(
-          "loginEmail"
-        ).value.trim();
+        document
+          .getElementById(
+            "loginEmail"
+          )
+          .value.trim();
 
       const password =
         document.getElementById(
@@ -568,36 +1694,52 @@
       const {
         data,
         error,
-      } = await sb.auth.signInWithPassword({
-        email,
-        password,
-      });
+      } =
+        await client.auth.signInWithPassword(
+          {
+            email,
+            password,
+          }
+        );
 
       if (error) {
         throw error;
       }
 
-      activeSession = data.session;
-      activeUser = data.user;
+      activeSession =
+        data.session;
 
-      showMessage(
+      activeUser =
+        data.user;
+
+      await ensureProfile();
+
+      showToast(
         "Login successful",
         "success"
       );
 
       renderHome();
+
     } catch (error) {
-      showMessage(
+      console.error(error);
+
+      showToast(
         error.message ||
           "Login failed",
         "error"
       );
     } finally {
-      setLoading(button, false);
+      setButtonLoading(
+        button,
+        false
+      );
     }
   }
 
-  async function signupUser(event) {
+  async function signupUser(
+    event
+  ) {
     event.preventDefault();
 
     const button =
@@ -605,7 +1747,7 @@
         "signupButton"
       );
 
-    setLoading(
+    setButtonLoading(
       button,
       true,
       "Creating account..."
@@ -613,14 +1755,18 @@
 
     try {
       const name =
-        document.getElementById(
-          "signupName"
-        ).value.trim();
+        document
+          .getElementById(
+            "signupName"
+          )
+          .value.trim();
 
       const email =
-        document.getElementById(
-          "signupEmail"
-        ).value.trim();
+        document
+          .getElementById(
+            "signupEmail"
+          )
+          .value.trim();
 
       const password =
         document.getElementById(
@@ -630,149 +1776,134 @@
       const {
         data,
         error,
-      } = await sb.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
+      } =
+        await client.auth.signUp({
+          email,
+          password,
+
+          options: {
+            data: {
+              full_name:
+                name,
+            },
           },
-        },
-      });
+        });
 
       if (error) {
         throw error;
       }
 
       if (data.session) {
-        activeSession = data.session;
-        activeUser = data.user;
+        activeSession =
+          data.session;
+
+        activeUser =
+          data.user;
 
         await ensureProfile();
 
-        showMessage(
+        showToast(
           "Account created",
           "success"
         );
 
         renderHome();
       } else {
-        showMessage(
-          "Account created. Email confirmation required.",
+        showToast(
+          "Account created. Please confirm your email.",
           "success"
         );
 
-        showLoginForm();
+        renderAuth("login");
       }
+
     } catch (error) {
-      showMessage(
+      console.error(error);
+
+      showToast(
         error.message ||
           "Signup failed",
         "error"
       );
     } finally {
-      setLoading(button, false);
+      setButtonLoading(
+        button,
+        false
+      );
     }
   }
 
   async function logoutUser() {
-    await sb.auth.signOut();
+    await client.auth.signOut();
 
-    activeSession = null;
-    activeUser = null;
-    activeProject = null;
-    activeFiles = [];
+    activeSession =
+      null;
 
-    renderLogin();
+    activeUser =
+      null;
+
+    activeProject =
+      null;
+
+    activeFiles =
+      [];
+
+    renderAuth(
+      "login"
+    );
   }
 
-  async function ensureProfile() {
-    if (!activeUser) return;
-
-    const { data: profile } =
-      await sb
-        .from("profiles")
-        .select("id")
-        .eq("id", activeUser.id)
-        .maybeSingle();
-
-    if (profile) return;
-
-    await sb
-      .from("profiles")
-      .insert({
-        id: activeUser.id,
-        full_name:
-          activeUser.user_metadata
-            ?.full_name ||
-          activeUser.email ||
-          "User",
-      });
-  }
-
-  /*
-   * ============================================================
-   * HOME
-   * ============================================================
-   */
+  /* =========================================================
+     HOME
+     ========================================================= */
 
   async function renderHome() {
-    if (!(await requireSession())) {
+    await getSession();
+
+    if (!activeUser) {
+      renderAuth(
+        "login"
+      );
+
       return;
     }
 
-    currentView = "home";
-
-    const root = appRoot();
+    await ensureProfile();
 
     root.innerHTML = `
-      <div style="
-        min-height:100vh;
-        background:#f8fafc;
-        font-family:Arial,sans-serif;
-      ">
+      <div class="bp-app">
 
-        <header style="
-          height:64px;
-          background:#111827;
-          color:white;
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          padding:0 24px;
-          box-sizing:border-box;
-        ">
+        <header class="bp-topbar">
 
-          <strong>
-            BuildPilot AI
-          </strong>
+          <div class="bp-brand">
 
-          <div style="
-            display:flex;
-            align-items:center;
-            gap:12px;
-          ">
+            <div class="bp-logo">
+              ⚡
+            </div>
 
-            <span style="
-              font-size:13px;
-              opacity:.8;
-            ">
+            <span>
+              BuildPilot AI
+            </span>
+
+          </div>
+
+          <div class="bp-user-area">
+
+            <span class="bp-user-email">
               ${escapeHtml(
-                activeUser?.email ||
+                activeUser.email ||
                   ""
               )}
             </span>
 
             <button
-              onclick="window.BuildPilot.logout()"
+              class="bp-btn"
               style="
-                border:1px solid #475569;
                 background:transparent;
                 color:white;
-                padding:8px 12px;
-                border-radius:8px;
-                cursor:pointer;
+                border-color:#475569;
               "
+              onclick="window.BuildPilot.logout()"
             >
               Logout
             </button>
@@ -781,125 +1912,110 @@
 
         </header>
 
-        <main style="
-          max-width:1100px;
-          margin:0 auto;
-          padding:35px 20px;
-        ">
+        <main class="bp-main">
 
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:20px;
-            flex-wrap:wrap;
-          ">
+          <section class="bp-hero">
 
-            <div>
-              <h1 style="margin:0 0 8px;">
-                What do you want to build?
-              </h1>
+            <h1>
+              Build anything with
+              <span class="bp-gradient-text">
+                AI
+              </span>
+            </h1>
 
-              <p style="
-                margin:0;
-                color:#64748b;
-              ">
-                Describe your project and BuildPilot AI will build it.
-              </p>
-            </div>
+            <p>
+              Describe your idea in simple language.
+              BuildPilot AI creates the project,
+              lets you edit it with AI,
+              previews it live and generates a
+              shareable public link.
+            </p>
 
-          </div>
+          </section>
 
-          <div style="
-            display:grid;
-            grid-template-columns:
-              repeat(auto-fit,minmax(220px,1fr));
-            gap:18px;
-            margin-top:30px;
-          ">
+          <section>
 
-            <button
-              onclick="window.BuildPilot.startProject('complete_system')"
-              style="
-                text-align:left;
-                border:1px solid #e2e8f0;
-                background:white;
-                padding:25px;
-                border-radius:16px;
-                cursor:pointer;
-                box-shadow:0 5px 20px rgba(0,0,0,.04);
-              "
-            >
-              <div style="font-size:32px;">🚀</div>
+            <div class="bp-builder-grid">
 
-              <h3>
-                Complete System
-              </h3>
-
-              <p style="
-                color:#64748b;
-                line-height:1.5;
-              ">
-                Website, dashboard, database,
-                authentication and business logic.
-              </p>
-            </button>
-
-            <button
-              onclick="window.BuildPilot.startProject('website')"
-              style="
-                text-align:left;
-                border:1px solid #e2e8f0;
-                background:white;
-                padding:25px;
-                border-radius:16px;
-                cursor:pointer;
-                box-shadow:0 5px 20px rgba(0,0,0,.04);
-              "
-            >
-              <div style="font-size:32px;">🌐</div>
-
-              <h3>
-                Website
-              </h3>
-
-              <p style="
-                color:#64748b;
-                line-height:1.5;
-              ">
-                Responsive HTML, CSS and JavaScript
-                website.
-              </p>
-            </button>
-
-          </div>
-
-          <section style="
-            margin-top:45px;
-          ">
-
-            <div style="
-              display:flex;
-              justify-content:space-between;
-              align-items:center;
-              margin-bottom:15px;
-            ">
-
-              <h2>
-                My Projects
-              </h2>
-
-              <button
-                onclick="window.BuildPilot.loadProjects()"
-                style="
-                  padding:9px 13px;
-                  border:1px solid #cbd5e1;
-                  background:white;
-                  border-radius:8px;
-                  cursor:pointer;
+              <div
+                class="bp-card bp-card-hover"
+                onclick="
+                  window.BuildPilot.startProject(
+                    'complete_system'
+                  )
                 "
               >
-                Refresh
+
+                <div class="bp-card-icon">
+                  🚀
+                </div>
+
+                <h3>
+                  Complete System
+                </h3>
+
+                <p>
+                  Build websites, dashboards,
+                  authentication, database
+                  and business features.
+                </p>
+
+              </div>
+
+              <div
+                class="bp-card bp-card-hover"
+                onclick="
+                  window.BuildPilot.startProject(
+                    'website'
+                  )
+                "
+              >
+
+                <div class="bp-card-icon">
+                  🌐
+                </div>
+
+                <h3>
+                  Website
+                </h3>
+
+                <p>
+                  Create responsive HTML, CSS
+                  and JavaScript websites
+                  quickly with AI.
+                </p>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          <section class="bp-section">
+
+            <div class="bp-section-header">
+
+              <div>
+                <h2>
+                  My Projects
+                </h2>
+
+                <p style="
+                  margin:5px 0 0;
+                  color:#64748b;
+                  font-size:14px;
+                ">
+                  Your saved BuildPilot projects
+                </p>
+              </div>
+
+              <button
+                class="bp-btn"
+                onclick="
+                  window.BuildPilot.loadProjects()
+                "
+              >
+                ↻ Refresh
               </button>
 
             </div>
@@ -918,204 +2034,252 @@
     await loadProjects();
   }
 
-  /*
-   * ============================================================
-   * PROJECT CREATION
-   * ============================================================
-   */
+  /* =========================================================
+     NEW PROJECT
+     ========================================================= */
 
-  async function startProject(projectType) {
-    currentView = "builder";
+  function startProject(
+    projectType
+  ) {
+    root.innerHTML = `
+      <div class="bp-app">
 
-    appRoot().innerHTML = `
-      <div style="
-        min-height:100vh;
-        background:#f8fafc;
-        font-family:Arial,sans-serif;
-        padding:30px 20px;
-        box-sizing:border-box;
-      ">
+        <header class="bp-topbar">
 
-        <div style="
-          max-width:850px;
-          margin:auto;
-        ">
+          <div class="bp-brand">
 
-          <button
-            onclick="window.BuildPilot.home()"
-            style="
-              border:0;
-              background:none;
-              cursor:pointer;
-              margin-bottom:20px;
-            "
-          >
-            ← Back
-          </button>
-
-          <div style="
-            background:white;
-            padding:30px;
-            border-radius:18px;
-            box-shadow:0 10px 35px rgba(0,0,0,.08);
-          ">
-
-            <h1>
-              Build your project
-            </h1>
-
-            <p style="color:#64748b;">
-              ${projectType === "website"
-                ? "Website"
-                : "Complete System"}
-            </p>
-
-            <label>
-              Project Name
-            </label>
-
-            <input
-              id="newProjectName"
-              type="text"
-              placeholder="My Business Website"
-              style="
-                width:100%;
-                box-sizing:border-box;
-                padding:14px;
-                margin:8px 0 20px;
-                border:1px solid #cbd5e1;
-                border-radius:10px;
-              "
-            />
-
-            <label>
-              Describe your project
-            </label>
-
-            <textarea
-              id="newProjectPrompt"
-              rows="8"
-              placeholder="Example: Create a modern coaching website with Home, Courses, Teachers, About and Contact pages."
-              style="
-                width:100%;
-                box-sizing:border-box;
-                padding:14px;
-                margin:8px 0 20px;
-                border:1px solid #cbd5e1;
-                border-radius:10px;
-                resize:vertical;
-              "
-            ></textarea>
-
-            <div style="
-              display:grid;
-              grid-template-columns:
-                repeat(auto-fit,minmax(220px,1fr));
-              gap:15px;
-            ">
-
-              <div>
-                <label>Frontend</label>
-
-                <select
-                  id="frontend"
-                  style="
-                    width:100%;
-                    padding:12px;
-                    margin-top:7px;
-                    border:1px solid #cbd5e1;
-                    border-radius:10px;
-                  "
-                >
-                  <option value="html">
-                    HTML / CSS / JavaScript
-                  </option>
-
-                  <option value="react">
-                    React
-                  </option>
-
-                  <option value="nextjs">
-                    Next.js
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label>Backend</label>
-
-                <select
-                  id="backend"
-                  style="
-                    width:100%;
-                    padding:12px;
-                    margin-top:7px;
-                    border:1px solid #cbd5e1;
-                    border-radius:10px;
-                  "
-                >
-                  <option value="supabase">
-                    Supabase
-                  </option>
-
-                  <option value="firebase">
-                    Firebase
-                  </option>
-
-                  <option value="github">
-                    GitHub
-                  </option>
-                </select>
-              </div>
-
+            <div class="bp-logo">
+              ⚡
             </div>
 
-            <button
-              id="createProjectButton"
-              onclick="window.BuildPilot.createProject('${projectType}')"
-              style="
-                margin-top:25px;
-                width:100%;
-                padding:15px;
-                border:0;
-                border-radius:10px;
-                background:#111827;
-                color:white;
-                cursor:pointer;
-                font-size:16px;
-              "
-            >
-              Build Project
-            </button>
+            <span>
+              BuildPilot AI
+            </span>
 
           </div>
 
-        </div>
+          <button
+            class="bp-btn"
+            style="
+              background:transparent;
+              color:white;
+              border-color:#475569;
+            "
+            onclick="
+              window.BuildPilot.home()
+            "
+          >
+            ← Projects
+          </button>
+
+        </header>
+
+        <main class="bp-main">
+
+          <div style="
+            max-width:850px;
+            margin:auto;
+          ">
+
+            <div class="bp-card">
+
+              <div class="bp-card-icon">
+                ${
+                  projectType ===
+                  "website"
+                    ? "🌐"
+                    : "🚀"
+                }
+              </div>
+
+              <h1 style="
+                margin:0 0 8px;
+              ">
+                Build your project
+              </h1>
+
+              <p style="
+                color:#64748b;
+                margin-top:0;
+              ">
+                Tell BuildPilot AI exactly
+                what you want to create.
+              </p>
+
+              <div class="bp-field">
+
+                <label class="bp-label">
+                  Project Name
+                </label>
+
+                <input
+                  id="newProjectName"
+                  class="bp-input"
+                  placeholder="My Business Website"
+                />
+
+              </div>
+
+              <div class="bp-field">
+
+                <label class="bp-label">
+                  What do you want to build?
+                </label>
+
+                <textarea
+                  id="newProjectPrompt"
+                  class="bp-textarea"
+                  rows="8"
+                  placeholder="
+Example:
+
+Create a modern coaching website for Kartar Classes.
+
+Pages:
+Home
+Courses
+Teachers
+About
+Contact
+
+Add WhatsApp contact button,
+responsive mobile design and
+a professional header.
+                  "
+                ></textarea>
+
+              </div>
+
+              <div class="bp-two-col">
+
+                <div class="bp-field">
+
+                  <label class="bp-label">
+                    Frontend
+                  </label>
+
+                  <select
+                    id="frontend"
+                    class="bp-select"
+                  >
+                    <option value="html">
+                      HTML / CSS / JavaScript
+                    </option>
+
+                    <option value="react">
+                      React
+                    </option>
+
+                    <option value="nextjs">
+                      Next.js
+                    </option>
+                  </select>
+
+                </div>
+
+                <div class="bp-field">
+
+                  <label class="bp-label">
+                    Backend
+                  </label>
+
+                  <select
+                    id="backend"
+                    class="bp-select"
+                  >
+                    <option value="supabase">
+                      Supabase
+                    </option>
+
+                    <option value="firebase">
+                      Firebase
+                    </option>
+
+                    <option value="github">
+                      GitHub
+                    </option>
+                  </select>
+
+                </div>
+
+              </div>
+
+              <button
+                id="createProjectButton"
+                class="bp-btn bp-btn-primary"
+                style="
+                  width:100%;
+                  padding:14px;
+                  margin-top:5px;
+                "
+                onclick="
+                  window.BuildPilot.createProject(
+                    '${escapeAttribute(
+                      projectType
+                    )}'
+                  )
+                "
+              >
+                ✨ Build Project
+              </button>
+
+            </div>
+
+          </div>
+
+        </main>
 
       </div>
     `;
   }
 
-  function starterHTML(name) {
+  /* =========================================================
+     STARTER FILES
+     IMPORTANT:
+     generated_by IS NOT SENT.
+     ========================================================= */
+
+  function starterHTML(
+    name
+  ) {
     return `<!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(name)}</title>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>${escapeHtml(
+    name
+  )}</title>
 </head>
+
 <body>
 
-  <main class="container">
-    <h1>${escapeHtml(name)}</h1>
+  <main class="bp-starter">
+    <div class="bp-starter-card">
 
-    <p>
-      Your BuildPilot AI project is ready.
-    </p>
+      <div class="bp-starter-icon">
+        ⚡
+      </div>
 
-    <button id="helloButton">
-      Get Started
-    </button>
+      <h1>
+        ${escapeHtml(name)}
+      </h1>
+
+      <p>
+        Your BuildPilot AI project is ready.
+      </p>
+
+      <button id="helloButton">
+        Get Started
+      </button>
+
+    </div>
   </main>
 
 </body>
@@ -1133,38 +2297,101 @@ body {
     Inter,
     Arial,
     sans-serif;
-  background: #f8fafc;
-  color: #111827;
+
+  background:
+    linear-gradient(
+      135deg,
+      #eef2ff,
+      #ecfeff
+    );
+
+  color:
+    #0f172a;
 }
 
-.container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 80px 20px;
+.bp-starter {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 30px;
+}
+
+.bp-starter-card {
+  width: min(650px,100%);
+
+  padding: 55px 30px;
+
+  background: white;
+
+  border-radius: 25px;
+
   text-align: center;
+
+  box-shadow:
+    0 25px 80px
+    rgba(15,23,42,.12);
 }
 
-button {
-  padding: 12px 18px;
+.bp-starter-icon {
+  font-size: 50px;
+  margin-bottom: 15px;
+}
+
+.bp-starter-card h1 {
+  margin: 0 0 10px;
+}
+
+.bp-starter-card p {
+  color: #64748b;
+  margin-bottom: 25px;
+}
+
+.bp-starter-card button {
   border: 0;
+
+  padding: 13px 20px;
+
   border-radius: 10px;
-  cursor: pointer;
+
   background: #111827;
+
   color: white;
+
+  cursor: pointer;
 }`;
+
   }
 
   function starterJS() {
-    return `document.addEventListener("DOMContentLoaded", function () {
-  const button =
-    document.getElementById("helloButton");
+    return `document.addEventListener(
+  "DOMContentLoaded",
+  function () {
 
-  if (button) {
-    button.addEventListener("click", function () {
-      alert("BuildPilot AI project is working!");
-    });
+    const button =
+      document.getElementById(
+        "helloButton"
+      );
+
+    if (button) {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          alert(
+            "BuildPilot AI project is working!"
+          );
+
+        }
+      );
+
+    }
+
   }
-});`;
+);`;
   }
 
   async function ensureStarterFiles(
@@ -1177,72 +2404,117 @@ button {
       );
     }
 
-    const { data: existing, error } =
-      await sb
-        .from("project_files")
-        .select(
-          "id,file_path,file_content,language"
-        )
-        .eq("project_id", projectId);
+    const {
+      data: existing,
+      error: selectError,
+    } = await client
+      .from("project_files")
+      .select(
+        "id,file_path,file_content,language"
+      )
+      .eq(
+        "project_id",
+        projectId
+      );
 
-    if (error) {
+    if (selectError) {
       throw new Error(
         "Could not load project files: " +
-          error.message
+          selectError.message
       );
     }
 
-    const files = existing || [];
+    const files =
+      existing || [];
 
-    const existingPaths = new Set(
-      files.map((file) =>
-        String(
-          file.file_path
-        ).toLowerCase()
+    const existingPaths =
+      new Set(
+        files.map(
+          (file) =>
+            String(
+              file.file_path
+            ).toLowerCase()
+        )
+      );
+
+    const starterFiles =
+      [];
+
+    if (
+      !existingPaths.has(
+        "index.html"
       )
-    );
-
-    const starterFiles = [];
-
-    if (!existingPaths.has("index.html")) {
+    ) {
       starterFiles.push({
-        project_id: projectId,
-        file_path: "index.html",
+        project_id:
+          projectId,
+
+        file_path:
+          "index.html",
+
         file_content:
-          starterHTML(projectName),
-        language: "html",
-        generated_by: "system",
+          starterHTML(
+            projectName
+          ),
+
+        language:
+          "html",
       });
     }
 
-    if (!existingPaths.has("style.css")) {
+    if (
+      !existingPaths.has(
+        "style.css"
+      )
+    ) {
       starterFiles.push({
-        project_id: projectId,
-        file_path: "style.css",
-        file_content: starterCSS(),
-        language: "css",
-        generated_by: "system",
+        project_id:
+          projectId,
+
+        file_path:
+          "style.css",
+
+        file_content:
+          starterCSS(),
+
+        language:
+          "css",
       });
     }
 
-    if (!existingPaths.has("script.js")) {
+    if (
+      !existingPaths.has(
+        "script.js"
+      )
+    ) {
       starterFiles.push({
-        project_id: projectId,
-        file_path: "script.js",
-        file_content: starterJS(),
-        language: "javascript",
-        generated_by: "system",
+        project_id:
+          projectId,
+
+        file_path:
+          "script.js",
+
+        file_content:
+          starterJS(),
+
+        language:
+          "javascript",
       });
     }
 
-    if (!starterFiles.length) {
-      return;
+    if (
+      !starterFiles.length
+    ) {
+      return true;
     }
 
-    const { error: insertError } =
-      await sb
-        .from("project_files")
-        .insert(starterFiles);
+    const {
+      error: insertError,
+    } = await client
+      .from("project_files")
+      .insert(
+        starterFiles
+      );
 
     if (insertError) {
       throw new Error(
@@ -1250,12 +2522,24 @@ button {
           insertError.message
       );
     }
+
+    return true;
   }
+
+  /* =========================================================
+     CREATE PROJECT
+     ========================================================= */
 
   async function createProject(
     projectType
   ) {
-    if (!(await requireSession())) {
+    await getSession();
+
+    if (!activeUser) {
+      renderAuth(
+        "login"
+      );
+
       return;
     }
 
@@ -1289,7 +2573,7 @@ button {
       ).value;
 
     if (!name) {
-      showMessage(
+      showToast(
         "Project name required",
         "error"
       );
@@ -1298,7 +2582,7 @@ button {
     }
 
     if (!prompt) {
-      showMessage(
+      showToast(
         "Project description required",
         "error"
       );
@@ -1306,39 +2590,64 @@ button {
       return;
     }
 
-    setLoading(
+    setButtonLoading(
       button,
       true,
       "Creating project..."
     );
 
     try {
-      const { data: typeData } =
-        await sb
-          .from("project_types")
-          .select("id,name,code")
-          .eq("code", projectType)
-          .maybeSingle();
-
-      const projectPayload = {
-        user_id: activeUser.id,
-        name,
-        description: prompt,
-        frontend,
-        backend,
-        status: "draft",
-        project_type_id:
-          typeData?.id || null,
-      };
+      const {
+        data: typeData,
+      } = await client
+        .from("project_types")
+        .select(
+          "id,name,code"
+        )
+        .eq(
+          "code",
+          projectType
+        )
+        .maybeSingle();
 
       const {
         data: project,
         error,
-      } = await sb
+      } = await client
         .from("projects")
-        .insert(projectPayload)
+        .insert({
+          user_id:
+            activeUser.id,
+
+          name,
+
+          description:
+            prompt,
+
+          frontend,
+
+          backend,
+
+          status:
+            "draft",
+
+          project_type_id:
+            typeData?.id ||
+            null,
+        })
         .select(
-          "id,name,description,frontend,backend,project_plan,public_id,public_enabled,published_at"
+          `
+          id,
+          name,
+          description,
+          frontend,
+          backend,
+          project_plan,
+          public_id,
+          public_enabled,
+          published_at,
+          status
+          `
         )
         .single();
 
@@ -1346,108 +2655,132 @@ button {
         throw error;
       }
 
+      /*
+       * IMPORTANT:
+       * Starter files are created BEFORE AI call.
+       */
       await ensureStarterFiles(
         project.id,
-        name
+        project.name
       );
 
-      activeProject = project;
+      activeProject =
+        project;
 
-      showMessage(
-        "Project created",
+      await loadProjectFiles();
+
+      showToast(
+        "Project created. AI is building it...",
         "success"
       );
 
+      /*
+       * AI generation.
+       */
+      try {
+        await callGenerateFunction(
+          project.id,
+          prompt,
+          name,
+          frontend,
+          backend
+        );
+      } catch (aiError) {
+        console.error(
+          "AI generation error:",
+          aiError
+        );
+
+        showToast(
+          "Starter project created. AI generation failed: " +
+            aiError.message,
+          "error"
+        );
+      }
+
       await loadProjectFiles();
 
-      /*
-       * AI generation is attempted only after
-       * starter files are safely created.
-       */
-      await callGenerateFunction(
-        project.id,
-        prompt,
-        name,
-        frontend,
-        backend
+      openWorkspace(
+        project.id
       );
 
-      await loadProjectFiles();
-
-      openWorkspace(project.id);
     } catch (error) {
       console.error(error);
 
-      showMessage(
+      showToast(
         error.message ||
           "Project creation failed",
         "error"
       );
     } finally {
-      setLoading(button, false);
+      setButtonLoading(
+        button,
+        false
+      );
     }
   }
 
-  /*
-   * ============================================================
-   * AI GENERATION
-   * ============================================================
-   */
+  /* =========================================================
+     AI FUNCTION
+     ========================================================= */
 
   async function callGenerateFunction(
     projectId,
-    prompt,
-    name,
+    instruction,
+    projectName,
     frontend,
     backend
   ) {
-    if (!activeSession) {
-      await getSession();
-    }
+    await getSession();
 
     if (!activeSession) {
       throw new Error(
-        "Please login again."
+        "Your login session expired. Please login again."
       );
     }
 
     const {
       data,
       error,
-    } = await sb.functions.invoke(
-      GENERATE_FUNCTION,
-      {
-        headers: {
-          Authorization:
-            "Bearer " +
-            activeSession.access_token,
-        },
+    } =
+      await client.functions.invoke(
+        GENERATE_FUNCTION,
+        {
+          headers: {
+            Authorization:
+              "Bearer " +
+              activeSession.access_token,
+          },
 
-        body: {
-          projectId,
-          instruction: prompt,
+          body: {
+            projectId,
 
-          /*
-           * Compatibility fields for
-           * older BuildPilot functions.
-           */
-          prompt,
-          projectName: name,
-          frontend,
-          backend,
-        },
-      }
-    );
+            instruction,
+
+            /*
+             * Compatibility fields.
+             */
+            prompt:
+              instruction,
+
+            projectName,
+
+            frontend,
+
+            backend,
+          },
+        }
+      );
 
     if (error) {
       console.error(
-        "Generate function error:",
+        "Edge Function error:",
         error
       );
 
       throw new Error(
         error.message ||
-          "AI generation failed"
+          "AI function failed"
       );
     }
 
@@ -1461,54 +2794,124 @@ button {
       );
     }
 
-    return data;
+    return (
+      data || {
+        success: true,
+      }
+    );
   }
 
-  /*
-   * ============================================================
-   * PROJECT LIST
-   * ============================================================
-   */
+  /* =========================================================
+     LOAD PROJECT FILES
+     ========================================================= */
 
-  async function loadProjects() {
-    if (!activeUser) {
-      await getSession();
+  async function loadProjectFiles() {
+    if (!activeProject) {
+      activeFiles = [];
+
+      return [];
     }
-
-    const container =
-      document.getElementById(
-        "projectsList"
-      );
-
-    if (!container) return;
-
-    container.innerHTML =
-      "Loading projects...";
 
     const {
       data,
       error,
-    } = await sb
-      .from("projects")
-      .select(
-        "id,name,description,status,frontend,backend,public_id,public_enabled,published_at,created_at"
-      )
-      .eq("user_id", activeUser.id)
-      .order(
-        "created_at",
-        {
-          ascending: false,
-        }
-      );
+    } =
+      await client
+        .from("project_files")
+        .select(
+          `
+          id,
+          project_id,
+          file_path,
+          file_content,
+          language
+          `
+        )
+        .eq(
+          "project_id",
+          activeProject.id
+        )
+        .order(
+          "file_path"
+        );
 
     if (error) {
-      container.innerHTML = `
-        <div style="
-          color:#dc2626;
-        ">
-          ${escapeHtml(
-            error.message
-          )}
+      throw error;
+    }
+
+    activeFiles =
+      data || [];
+
+    return activeFiles;
+  }
+
+  /* =========================================================
+     PROJECT LIST
+     ========================================================= */
+
+  async function loadProjects() {
+    const list =
+      document.getElementById(
+        "projectsList"
+      );
+
+    if (!list) {
+      return;
+    }
+
+    list.innerHTML = `
+      <div class="bp-card">
+        Loading projects...
+      </div>
+    `;
+
+    const {
+      data,
+      error,
+    } =
+      await client
+        .from("projects")
+        .select(
+          `
+          id,
+          name,
+          description,
+          status,
+          frontend,
+          backend,
+          public_id,
+          public_enabled,
+          published_at,
+          created_at
+          `
+        )
+        .eq(
+          "user_id",
+          activeUser.id
+        )
+        .order(
+          "created_at",
+          {
+            ascending:
+              false,
+          }
+        );
+
+    if (error) {
+      list.innerHTML = `
+        <div class="bp-card">
+          <strong>
+            Could not load projects
+          </strong>
+
+          <p style="
+            color:#dc2626;
+            margin-bottom:0;
+          ">
+            ${escapeHtml(
+              error.message
+            )}
+          </p>
         </div>
       `;
 
@@ -1516,295 +2919,291 @@ button {
     }
 
     if (!data?.length) {
-      container.innerHTML = `
-        <div style="
-          background:white;
-          border:1px dashed #cbd5e1;
-          padding:30px;
-          border-radius:15px;
+      list.innerHTML = `
+        <div class="bp-card" style="
           text-align:center;
-          color:#64748b;
+          padding:45px;
         ">
-          No projects yet.
+
+          <div style="
+            font-size:42px;
+          ">
+            🛠️
+          </div>
+
+          <h3>
+            No projects yet
+          </h3>
+
+          <p style="
+            color:#64748b;
+          ">
+            Create your first project above.
+          </p>
+
         </div>
       `;
 
       return;
     }
 
-    container.innerHTML =
+    list.innerHTML =
       data
         .map(
           (project) => `
-          <div style="
-            background:white;
-            border:1px solid #e2e8f0;
-            border-radius:15px;
-            padding:20px;
-            margin-bottom:12px;
-          ">
+            <div class="bp-project">
 
-            <div style="
-              display:flex;
-              justify-content:space-between;
-              gap:20px;
-              flex-wrap:wrap;
-            ">
+              <div class="bp-project-main">
 
-              <div>
+                <div class="bp-project-info">
 
-                <h3 style="
-                  margin:0 0 7px;
-                ">
-                  ${escapeHtml(
-                    project.name
-                  )}
-                </h3>
+                  <h3 class="bp-project-title">
+                    ${escapeHtml(
+                      project.name
+                    )}
+                  </h3>
 
-                <p style="
-                  margin:0;
-                  color:#64748b;
-                ">
-                  ${escapeHtml(
-                    project.description ||
-                      ""
-                  )}
-                </p>
+                  <p class="bp-project-description">
+                    ${escapeHtml(
+                      project.description ||
+                        "No description"
+                    )}
+                  </p>
 
-                <div style="
-                  margin-top:10px;
-                  font-size:13px;
-                  color:#64748b;
-                ">
-                  Status:
-                  ${escapeHtml(
-                    project.status ||
-                      "draft"
-                  )}
+                  <div style="
+                    display:flex;
+                    gap:7px;
+                    margin-top:10px;
+                    flex-wrap:wrap;
+                  ">
+
+                    <span style="
+                      background:#f1f5f9;
+                      padding:5px 9px;
+                      border-radius:999px;
+                      font-size:12px;
+                    ">
+                      ${escapeHtml(
+                        project.status ||
+                          "draft"
+                      )}
+                    </span>
+
+                    ${
+                      project.public_enabled
+                        ? `
+                          <span style="
+                            background:#dcfce7;
+                            color:#166534;
+                            padding:5px 9px;
+                            border-radius:999px;
+                            font-size:12px;
+                          ">
+                            ● Public
+                          </span>
+                        `
+                        : ""
+                    }
+
+                  </div>
+
+                </div>
+
+                <div class="bp-actions">
+
+                  <button
+                    class="bp-btn bp-btn-primary"
+                    onclick="
+                      window.BuildPilot.openProject(
+                        '${escapeAttribute(
+                          project.id
+                        )}'
+                      )
+                    "
+                  >
+                    Open
+                  </button>
+
+                  ${
+                    project.public_enabled
+                      ? `
+                        <button
+                          class="bp-btn"
+                          onclick="
+                            window.BuildPilot.copyPublicLink(
+                              '${escapeAttribute(
+                                project.public_id
+                              )}'
+                            )
+                          "
+                        >
+                          🔗 Public Link
+                        </button>
+                      `
+                      : ""
+                  }
+
                 </div>
 
               </div>
 
-              <div style="
-                display:flex;
-                gap:8px;
-                flex-wrap:wrap;
-                align-items:center;
-              ">
-
-                <button
-                  onclick="window.BuildPilot.openProject('${project.id}')"
-                  style="
-                    padding:9px 13px;
-                    border:0;
-                    border-radius:8px;
-                    background:#111827;
-                    color:white;
-                    cursor:pointer;
-                  "
-                >
-                  Open
-                </button>
-
-                ${
-                  project.public_enabled
-                    ? `
-                    <button
-                      onclick="window.BuildPilot.copyPublicLink('${project.public_id}')"
-                      style="
-                        padding:9px 13px;
-                        border:1px solid #cbd5e1;
-                        background:white;
-                        border-radius:8px;
-                        cursor:pointer;
-                      "
-                    >
-                      Copy Public Link
-                    </button>
-                  `
-                    : ""
-                }
-
-              </div>
-
             </div>
-
-          </div>
-        `
+          `
         )
         .join("");
   }
 
-  /*
-   * ============================================================
-   * OPEN PROJECT
-   * ============================================================
-   */
+  /* =========================================================
+     OPEN PROJECT
+     ========================================================= */
 
-  async function openProject(projectId) {
-    if (!(await requireSession())) {
+  async function openProject(
+    projectId
+  ) {
+    await getSession();
+
+    if (!activeUser) {
+      renderAuth(
+        "login"
+      );
+
       return;
     }
 
     try {
       const {
-        data: project,
+        data,
         error,
-      } = await sb
-        .from("projects")
-        .select(
-          "id,name,description,frontend,backend,project_plan,public_id,public_enabled,published_at,status"
-        )
-        .eq("id", projectId)
-        .eq(
-          "user_id",
-          activeUser.id
-        )
-        .single();
+      } =
+        await client
+          .from("projects")
+          .select(
+            `
+            id,
+            name,
+            description,
+            frontend,
+            backend,
+            project_plan,
+            public_id,
+            public_enabled,
+            published_at,
+            status
+            `
+          )
+          .eq(
+            "id",
+            projectId
+          )
+          .eq(
+            "user_id",
+            activeUser.id
+          )
+          .single();
 
       if (error) {
         throw error;
       }
 
-      activeProject = project;
+      activeProject =
+        data;
 
+      /*
+       * Critical fix:
+       * If old project has no index.html,
+       * create it now.
+       */
       await ensureStarterFiles(
-        project.id,
-        project.name
+        activeProject.id,
+        activeProject.name
       );
 
       await loadProjectFiles();
 
-      openWorkspace(project.id);
+      openWorkspace(
+        activeProject.id
+      );
+
     } catch (error) {
-      showMessage(
+      console.error(error);
+
+      showToast(
         error.message ||
-          "Project could not be opened",
+          "Could not open project",
         "error"
       );
     }
   }
 
-  async function loadProjectFiles() {
-    if (!activeProject) {
-      return [];
-    }
+  /* =========================================================
+     WORKSPACE
+     ========================================================= */
 
-    const {
-      data,
-      error,
-    } = await sb
-      .from("project_files")
-      .select(
-        "id,file_path,file_content,language,generated_by"
-      )
-      .eq(
-        "project_id",
-        activeProject.id
-      )
-      .order("file_path");
+  function openWorkspace(
+    projectId
+  ) {
+    root.innerHTML = `
+      <div class="bp-app">
 
-    if (error) {
-      throw error;
-    }
+        <header class="bp-topbar">
 
-    activeFiles = data || [];
-
-    return activeFiles;
-  }
-
-  /*
-   * ============================================================
-   * WORKSPACE
-   * ============================================================
-   */
-
-  function openWorkspace(projectId) {
-    currentView = "workspace";
-
-    appRoot().innerHTML = `
-      <div style="
-        min-height:100vh;
-        background:#f1f5f9;
-        font-family:Arial,sans-serif;
-      ">
-
-        <header style="
-          height:64px;
-          background:#111827;
-          color:white;
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          padding:0 18px;
-          box-sizing:border-box;
-        ">
-
-          <div style="
-            display:flex;
-            gap:12px;
-            align-items:center;
-          ">
+          <div class="bp-brand">
 
             <button
-              onclick="window.BuildPilot.home()"
+              class="bp-btn"
               style="
-                border:1px solid #475569;
                 background:transparent;
                 color:white;
-                padding:8px 12px;
-                border-radius:8px;
-                cursor:pointer;
+                border-color:#475569;
+                margin-right:5px;
+              "
+              onclick="
+                window.BuildPilot.home()
               "
             >
-              ← Projects
+              ←
             </button>
 
-            <strong>
+            <div class="bp-logo">
+              ⚡
+            </div>
+
+            <span>
               ${escapeHtml(
                 activeProject?.name ||
                   "Project"
               )}
-            </strong>
+            </span>
 
           </div>
 
-          <div style="
-            display:flex;
-            gap:8px;
-            flex-wrap:wrap;
-          ">
+          <div class="bp-actions">
 
             <button
-              onclick="window.BuildPilot.refreshFiles()"
+              class="bp-btn"
               style="
-                border:1px solid #475569;
                 background:transparent;
                 color:white;
-                padding:8px 12px;
-                border-radius:8px;
-                cursor:pointer;
+                border-color:#475569;
+              "
+              onclick="
+                window.BuildPilot.refreshFiles()
               "
             >
-              Refresh Files
+              ↻ Refresh
             </button>
 
             <button
               id="publishButton"
-              onclick="window.BuildPilot.togglePublish()"
-              style="
-                border:0;
-                background:#22c55e;
-                color:white;
-                padding:8px 12px;
-                border-radius:8px;
-                cursor:pointer;
+              class="bp-btn bp-btn-success"
+              onclick="
+                window.BuildPilot.togglePublish()
               "
             >
               ${
                 activeProject?.public_enabled
-                  ? "Public Link"
-                  : "Publish"
+                  ? "🔗 Public Link"
+                  : "🚀 Publish"
               }
             </button>
 
@@ -1812,161 +3211,137 @@ button {
 
         </header>
 
-        <main style="
-          display:grid;
-          grid-template-columns:
-            250px minmax(0,1fr);
-          min-height:calc(100vh - 64px);
-        ">
+        <main class="bp-workspace">
 
-          <aside style="
-            background:white;
-            border-right:1px solid #e2e8f0;
-            padding:15px;
-            overflow:auto;
-          ">
+          <div class="bp-workspace-grid">
 
-            <h3>
-              Project Files
-            </h3>
+            <aside class="bp-sidebar">
 
-            <div id="filesList">
-              Loading...
-            </div>
+              <div class="bp-sidebar-header">
 
-          </aside>
+                <span>
+                  Project Files
+                </span>
 
-          <section style="
-            padding:15px;
-            min-width:0;
-          ">
-
-            <div style="
-              display:grid;
-              grid-template-columns:
-                minmax(0,1fr)
-                minmax(0,1fr);
-              gap:15px;
-            ">
-
-              <div style="
-                background:white;
-                border-radius:14px;
-                border:1px solid #e2e8f0;
-                overflow:hidden;
-              ">
-
-                <div style="
-                  padding:12px 15px;
-                  border-bottom:1px solid #e2e8f0;
-                  font-weight:bold;
+                <span style="
+                  color:#64748b;
+                  font-size:12px;
                 ">
-                  Live Preview
+                  ${
+                    activeFiles.length
+                  }
+                }
+                </span>
+
+              </div>
+
+              <div
+                id="filesList"
+                class="bp-files"
+              ></div>
+
+            </aside>
+
+            <section class="bp-workspace-main">
+
+              <div class="bp-panel">
+
+                <div class="bp-panel-header">
+
+                  <span>
+                    Live Preview
+                  </span>
+
+                  <button
+                    class="bp-btn"
+                    onclick="
+                      window.BuildPilot.updatePreview()
+                    "
+                  >
+                    Refresh
+                  </button>
+
                 </div>
 
-                <div
-                  id="previewContent"
-                  style="
-                    min-height:600px;
-                    background:white;
-                  "
-                >
-                  Loading preview...
+                <div id="previewContent">
+                  Loading...
                 </div>
 
               </div>
 
-              <div style="
-                background:white;
-                border-radius:14px;
-                border:1px solid #e2e8f0;
-                overflow:hidden;
-                display:flex;
-                flex-direction:column;
-              ">
+              <div class="bp-panel bp-chat">
 
-                <div style="
-                  padding:12px 15px;
-                  border-bottom:1px solid #e2e8f0;
-                  font-weight:bold;
-                ">
-                  AI Builder
+                <div class="bp-panel-header">
+                  <span>
+                    ✨ AI Builder
+                  </span>
                 </div>
 
                 <div
                   id="chatMessages"
-                  style="
-                    flex:1;
-                    min-height:420px;
-                    max-height:520px;
-                    overflow:auto;
-                    padding:15px;
-                  "
+                  class="bp-chat-messages"
                 >
-                  <div style="
-                    background:#f8fafc;
-                    padding:12px;
-                    border-radius:10px;
-                    color:#475569;
+
+                  <div class="
+                    bp-chat-message
+                    bp-chat-ai
                   ">
-                    Tell me what you want to change.
-                    <br><br>
-                    Example:
-                    <br>
-                    "Header का color blue कर दो"
-                    <br>
-                    "Contact section add करो"
-                    <br>
-                    "WhatsApp button लगा दो"
+                    <strong>
+                      BuildPilot AI
+                    </strong>
+
+                    <div style="
+                      margin-top:5px;
+                    ">
+                      Tell me what you want
+                      to change in your project.
+                    </div>
                   </div>
+
                 </div>
 
-                <form
-                  id="aiChatForm"
-                  style="
-                    padding:12px;
-                    border-top:1px solid #e2e8f0;
-                  "
-                >
+                <div class="bp-chat-input">
 
-                  <textarea
-                    id="aiInstruction"
-                    rows="4"
-                    placeholder="Describe the change..."
-                    style="
-                      width:100%;
-                      box-sizing:border-box;
-                      padding:12px;
-                      border:1px solid #cbd5e1;
-                      border-radius:10px;
-                      resize:vertical;
-                    "
-                  ></textarea>
+                  <form id="aiChatForm">
 
-                  <button
-                    type="submit"
-                    id="aiSendButton"
-                    style="
-                      width:100%;
-                      margin-top:8px;
-                      padding:12px;
-                      border:0;
-                      border-radius:10px;
-                      background:#111827;
-                      color:white;
-                      cursor:pointer;
-                    "
-                  >
-                    Build / Modify Project
-                  </button>
+                    <textarea
+                      id="aiInstruction"
+                      class="bp-textarea"
+                      rows="4"
+                      placeholder="
+Example:
+Header ka color blue kar do
 
-                </form>
+Contact section add karo
+
+WhatsApp button laga do
+
+Logo header me add karo
+                      "
+                    ></textarea>
+
+                    <button
+                      id="aiSendButton"
+                      class="bp-btn bp-btn-primary"
+                      style="
+                        width:100%;
+                        margin-top:8px;
+                        padding:12px;
+                      "
+                      type="submit"
+                    >
+                      ✨ Build / Modify
+                    </button>
+
+                  </form>
+
+                </div>
 
               </div>
 
-            </div>
+            </section>
 
-          </section>
+          </div>
 
         </main>
 
@@ -1987,11 +3362,9 @@ button {
     updatePreview();
   }
 
-  /*
-   * ============================================================
-   * FILE LIST
-   * ============================================================
-   */
+  /* =========================================================
+     FILE LIST
+     ========================================================= */
 
   function renderFilesList() {
     const list =
@@ -1999,13 +3372,19 @@ button {
         "filesList"
       );
 
-    if (!list) return;
+    if (!list) {
+      return;
+    }
 
     if (!activeFiles.length) {
       list.innerHTML = `
-        <p style="color:#64748b;">
+        <div style="
+          padding:15px;
+          color:#64748b;
+          font-size:13px;
+        ">
           No files found.
-        </p>
+        </div>
       `;
 
       return;
@@ -2015,34 +3394,55 @@ button {
       activeFiles
         .map(
           (file) => `
-          <button
-            onclick="window.BuildPilot.editFile('${file.id}')"
-            style="
-              display:block;
-              width:100%;
-              text-align:left;
-              padding:10px;
-              margin-bottom:5px;
-              border:1px solid #e2e8f0;
-              background:#f8fafc;
-              border-radius:8px;
-              cursor:pointer;
-            "
-          >
-            ${escapeHtml(
-              file.file_path
-            )}
-          </button>
-        `
+            <button
+              class="
+                bp-file
+                ${
+                  selectedFileId ===
+                  file.id
+                    ? "bp-file-active"
+                    : ""
+                }
+              "
+              onclick="
+                window.BuildPilot.editFile(
+                  '${escapeAttribute(
+                    file.id
+                  )}'
+                )
+              "
+            >
+              ${
+                file.file_path
+                  .endsWith(
+                    ".html"
+                  )
+                  ? "🌐"
+                  : file.file_path.endsWith(
+                      ".css"
+                    )
+                  ? "🎨"
+                  : file.file_path.endsWith(
+                      ".js"
+                    )
+                  ? "⚡"
+                  : "📄"
+              }
+
+              &nbsp;
+
+              ${escapeHtml(
+                file.file_path
+              )}
+            </button>
+          `
         )
         .join("");
   }
 
-  /*
-   * ============================================================
-   * PREVIEW
-   * ============================================================
-   */
+  /* =========================================================
+     PREVIEW
+     ========================================================= */
 
   function buildPreviewHTML() {
     const htmlFile =
@@ -2056,7 +3456,9 @@ button {
         (file) =>
           file.file_path
             .toLowerCase()
-            .endsWith(".html")
+            .endsWith(
+              ".html"
+            )
       );
 
     if (!htmlFile) {
@@ -2064,68 +3466,95 @@ button {
     }
 
     let html =
-      htmlFile.file_content || "";
+      htmlFile.file_content ||
+      "";
 
-    const css = activeFiles
-      .filter((file) =>
-        file.file_path
-          .toLowerCase()
-          .endsWith(".css")
-      )
-      .map(
-        (file) =>
-          file.file_content || ""
-      )
-      .join("\n\n");
+    const css =
+      activeFiles
+        .filter(
+          (file) =>
+            file.file_path
+              .toLowerCase()
+              .endsWith(
+                ".css"
+              )
+        )
+        .map(
+          (file) =>
+            file.file_content ||
+            ""
+        )
+        .join(
+          "\n\n"
+        );
 
-    const js = activeFiles
-      .filter((file) =>
-        file.file_path
-          .toLowerCase()
-          .endsWith(".js")
-      )
-      .map(
-        (file) =>
-          file.file_content || ""
-      )
-      .join("\n\n");
+    const js =
+      activeFiles
+        .filter(
+          (file) =>
+            file.file_path
+              .toLowerCase()
+              .endsWith(
+                ".js"
+              )
+        )
+        .map(
+          (file) =>
+            file.file_content ||
+            ""
+        )
+        .join(
+          "\n\n"
+        );
 
     if (css.trim()) {
-      const styleTag = `
-<style data-buildpilot-preview="css">
+      const style =
+        `
+<style data-buildpilot-css>
 ${css}
 </style>
 `;
 
       if (
-        /<\/head>/i.test(html)
+        /<\/head>/i.test(
+          html
+        )
       ) {
-        html = html.replace(
-          /<\/head>/i,
-          styleTag + "</head>"
-        );
+        html =
+          html.replace(
+            /<\/head>/i,
+            style +
+              "</head>"
+          );
       } else {
         html =
-          styleTag + html;
+          style +
+          html;
       }
     }
 
     if (js.trim()) {
-      const scriptTag = `
-<script data-buildpilot-preview="js">
+      const script =
+        `
+<script data-buildpilot-js>
 ${js}
 </script>
 `;
 
       if (
-        /<\/body>/i.test(html)
+        /<\/body>/i.test(
+          html
+        )
       ) {
-        html = html.replace(
-          /<\/body>/i,
-          scriptTag + "</body>"
-        );
+        html =
+          html.replace(
+            /<\/body>/i,
+            script +
+              "</body>"
+          );
       } else {
-        html += scriptTag;
+        html +=
+          script;
       }
     }
 
@@ -2138,40 +3567,45 @@ ${js}
         "previewContent"
       );
 
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const html =
       buildPreviewHTML();
 
     if (!html) {
       container.innerHTML = `
-        <div style="
-          padding:30px;
-          text-align:center;
-          color:#64748b;
-        ">
+        <div class="bp-preview-empty">
 
-          <h3>
-            Project Preview
-          </h3>
+          <div>
 
-          <p>
-            index.html अभी available नहीं है।
-          </p>
+            <div style="
+              font-size:45px;
+              margin-bottom:12px;
+            ">
+              📄
+            </div>
 
-          <button
-            onclick="window.BuildPilot.refreshFiles()"
-            style="
-              padding:10px 15px;
-              border:0;
-              border-radius:8px;
-              background:#111827;
-              color:white;
-              cursor:pointer;
-            "
-          >
-            Refresh Files
-          </button>
+            <h3>
+              index.html not found
+            </h3>
+
+            <p>
+              BuildPilot will create the
+              starter file automatically.
+            </p>
+
+            <button
+              class="bp-btn bp-btn-primary"
+              onclick="
+                window.BuildPilot.refreshFiles()
+              "
+            >
+              Create / Refresh Files
+            </button>
+
+          </div>
 
         </div>
       `;
@@ -2184,17 +3618,19 @@ ${js}
         "iframe"
       );
 
+    iframe.className =
+      "bp-preview-frame";
+
     iframe.setAttribute(
       "sandbox",
       "allow-scripts allow-forms allow-modals allow-popups"
     );
 
-    iframe.style.width = "100%";
-    iframe.style.height = "650px";
-    iframe.style.border = "0";
-    iframe.srcdoc = html;
+    iframe.srcdoc =
+      html;
 
-    container.innerHTML = "";
+    container.innerHTML =
+      "";
 
     container.appendChild(
       iframe
@@ -2202,18 +3638,13 @@ ${js}
   }
 
   async function refreshFiles() {
+    if (!activeProject) {
+      return;
+    }
+
     try {
-      if (!activeProject) {
-        showMessage(
-          "No active project",
-          "error"
-        );
-
-        return;
-      }
-
-      showMessage(
-        "Refreshing project files..."
+      showToast(
+        "Refreshing files..."
       );
 
       await ensureStarterFiles(
@@ -2227,14 +3658,15 @@ ${js}
 
       updatePreview();
 
-      showMessage(
+      showToast(
         "Files refreshed",
         "success"
       );
+
     } catch (error) {
       console.error(error);
 
-      showMessage(
+      showToast(
         error.message ||
           "Refresh failed",
         "error"
@@ -2242,11 +3674,9 @@ ${js}
     }
   }
 
-  /*
-   * ============================================================
-   * AI EDIT
-   * ============================================================
-   */
+  /* =========================================================
+     AI CHAT
+     ========================================================= */
 
   async function submitAIInstruction(
     event
@@ -2254,7 +3684,7 @@ ${js}
     event.preventDefault();
 
     if (!activeProject) {
-      showMessage(
+      showToast(
         "Open a project first",
         "error"
       );
@@ -2287,13 +3717,17 @@ ${js}
 
     input.value = "";
 
-    setLoading(
+    setButtonLoading(
       button,
       true,
-      "AI is building..."
+      "AI is working..."
     );
 
     try {
+      /*
+       * Make sure index.html exists
+       * before AI editing.
+       */
       await ensureStarterFiles(
         activeProject.id,
         activeProject.name
@@ -2323,10 +3757,11 @@ ${js}
         "ai"
       );
 
-      showMessage(
-        "Project updated successfully",
+      showToast(
+        "Project updated",
         "success"
       );
+
     } catch (error) {
       console.error(error);
 
@@ -2337,13 +3772,17 @@ ${js}
         "error"
       );
 
-      showMessage(
+      showToast(
         error.message ||
           "AI update failed",
         "error"
       );
+
     } finally {
-      setLoading(button, false);
+      setButtonLoading(
+        button,
+        false
+      );
     }
   }
 
@@ -2357,99 +3796,108 @@ ${js}
         "chatMessages"
       );
 
-    if (!box) return;
+    if (!box) {
+      return;
+    }
 
     const item =
       document.createElement(
         "div"
       );
 
-    item.style.marginBottom =
-      "12px";
-
-    item.style.padding =
-      "11px";
-
-    item.style.borderRadius =
-      "10px";
-
-    item.style.background =
-      type === "user"
-        ? "#e0f2fe"
-        : type === "error"
-        ? "#fee2e2"
-        : "#f1f5f9";
+    item.className =
+      "bp-chat-message " +
+      (
+        type === "user"
+          ? "bp-chat-user"
+          : type === "error"
+          ? "bp-chat-error"
+          : "bp-chat-ai"
+      );
 
     item.innerHTML = `
       <strong>
-        ${escapeHtml(sender)}
+        ${escapeHtml(
+          sender
+        )}
       </strong>
 
       <div style="
         margin-top:5px;
-        white-space:pre-wrap;
       ">
-        ${escapeHtml(message)}
+        ${escapeHtml(
+          message
+        )}
       </div>
     `;
 
-    box.appendChild(item);
+    box.appendChild(
+      item
+    );
 
     box.scrollTop =
       box.scrollHeight;
   }
 
-  /*
-   * ============================================================
-   * EDIT FILE
-   * ============================================================
-   */
+  /* =========================================================
+     FILE EDITOR
+     ========================================================= */
 
-  function editFile(fileId) {
+  function editFile(
+    fileId
+  ) {
     const file =
       activeFiles.find(
         (item) =>
           item.id === fileId
       );
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
-    const root = appRoot();
+    selectedFileId =
+      fileId;
 
     root.innerHTML = `
-      <div style="
-        min-height:100vh;
-        background:#f1f5f9;
-        padding:20px;
-        box-sizing:border-box;
-        font-family:Arial,sans-serif;
-      ">
+      <div class="bp-editor-page">
 
         <div style="
-          max-width:1200px;
+          max-width:1250px;
           margin:auto;
         ">
 
           <div style="
             display:flex;
-            justify-content:space-between;
             align-items:center;
+            justify-content:space-between;
+            gap:15px;
             margin-bottom:15px;
           ">
 
-            <h2>
-              ${escapeHtml(
-                file.file_path
-              )}
-            </h2>
+            <div>
+
+              <div style="
+                color:#64748b;
+                font-size:13px;
+              ">
+                Project File
+              </div>
+
+              <h2 style="
+                margin:4px 0 0;
+              ">
+                ${escapeHtml(
+                  file.file_path
+                )}
+              </h2>
+
+            </div>
 
             <button
-              onclick="window.BuildPilot.backWorkspace()"
-              style="
-                padding:10px 14px;
-                border:0;
-                border-radius:8px;
-                cursor:pointer;
+              class="bp-btn"
+              onclick="
+                window.BuildPilot.backWorkspace()
               "
             >
               ← Back
@@ -2457,38 +3905,49 @@ ${js}
 
           </div>
 
-          <textarea
-            id="fileEditor"
-            style="
-              width:100%;
-              min-height:650px;
-              box-sizing:border-box;
-              padding:15px;
-              font-family:monospace;
-              font-size:14px;
-              border:1px solid #cbd5e1;
-              border-radius:12px;
-              resize:vertical;
-            "
-          >${escapeHtml(
-            file.file_content
-          )}</textarea>
+          <div class="bp-card">
 
-          <button
-            id="saveFileButton"
-            onclick="window.BuildPilot.saveFile('${file.id}')"
-            style="
+            <textarea
+              id="fileEditor"
+              class="bp-editor"
+              spellcheck="false"
+            >${escapeHtml(
+              file.file_content ||
+                ""
+            )}</textarea>
+
+            <div style="
+              display:flex;
+              gap:8px;
               margin-top:12px;
-              padding:12px 18px;
-              border:0;
-              border-radius:9px;
-              background:#111827;
-              color:white;
-              cursor:pointer;
-            "
-          >
-            Save File
-          </button>
+            ">
+
+              <button
+                id="saveFileButton"
+                class="bp-btn bp-btn-primary"
+                onclick="
+                  window.BuildPilot.saveFile(
+                    '${escapeAttribute(
+                      file.id
+                    )}'
+                  )
+                "
+              >
+                💾 Save File
+              </button>
+
+              <button
+                class="bp-btn"
+                onclick="
+                  window.BuildPilot.backWorkspace()
+                "
+              >
+                Cancel
+              </button>
+
+            </div>
+
+          </div>
 
         </div>
 
@@ -2496,52 +3955,52 @@ ${js}
     `;
   }
 
-  async function saveFile(fileId) {
-    const file =
-      activeFiles.find(
-        (item) =>
-          item.id === fileId
+  async function saveFile(
+    fileId
+  ) {
+    const editor =
+      document.getElementById(
+        "fileEditor"
       );
-
-    if (!file) return;
 
     const button =
       document.getElementById(
         "saveFileButton"
       );
 
-    const editor =
-      document.getElementById(
-        "fileEditor"
-      );
+    if (!editor) {
+      return;
+    }
 
-    if (!editor) return;
-
-    setLoading(
+    setButtonLoading(
       button,
       true,
       "Saving..."
     );
 
     try {
+      /*
+       * IMPORTANT:
+       * generated_by is NOT sent because
+       * your column is UUID.
+       */
       const {
         error,
-      } = await sb
-        .from("project_files")
-        .update({
-          file_content:
-            editor.value,
-          generated_by:
-            "user",
-        })
-        .eq(
-          "id",
-          fileId
-        )
-        .eq(
-          "project_id",
-          activeProject.id
-        );
+      } =
+        await client
+          .from("project_files")
+          .update({
+            file_content:
+              editor.value,
+          })
+          .eq(
+            "id",
+            fileId
+          )
+          .eq(
+            "project_id",
+            activeProject.id
+          );
 
       if (error) {
         throw error;
@@ -2549,33 +4008,46 @@ ${js}
 
       await loadProjectFiles();
 
-      showMessage(
-        "File saved",
+      showToast(
+        "File saved successfully",
         "success"
       );
 
       openWorkspace(
         activeProject.id
       );
+
     } catch (error) {
-      showMessage(
+      console.error(error);
+
+      showToast(
         error.message ||
-          "Save failed",
+          "Could not save file",
         "error"
       );
     } finally {
-      setLoading(
+      setButtonLoading(
         button,
         false
       );
     }
   }
 
-  /*
-   * ============================================================
-   * PUBLIC PUBLISH
-   * ============================================================
-   */
+  function backWorkspace() {
+    if (
+      activeProject
+    ) {
+      openWorkspace(
+        activeProject.id
+      );
+    } else {
+      renderHome();
+    }
+  }
+
+  /* =========================================================
+     PUBLISH PROJECT
+     ========================================================= */
 
   async function togglePublish() {
     if (!activeProject) {
@@ -2589,7 +4061,8 @@ ${js}
         );
 
       /*
-       * Make sure project has a public_id.
+       * Generate public UUID on client.
+       * This is NOT generated_by.
        */
       let publicId =
         activeProject.public_id;
@@ -2599,42 +4072,54 @@ ${js}
           crypto.randomUUID();
       }
 
-      const updatePayload = {
-        public_id: publicId,
-        public_enabled:
-          newState,
-        published_at:
-          newState
-            ? new Date().toISOString()
-            : null,
-      };
-
       const {
         data,
         error,
-      } = await sb
-        .from("projects")
-        .update(
-          updatePayload
-        )
-        .eq(
-          "id",
-          activeProject.id
-        )
-        .eq(
-          "user_id",
-          activeUser.id
-        )
-        .select(
-          "id,name,description,frontend,backend,project_plan,public_id,public_enabled,published_at,status"
-        )
-        .single();
+      } =
+        await client
+          .from("projects")
+          .update({
+            public_id:
+              publicId,
+
+            public_enabled:
+              newState,
+
+            published_at:
+              newState
+                ? new Date().toISOString()
+                : null,
+          })
+          .eq(
+            "id",
+            activeProject.id
+          )
+          .eq(
+            "user_id",
+            activeUser.id
+          )
+          .select(
+            `
+            id,
+            name,
+            description,
+            frontend,
+            backend,
+            project_plan,
+            public_id,
+            public_enabled,
+            published_at,
+            status
+            `
+          )
+          .single();
 
       if (error) {
         throw error;
       }
 
-      activeProject = data;
+      activeProject =
+        data;
 
       if (newState) {
         const link =
@@ -2642,13 +4127,16 @@ ${js}
             data.public_id
           );
 
-        await copyText(link);
-
-        showPublicLinkDialog(
+        await copyText(
           link
         );
+
+        showPublicModal(
+          link
+        );
+
       } else {
-        showMessage(
+        showToast(
           "Public link disabled",
           "success"
         );
@@ -2657,10 +4145,11 @@ ${js}
           activeProject.id
         );
       }
+
     } catch (error) {
       console.error(error);
 
-      showMessage(
+      showToast(
         error.message ||
           "Publish failed",
         "error"
@@ -2668,85 +4157,38 @@ ${js}
     }
   }
 
-  function createPublicLink(
-    publicId
-  ) {
-    return (
-      PUBLIC_BASE_URL +
-      "?public=" +
-      encodeURIComponent(
-        publicId
-      )
-    );
-  }
-
   async function copyPublicLink(
     publicId
   ) {
+    if (!publicId) {
+      showToast(
+        "Public ID missing",
+        "error"
+      );
+
+      return;
+    }
+
     const link =
       createPublicLink(
         publicId
       );
 
-    await copyText(link);
+    await copyText(
+      link
+    );
 
-    showPublicLinkDialog(
+    showPublicModal(
       link
     );
   }
 
-  async function copyText(
-    text
-  ) {
-    try {
-      if (
-        navigator.clipboard &&
-        window.isSecureContext
-      ) {
-        await navigator.clipboard.writeText(
-          text
-        );
-
-        return true;
-      }
-
-      const textarea =
-        document.createElement(
-          "textarea"
-        );
-
-      textarea.value = text;
-
-      textarea.style.position =
-        "fixed";
-
-      textarea.style.left =
-        "-9999px";
-
-      document.body.appendChild(
-        textarea
-      );
-
-      textarea.select();
-
-      document.execCommand(
-        "copy"
-      );
-
-      textarea.remove();
-
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  function showPublicLinkDialog(
+  function showPublicModal(
     link
   ) {
     const old =
       document.getElementById(
-        "publicLinkModal"
+        "bpPublicModal"
       );
 
     if (old) {
@@ -2759,105 +4201,81 @@ ${js}
       );
 
     modal.id =
-      "publicLinkModal";
+      "bpPublicModal";
 
-    modal.style.position =
-      "fixed";
-
-    modal.style.inset = "0";
-
-    modal.style.background =
-      "rgba(15,23,42,.65)";
-
-    modal.style.zIndex =
-      "99998";
-
-    modal.style.display =
-      "flex";
-
-    modal.style.alignItems =
-      "center";
-
-    modal.style.justifyContent =
-      "center";
+    modal.className =
+      "bp-modal";
 
     modal.innerHTML = `
-      <div style="
-        width:min(600px,90%);
-        background:white;
-        border-radius:18px;
-        padding:25px;
-        box-shadow:0 20px 70px rgba(0,0,0,.3);
-        font-family:Arial,sans-serif;
-      ">
+      <div class="bp-modal-card">
 
-        <h2>
-          🎉 Public Project Link
+        <div style="
+          font-size:45px;
+          margin-bottom:10px;
+        ">
+          🎉
+        </div>
+
+        <h2 style="
+          margin:0 0 8px;
+        ">
+          Project Published
         </h2>
 
         <p style="
           color:#64748b;
+          line-height:1.6;
         ">
-          अब कोई भी इस link को खोल सकता है।
+          यह link किसी को भी share कर सकते हैं।
+          Viewer को BuildPilot login की जरूरत नहीं होगी।
         </p>
 
         <input
           id="publicLinkInput"
+          class="bp-public-link"
           readonly
-          value="${escapeHtml(link)}"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:13px;
-            border:1px solid #cbd5e1;
-            border-radius:10px;
-          "
+          value="${escapeAttribute(
+            link
+          )}"
         />
 
-        <div style="
-          display:flex;
-          gap:8px;
-          margin-top:15px;
-          flex-wrap:wrap;
-        ">
+        <div class="bp-actions"
+          style="
+            margin-top:15px;
+          "
+        >
 
           <button
-            onclick="window.BuildPilot.copyCurrentPublicLink()"
-            style="
-              padding:11px 15px;
-              border:0;
-              border-radius:8px;
-              background:#111827;
-              color:white;
-              cursor:pointer;
+            class="bp-btn bp-btn-primary"
+            onclick="
+              window.BuildPilot.copyCurrentPublicLink()
             "
           >
-            Copy Link
+            📋 Copy Link
           </button>
 
           <button
-            onclick="window.open('${escapeHtml(
-              link
-            )}', '_blank')"
-            style="
-              padding:11px 15px;
-              border:1px solid #cbd5e1;
-              background:white;
-              border-radius:8px;
-              cursor:pointer;
+            class="bp-btn"
+            onclick="
+              window.open(
+                '${escapeAttribute(
+                  link
+                )}',
+                '_blank'
+              )
             "
           >
-            Open Public Page
+            ↗ Open
           </button>
 
           <button
-            onclick="document.getElementById('publicLinkModal').remove()"
-            style="
-              padding:11px 15px;
-              border:1px solid #cbd5e1;
-              background:white;
-              border-radius:8px;
-              cursor:pointer;
+            class="bp-btn"
+            onclick="
+              document
+                .getElementById(
+                  'bpPublicModal'
+                )
+                .remove()
             "
           >
             Close
@@ -2872,50 +4290,257 @@ ${js}
       modal
     );
 
-    window._buildpilotPublicLink =
+    window.__buildpilotPublicLink =
       link;
   }
 
   async function copyCurrentPublicLink() {
     const link =
-      window._buildpilotPublicLink;
+      window.__buildpilotPublicLink;
 
-    if (!link) return;
+    if (!link) {
+      return;
+    }
 
-    await copyText(link);
+    await copyText(
+      link
+    );
 
-    showMessage(
+    showToast(
       "Public link copied",
       "success"
     );
   }
 
-  /*
-   * ============================================================
-   * NAVIGATION
-   * ============================================================
-   */
+  /* =========================================================
+     PUBLIC PROJECT
+     ========================================================= */
 
-  function backWorkspace() {
-    if (!activeProject) {
-      renderHome();
+  async function loadPublicProject(
+    publicId
+  ) {
+    root.innerHTML = `
+      <div class="bp-auth-page">
 
-      return;
+        <div class="bp-auth-card"
+          style="
+            text-align:center;
+          "
+        >
+
+          <div class="bp-auth-logo">
+            ⚡
+          </div>
+
+          <h2 class="bp-auth-title">
+            BuildPilot Preview
+          </h2>
+
+          <p class="bp-auth-subtitle">
+            Loading public project...
+          </p>
+
+        </div>
+
+      </div>
+    `;
+
+    try {
+      /*
+       * Public function is intentionally called
+       * directly because visitor has no login session.
+       */
+      const response =
+        await fetch(
+          SUPABASE_URL +
+            "/functions/v1/" +
+            encodeURIComponent(
+              PUBLIC_FUNCTION
+            ) +
+            "?id=" +
+            encodeURIComponent(
+              publicId
+            ),
+          {
+            method:
+              "GET",
+
+            headers: {
+              apikey:
+                SUPABASE_KEY,
+
+              "Content-Type":
+                "application/json",
+            },
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        throw new Error(
+          data.error ||
+            "Public project unavailable"
+        );
+      }
+
+      /*
+       * IMPORTANT:
+       * Do NOT replace the complete document here.
+       * Keep BuildPilot wrapper and put the project
+       * into an iframe.
+       */
+      renderPublicPreview(
+        data
+      );
+
+    } catch (error) {
+      console.error(error);
+
+      root.innerHTML = `
+        <div class="bp-auth-page">
+
+          <div class="bp-auth-card"
+            style="
+              text-align:center;
+            "
+          >
+
+            <div
+              class="bp-auth-logo"
+              style="
+                background:#fee2e2;
+                color:#b91c1c;
+              "
+            >
+              !
+            </div>
+
+            <h2 class="bp-auth-title">
+              Project unavailable
+            </h2>
+
+            <p class="bp-auth-subtitle">
+              यह project publish नहीं किया गया है
+              या public link invalid है।
+            </p>
+
+            <div style="
+              padding:12px;
+              background:#fef2f2;
+              border-radius:10px;
+              color:#991b1b;
+              font-size:13px;
+            ">
+              ${escapeHtml(
+                error.message
+              )}
+            </div>
+
+          </div>
+
+        </div>
+      `;
     }
-
-    openWorkspace(
-      activeProject.id
-    );
   }
 
-  /*
-   * ============================================================
-   * AUTH STATE
-   * ============================================================
-   */
+  function renderPublicPreview(
+    data
+  ) {
+    const project =
+      data.project || {};
 
-  sb.auth.onAuthStateChange(
-    async (_event, session) => {
+    const html =
+      data.html || "";
+
+    root.innerHTML = `
+      <div class="bp-app">
+
+        <header class="bp-topbar">
+
+          <div class="bp-brand">
+
+            <div class="bp-logo">
+              ⚡
+            </div>
+
+            <span>
+              ${escapeHtml(
+                project.name ||
+                  "BuildPilot Project"
+              )}
+            </span>
+
+          </div>
+
+          <div style="
+            color:#cbd5e1;
+            font-size:13px;
+          ">
+            Published with BuildPilot AI
+          </div>
+
+        </header>
+
+        <main style="
+          padding:15px;
+          background:#f1f5f9;
+          min-height:
+            calc(100vh - 70px);
+        ">
+
+          <div style="
+            background:white;
+            border:1px solid #e2e8f0;
+            border-radius:16px;
+            overflow:hidden;
+            max-width:1500px;
+            margin:auto;
+          ">
+
+            <iframe
+              id="publicPreviewFrame"
+              class="bp-preview-frame"
+              style="
+                height:calc(100vh - 110px);
+                min-height:700px;
+              "
+              sandbox="
+                allow-scripts
+                allow-forms
+                allow-modals
+                allow-popups
+              "
+            ></iframe>
+
+          </div>
+
+        </main>
+
+      </div>
+    `;
+
+    const iframe =
+      document.getElementById(
+        "publicPreviewFrame"
+      );
+
+    if (iframe) {
+      iframe.srcdoc =
+        html;
+    }
+  }
+
+  /* =========================================================
+     AUTH STATE
+     ========================================================= */
+
+  client.auth.onAuthStateChange(
+    (_event, session) => {
       activeSession =
         session || null;
 
@@ -2924,60 +4549,82 @@ ${js}
     }
   );
 
-  /*
-   * ============================================================
-   * PUBLIC API
-   * ============================================================
-   */
+  /* =========================================================
+     GLOBAL API
+     ========================================================= */
 
   window.BuildPilot = {
-    login: loginUser,
-    signup: signupUser,
-    logout: logoutUser,
+    showLogin:
+      () =>
+        renderAuth(
+          "login"
+        ),
 
-    showLoginForm,
-    showSignupForm,
+    showSignup:
+      () =>
+        renderAuth(
+          "signup"
+        ),
 
-    home: renderHome,
+    login:
+      loginUser,
 
-    startProject,
+    signup:
+      signupUser,
 
-    createProject,
+    logout:
+      logoutUser,
 
-    loadProjects,
+    home:
+      renderHome,
 
-    openProject,
+    startProject:
+      startProject,
 
-    refreshFiles,
+    createProject:
+      createProject,
 
-    editFile,
+    loadProjects:
+      loadProjects,
 
-    saveFile,
+    openProject:
+      openProject,
 
-    backWorkspace,
+    refreshFiles:
+      refreshFiles,
 
-    togglePublish,
+    updatePreview:
+      updatePreview,
 
-    copyPublicLink,
+    editFile:
+      editFile,
 
-    copyCurrentPublicLink,
+    saveFile:
+      saveFile,
+
+    backWorkspace:
+      backWorkspace,
+
+    togglePublish:
+      togglePublish,
+
+    copyPublicLink:
+      copyPublicLink,
+
+    copyCurrentPublicLink:
+      copyCurrentPublicLink,
   };
 
-  /*
-   * ============================================================
-   * START APPLICATION
-   * ============================================================
-   */
+  /* =========================================================
+     BOOT
+     ========================================================= */
 
-  (async function boot() {
+  async function boot() {
     const publicId =
       getPublicIdFromUrl();
 
     /*
-     * PUBLIC PROJECT
-     *
-     * Important:
-     * This is checked before authentication.
+     * Public page does NOT require login.
      */
     if (publicId) {
       await loadPublicProject(
@@ -2992,9 +4639,14 @@ ${js}
     if (activeUser) {
       await ensureProfile();
 
-      renderHome();
+      await renderHome();
     } else {
-      renderLogin();
+      renderAuth(
+        "login"
+      );
     }
-  })();
+  }
+
+  boot();
+
 })();

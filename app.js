@@ -2398,6 +2398,9 @@ body {
     projectId,
     projectName
   ) {
+    if (!projectId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(projectId)) {
+  throw new Error("Invalid project ID");
+}
     if (!projectId) {
       throw new Error(
         "Project ID missing"
@@ -3681,6 +3684,14 @@ ${js}
   async function submitAIInstruction(
     event
   ) {
+    if (
+  !activeProject ||
+  !activeProject.id ||
+  !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(activeProject.id)
+) {
+  alert("Invalid project ID. Please create/select a valid project.");
+  return;
+}
     event.preventDefault();
 
     if (!activeProject) {

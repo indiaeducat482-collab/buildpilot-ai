@@ -1,4 +1,3 @@
-```javascript
 (() => {
   const C = window.BUILDPILOT_CONFIG || {};
 
@@ -21,158 +20,181 @@
     loading: false
   };
 
+  // Your deployed Supabase Edge Function
   const FUNCTION_NAME = "super-function";
 
-  function esc(s) {
-    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[c]));
-  }
+  function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, function (char) {
+      const map = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      };
 
-  function setNotice(message, type = "success-note") {
-    const notice = document.getElementById("homeNotice");
-    if (!notice) return;
-
-    notice.className = `notice ${type}`;
-    notice.textContent = message;
+      return map[char];
+    });
   }
 
   async function ensureProfile(user) {
     if (!user) return null;
 
-    try {
-      const { data: existing, error } = await client
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
+    const result = await client
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
 
-      if (error) {
-        console.error("Profile read error:", error);
-        return null;
-      }
-
-      if (existing) return existing;
-
-      const { data: created, error: createError } = await client
-        .from("profiles")
-        .insert({
-          id: user.id,
-          full_name: user.email?.split("@")[0] || "User"
-        })
-        .select("*")
-        .single();
-
-      if (createError) {
-        console.error("Profile create error:", createError);
-        return null;
-      }
-
-      return created || null;
-    } catch (error) {
-      console.error("ensureProfile error:", error);
+    if (result.error) {
+      console.error("Profile error:", result.error);
       return null;
     }
+
+    if (result.data) {
+      return result.data;
+    }
+
+    const created = await client
+      .from("profiles")
+      .insert({
+        id: user.id,
+        full_name: user.email
+          ? user.email.split("@")[0]
+          : "User"
+      })
+      .select("*")
+      .single();
+
+    if (created.error) {
+      console.error(
+        "Profile create error:",
+        created.error
+      );
+
+      return null;
+    }
+
+    return created.data;
   }
 
   async function refreshAuth() {
     try {
-      const { data, error } = await client.auth.getSession();
+      const result =
+        await client.auth.getSession();
 
-      if (error) throw error;
+      if (result.error) {
+        throw result.error;
+      }
 
-      state.session = data?.session || null;
+      state.session =
+        result.data.session || null;
 
-      state.profile = state.session?.user
-        ? await ensureProfile(state.session.user)
-        : null;
+      if (state.session?.user) {
+        state.profile =
+          await ensureProfile(
+            state.session.user
+          );
+      } else {
+        state.profile = null;
+      }
 
       return state.session;
+
     } catch (error) {
-      console.error("Auth session error:", error);
+      console.error(
+        "Auth error:",
+        error
+      );
 
       state.session = null;
       state.profile = null;
 
-      return null;
-    }
-  }
-
-  async function getActiveSession() {
-    let session = await refreshAuth();
-
-    if (session?.access_token) {
-      return session;
-    }
-
-    try {
-      const { data, error } = await client.auth.refreshSession();
-
-      if (error) {
-        console.error("Session refresh error:", error);
-        return null;
-      }
-
-      session = data?.session || null;
-
-      state.session = session;
-
-      state.profile = session?.user
-        ? await ensureProfile(session.user)
-        : null;
-
-      return session;
-    } catch (error) {
-      console.error("getActiveSession error:", error);
       return null;
     }
   }
 
   function nav() {
+    let actions = "";
+
+    if (state.session) {
+      actions = `
+        <span class="pill">
+          ${esc(state.session.user.email)}
+        </span>
+
+        <button
+          class="btn"
+          id="logout"
+        >
+          Logout
+        </button>
+      `;
+    } else {
+      actions = `
+        <button
+          class="btn"
+          id="loginBtn"
+        >
+          Login
+        </button>
+
+        <button
+          class="btn primary"
+          id="signupBtn"
+        >
+          Sign up
+        </button>
+      `;
+    }
+
     return `
       <div class="nav">
+
         <div class="brand">
           BuildPilot <span>AI</span>
         </div>
 
         <div class="nav-actions">
-          ${
-            state.session
-              ? `
-                <span class="pill">${esc(state.session.user.email)}</span>
-                <button class="btn" id="logout">Logout</button>
-              `
-              : `
-                <button class="btn" id="loginBtn">Login</button>
-                <button class="btn primary" id="signupBtn">Sign up</button>
-              `
-          }
+          ${actions}
         </div>
+
       </div>
     `;
   }
 
   function bindNav() {
-    document.getElementById("logout")?.addEventListener("click", async () => {
-      await client.auth.signOut();
+    const logout =
+      document.getElementById("logout");
 
-      state.session = null;
-      state.profile = null;
+    if (logout) {
+      logout.onclick = async function () {
+        await client.auth.signOut();
 
-      location.hash = "";
-    });
+        state.session = null;
+        state.profile = null;
 
-    document.getElementById("loginBtn")?.addEventListener("click", () => {
-      location.hash = "#login";
-    });
+        location.hash = "";
+      };
+    }
 
-    document.getElementById("signupBtn")?.addEventListener("click", () => {
-      location.hash = "#signup";
-    });
+    const login =
+      document.getElementById("loginBtn");
+
+    if (login) {
+      login.onclick = function () {
+        location.hash = "#login";
+      };
+    }
+
+    const signup =
+      document.getElementById("signupBtn");
+
+    if (signup) {
+      signup.onclick = function () {
+        location.hash = "#signup";
+      };
+    }
   }
 
   function renderHome() {
@@ -184,20 +206,23 @@
         <main class="container">
 
           <section class="hero">
+
             <h1>
               Describe it.
               <span>Build it.</span>
             </h1>
 
             <p>
-              BuildPilot AI turns your idea into a structured software project
-              and lets AI modify your project files.
+              BuildPilot AI
+              turns your idea into software.
             </p>
+
           </section>
 
           <section class="chat card">
 
             <div class="row">
+
               <span class="pill">
                 Frontend: HTML / React / Next.js
               </span>
@@ -205,32 +230,34 @@
               <span class="pill">
                 Backend: Supabase / Firebase / GitHub
               </span>
+
             </div>
 
-            <div id="messages" class="messages">
+            <div
+              id="messages"
+              class="messages"
+            >
 
               <div class="msg ai">
-                Hi! Tell me what website or app you want to build.
-                <br><br>
 
-                You can also ask me to modify an existing project.
+                Hi! Tell me what you want to build.
 
                 <br><br>
 
                 Examples:
-                <br>
-                <b>Header का color बदलो</b>
-                <br>
-                <b>Home page में नया section जोड़ो</b>
-                <br>
-                <b>Contact number बदलो</b>
-                <br>
-                <b>Login page बनाओ</b>
-                <br>
-                <b>इस button को WhatsApp से connect करो</b>
-                <br><br>
 
-                Type <b>admin login</b> to open Admin Login.
+                <br>
+                Header ka color blue karo
+
+                <br>
+                Home page me section add karo
+
+                <br>
+                Login page banao
+
+                <br>
+                Contact number change karo
+
               </div>
 
             </div>
@@ -238,6 +265,7 @@
             <div class="grid">
 
               <div>
+
                 <label class="label">
                   Project name
                 </label>
@@ -245,20 +273,36 @@
                 <input
                   id="projectName"
                   class="input"
-                  placeholder="e.g. Coaching Management App"
+                  placeholder="Coaching Management App"
                 >
+
               </div>
 
               <div>
+
                 <label class="label">
                   Frontend
                 </label>
 
-                <select id="frontend" class="select">
-                  <option value="html">HTML</option>
-                  <option value="react">React</option>
-                  <option value="nextjs">Next.js</option>
+                <select
+                  id="frontend"
+                  class="select"
+                >
+
+                  <option value="html">
+                    HTML
+                  </option>
+
+                  <option value="react">
+                    React
+                  </option>
+
+                  <option value="nextjs">
+                    Next.js
+                  </option>
+
                 </select>
+
               </div>
 
             </div>
@@ -268,18 +312,34 @@
             <div class="grid">
 
               <div>
+
                 <label class="label">
                   Backend
                 </label>
 
-                <select id="backend" class="select">
-                  <option value="supabase">Supabase</option>
-                  <option value="firebase">Firebase</option>
-                  <option value="github">GitHub Only</option>
+                <select
+                  id="backend"
+                  class="select"
+                >
+
+                  <option value="supabase">
+                    Supabase
+                  </option>
+
+                  <option value="firebase">
+                    Firebase
+                  </option>
+
+                  <option value="github">
+                    GitHub Only
+                  </option>
+
                 </select>
+
               </div>
 
               <div>
+
                 <label class="label">
                   Request
                 </label>
@@ -287,15 +347,19 @@
                 <input
                   id="prompt"
                   class="input"
-                  placeholder="Build a coaching website with student login..."
+                  placeholder="Build a coaching website..."
                 >
+
               </div>
 
             </div>
 
             <br>
 
-            <button id="generate" class="btn primary">
+            <button
+              id="generate"
+              class="btn primary"
+            >
               Build with AI
             </button>
 
@@ -313,20 +377,25 @@
           >
 
             <div class="card">
-              <h3>Free limits</h3>
+
+              <h3>
+                Free limits
+              </h3>
 
               <p class="muted">
-                5 projects and 2 generated-file actions by default.
-                Request an upgrade when you reach a limit.
+                5 projects and 2 generated-file actions.
               </p>
+
             </div>
 
             <div class="card">
 
-              <h3>Admin</h3>
+              <h3>
+                Admin
+              </h3>
 
               <p class="muted">
-                Type <b>admin login</b> in chat or use the button.
+                Open Admin Login.
               </p>
 
               <button
@@ -347,270 +416,295 @@
 
     bindNav();
 
-    document.getElementById("adminOpen").onclick = () => {
-      location.hash = "#admin-login";
-    };
+    const admin =
+      document.getElementById(
+        "adminOpen"
+      );
 
-    document.getElementById("generate").onclick = generate;
-
-    document.getElementById("prompt").addEventListener("keydown", (e) => {
-      if (e.key !== "Enter") return;
-
-      e.preventDefault();
-
-      const value = e.currentTarget.value.trim().toLowerCase();
-
-      if (value === "admin login") {
+    if (admin) {
+      admin.onclick = function () {
         location.hash = "#admin-login";
-        return;
-      }
+      };
+    }
 
-      generate();
-    });
-  }
+    const generateButton =
+      document.getElementById(
+        "generate"
+      );
 
-  async function readFunctionError(error) {
-    try {
-      if (
-        error?.context &&
-        typeof error.context.json === "function"
-      ) {
-        const body = await error.context.json();
+    if (generateButton) {
+      generateButton.onclick =
+        generate;
+    }
 
-        return (
-          body?.message ||
-          body?.error ||
-          body?.details ||
-          error.message
-        );
-      }
-    } catch (_) {}
+    const prompt =
+      document.getElementById(
+        "prompt"
+      );
 
-    return (
-      error?.message ||
-      "Edge Function request failed."
-    );
+    if (prompt) {
+      prompt.addEventListener(
+        "keydown",
+        function (event) {
+
+          if (event.key !== "Enter") {
+            return;
+          }
+
+          event.preventDefault();
+
+          generate();
+
+        }
+      );
+    }
   }
 
   async function generate() {
-    if (state.loading) return;
 
-    const promptEl = document.getElementById("prompt");
+    if (state.loading) {
+      return;
+    }
 
-    if (!promptEl) return;
+    const promptElement =
+      document.getElementById(
+        "prompt"
+      );
 
-    const prompt = promptEl.value.trim();
+    const nameElement =
+      document.getElementById(
+        "projectName"
+      );
 
-    const name =
-      document.getElementById("projectName")?.value.trim() ||
-      "BuildPilot Project";
+    const frontendElement =
+      document.getElementById(
+        "frontend"
+      );
 
-    const frontend =
-      document.getElementById("frontend")?.value ||
-      "html";
+    const backendElement =
+      document.getElementById(
+        "backend"
+      );
 
-    const backend =
-      document.getElementById("backend")?.value ||
-      "supabase";
+    const messages =
+      document.getElementById(
+        "messages"
+      );
 
     const notice =
-      document.getElementById("homeNotice");
+      document.getElementById(
+        "homeNotice"
+      );
 
-    const msgs =
-      document.getElementById("messages");
-
-    if (prompt.toLowerCase() === "admin login") {
-      location.hash = "#admin-login";
+    if (!promptElement) {
       return;
     }
 
-    if (!prompt) {
-      if (notice) {
-        notice.className = "notice error";
-        notice.textContent =
-          "Please describe what you want to build or change.";
-      }
+    const instruction =
+      promptElement.value.trim();
+
+    const projectName =
+      nameElement
+        ? nameElement.value.trim()
+        : "BuildPilot Project";
+
+    const frontend =
+      frontendElement
+        ? frontendElement.value
+        : "html";
+
+    const backend =
+      backendElement
+        ? backendElement.value
+        : "supabase";
+
+    if (!instruction) {
+
+      notice.className =
+        "notice error";
+
+      notice.textContent =
+        "Please enter your request.";
 
       return;
     }
 
-    const activeSession =
-      await getActiveSession();
+    if (
+      instruction.toLowerCase() ===
+      "admin login"
+    ) {
 
-    if (!activeSession?.access_token) {
-      if (notice) {
-        notice.className = "notice error";
-        notice.textContent =
-          "Please login first.";
-      }
+      location.hash =
+        "#admin-login";
 
-      location.hash = "#login";
+      return;
+    }
+
+    const session =
+      await refreshAuth();
+
+    if (!session?.access_token) {
+
+      notice.className =
+        "notice error";
+
+      notice.textContent =
+        "Please login first.";
+
+      location.hash =
+        "#login";
+
       return;
     }
 
     state.loading = true;
 
     const button =
-      document.getElementById("generate");
+      document.getElementById(
+        "generate"
+      );
 
     if (button) {
       button.disabled = true;
-      button.textContent = "AI is working...";
+      button.textContent =
+        "AI is working...";
     }
 
-    if (msgs) {
-      msgs.insertAdjacentHTML(
-        "beforeend",
-        `
-          <div class="msg user">
-            ${esc(prompt)}
-          </div>
+    messages.insertAdjacentHTML(
+      "beforeend",
+      `
+        <div class="msg user">
+          ${esc(instruction)}
+        </div>
 
-          <div class="msg ai" id="workingMessage">
-            BuildPilot AI is working on your request...
-          </div>
-        `
-      );
+        <div
+          class="msg ai"
+          id="workingMessage"
+        >
+          BuildPilot AI is working...
+        </div>
+      `
+    );
 
-      msgs.scrollTop = msgs.scrollHeight;
-    }
+    messages.scrollTop =
+      messages.scrollHeight;
 
     try {
-      /*
-       * IMPORTANT:
-       * This calls the deployed Supabase Edge Function:
-       *
-       * super-function
-       *
-       * NOT buildpilot-generate
-       */
 
-      const { data, error } =
+      const result =
         await client.functions.invoke(
           FUNCTION_NAME,
           {
             headers: {
               Authorization:
-                `Bearer ${activeSession.access_token}`
+                "Bearer " +
+                session.access_token
             },
 
             body: {
+
               projectId: null,
 
-              instruction: prompt,
+              instruction:
+                instruction,
 
-              prompt: prompt,
+              prompt:
+                instruction,
 
-              projectName: name,
+              projectName:
+                projectName,
 
-              frontend: frontend,
+              frontend:
+                frontend,
 
-              backend: backend
+              backend:
+                backend
             }
           }
         );
 
-      document
-        .getElementById("workingMessage")
-        ?.remove();
+      const working =
+        document.getElementById(
+          "workingMessage"
+        );
 
-      if (data?.upgradeRequired) {
-        if (notice) {
-          notice.className =
-            "notice error";
-
-          notice.innerHTML =
-            `${esc(data.message || "Upgrade required.")}
-             <button
-               class="btn primary"
-               id="upgradeNow"
-             >
-               Request Upgrade
-             </button>`;
-        }
-
-        document
-          .getElementById("upgradeNow")
-          ?.addEventListener("click", () => {
-            location.hash = "#upgrade";
-          });
-
-        return;
+      if (working) {
+        working.remove();
       }
 
-      if (error) {
+      if (result.error) {
+
+        console.error(
+          "Function error:",
+          result.error
+        );
+
         const message =
-          await readFunctionError(error);
+          result.error.message ||
+          "Edge Function request failed.";
 
-        if (notice) {
-          notice.className =
-            "notice error";
+        notice.className =
+          "notice error";
 
-          notice.textContent =
-            message;
-        }
+        notice.textContent =
+          message;
 
-        if (msgs) {
-          msgs.insertAdjacentHTML(
-            "beforeend",
-            `
-              <div class="msg ai">
-                Generation failed:
-                ${esc(message)}
-              </div>
-            `
-          );
-        }
+        messages.insertAdjacentHTML(
+          "beforeend",
+          `
+            <div class="msg ai">
+              ❌ ${esc(message)}
+            </div>
+          `
+        );
 
         return;
       }
 
-      /*
-       * Current Edge Function can return:
-       * success
-       * message
-       * changes
-       * projectId
-       * userId
-       */
+      const data =
+        result.data || {};
 
-      const changes =
-        Array.isArray(data?.changes)
-          ? data.changes
-          : [];
+      if (data.success) {
 
-      if (notice) {
         notice.className =
           "notice success-note";
 
         notice.textContent =
-          data?.message ||
-          "Project updated successfully.";
-      }
+          data.message ||
+          "AI request completed.";
 
-      if (msgs) {
-        const fileText =
-          changes.length > 0
-            ? changes
-                .map(
-                  (x) =>
-                    `<li>${esc(x.path)}</li>`
-                )
-                .join("")
-            : "<li>No file changes returned.</li>";
+        let filesText =
+          "No changed files.";
 
-        msgs.insertAdjacentHTML(
+        if (
+          Array.isArray(
+            data.changes
+          ) &&
+          data.changes.length
+        ) {
+
+          filesText =
+            data.changes
+              .map(function (file) {
+                return (
+                  "<li>" +
+                  esc(file.path) +
+                  "</li>"
+                );
+              })
+              .join("");
+        }
+
+        messages.insertAdjacentHTML(
           "beforeend",
           `
             <div class="msg ai">
 
               <b>
-                ${
-                  esc(
-                    data?.message ||
-                    "Project updated successfully."
-                  )
-                }
+                ${esc(
+                  data.message ||
+                  "Project updated successfully."
+                )}
               </b>
 
               <br><br>
@@ -618,68 +712,77 @@
               Changed files:
 
               <ul>
-                ${fileText}
+                ${filesText}
               </ul>
 
             </div>
           `
         );
 
-        msgs.scrollTop =
-          msgs.scrollHeight;
-      }
+      } else {
 
-      await refreshAuth();
+        const message =
+          data.error ||
+          data.message ||
+          "AI request failed.";
 
-    } catch (error) {
-      console.error(
-        "BuildPilot generate error:",
-        error
-      );
-
-      document
-        .getElementById("workingMessage")
-        ?.remove();
-
-      const message =
-        error?.message ||
-        "Something went wrong.";
-
-      if (notice) {
         notice.className =
           "notice error";
 
         notice.textContent =
           message;
-      }
 
-      if (msgs) {
-        msgs.insertAdjacentHTML(
+        messages.insertAdjacentHTML(
           "beforeend",
           `
             <div class="msg ai">
-              Error:
-              ${esc(message)}
+              ❌ ${esc(message)}
             </div>
           `
         );
       }
 
-    } finally {
-      state.loading = false;
+      messages.scrollTop =
+        messages.scrollHeight;
 
-      const button =
-        document.getElementById("generate");
+    } catch (error) {
+
+      console.error(
+        "BuildPilot error:",
+        error
+      );
+
+      const working =
+        document.getElementById(
+          "workingMessage"
+        );
+
+      if (working) {
+        working.remove();
+      }
+
+      notice.className =
+        "notice error";
+
+      notice.textContent =
+        error.message ||
+        "Something went wrong.";
+
+    } finally {
+
+      state.loading = false;
 
       if (button) {
         button.disabled = false;
         button.textContent =
           "Build with AI";
       }
+
     }
   }
 
   function authPage(mode) {
+
     const signup =
       mode === "signup";
 
@@ -699,14 +802,6 @@
                   : "Login"
               }
             </h2>
-
-            <p class="muted">
-              ${
-                signup
-                  ? "Start with the free BuildPilot plan."
-                  : "Login to continue building projects."
-              }
-            </p>
 
             <div class="stack">
 
@@ -740,363 +835,9 @@
                 class="notice hidden"
               ></div>
 
-              <div class="row">
-
-                <button
-                  class="btn"
-                  id="other"
-                >
-                  ${
-                    signup
-                      ? "Already have an account"
-                      : "Create new account"
-                  }
-                </button>
-
-                <button
-                  class="btn"
-                  id="back"
-                >
-                  Home
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </main>
-
-      </div>
-    `;
-
-    bindNav();
-
-    document.getElementById("back").onclick =
-      () => {
-        location.hash = "";
-      };
-
-    document.getElementById("other").onclick =
-      () => {
-        location.hash =
-          signup
-            ? "#login"
-            : "#signup";
-      };
-
-    document.getElementById("auth").onclick =
-      async () => {
-
-        const email =
-          document.getElementById("email")
-            .value.trim();
-
-        const password =
-          document.getElementById("password")
-            .value;
-
-        const msg =
-          document.getElementById("authMsg");
-
-        if (
-          !email ||
-          password.length < 6
-        ) {
-          msg.className =
-            "notice error";
-
-          msg.textContent =
-            "Enter a valid email and a password of at least 6 characters.";
-
-          return;
-        }
-
-        const result = signup
-          ? await client.auth.signUp({
-              email,
-              password
-            })
-          : await client.auth.signInWithPassword({
-              email,
-              password
-            });
-
-        if (result.error) {
-          msg.className =
-            "notice error";
-
-          msg.textContent =
-            result.error.message;
-
-          return;
-        }
-
-        if (signup) {
-
-          if (
-            result.data.user &&
-            result.data.session
-          ) {
-            await ensureProfile(
-              result.data.user
-            );
-          }
-
-          msg.className =
-            "notice success-note";
-
-          msg.textContent =
-            result.data.session
-              ? "Account created. You can start building."
-              : "Account created. Confirm your email, then login.";
-
-        } else {
-
-          state.session =
-            result.data?.session ||
-            null;
-
-          state.profile =
-            state.session?.user
-              ? await ensureProfile(
-                  state.session.user
-                )
-              : null;
-
-          if (!state.session) {
-            msg.className =
-              "notice error";
-
-            msg.textContent =
-              "Login succeeded but no session was created. Please try again.";
-
-            return;
-          }
-
-          location.hash = "";
-        }
-      };
-  }
-
-  async function projectsPage() {
-    await refreshAuth();
-
-    if (!state.session) {
-      location.hash = "#login";
-      return;
-    }
-
-    const {
-      data: projects,
-      error
-    } = await client
-      .from("projects")
-      .select(
-        "id,name,description,status,frontend,backend,created_at"
-      )
-      .order(
-        "created_at",
-        { ascending: false }
-      );
-
-    app.innerHTML = `
-      <div class="shell">
-
-        ${nav()}
-
-        <main class="container">
-
-          <div
-            class="row"
-            style="justify-content:space-between"
-          >
-
-            <div>
-              <h2>My Projects</h2>
-
-              <p class="muted">
-                Your BuildPilot project history.
-              </p>
-            </div>
-
-            <button
-              class="btn"
-              id="home"
-            >
-              Build another
-            </button>
-
-          </div>
-
-          ${
-            error
-              ? `
-                <div class="notice error">
-                  ${esc(error.message)}
-                </div>
-              `
-              : ""
-          }
-
-          <div class="card table-wrap">
-
-            <table class="table">
-
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Stack</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-
-              <tbody>
-
-                ${
-                  (projects || [])
-                    .map(
-                      (p) =>
-                        `
-                        <tr>
-
-                          <td>
-                            <b>
-                              ${esc(p.name)}
-                            </b>
-
-                            <br>
-
-                            <span class="muted">
-                              ${esc(
-                                p.description || ""
-                              )}
-                            </span>
-                          </td>
-
-                          <td>
-                            ${esc(
-                              p.frontend
-                            )}
-                            /
-                            ${esc(
-                              p.backend
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              p.status
-                            )}
-                          </td>
-
-                          <td>
-                            ${new Date(
-                              p.created_at
-                            ).toLocaleString()}
-                          </td>
-
-                        </tr>
-                        `
-                    )
-                    .join("") ||
-                  `
-                    <tr>
-                      <td colspan="4">
-                        No projects yet.
-                      </td>
-                    </tr>
-                  `
-                }
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-        </main>
-
-      </div>
-    `;
-
-    bindNav();
-
-    document.getElementById("home").onclick =
-      () => {
-        location.hash = "";
-      };
-  }
-
-  async function upgradePage() {
-    await refreshAuth();
-
-    if (!state.session) {
-      location.hash = "#login";
-      return;
-    }
-
-    app.innerHTML = `
-      <div class="shell">
-
-        ${nav()}
-
-        <main class="container">
-
-          <div class="center card">
-
-            <h2>
-              Request Limit Upgrade
-            </h2>
-
-            <p class="muted">
-              Admin will review your request.
-              Add your requested limits and payment/details in the reason box.
-            </p>
-
-            <div class="stack">
-
-              <input
-                id="requestedProjects"
-                class="input"
-                type="number"
-                min="5"
-                value="10"
-                placeholder="Project limit"
-              >
-
-              <input
-                id="requestedFiles"
-                class="input"
-                type="number"
-                min="2"
-                value="10"
-                placeholder="Generated-file limit"
-              >
-
-              <textarea
-                id="reason"
-                class="textarea"
-                placeholder="Reason / payment details / required plan"
-              ></textarea>
-
               <button
-                id="send"
-                class="btn primary"
-              >
-                Send Request to Admin
-              </button>
-
-              <div
-                id="m"
-                class="notice hidden"
-              ></div>
-
-              <button
-                class="btn"
                 id="back"
+                class="btn"
               >
                 Back
               </button>
@@ -1112,77 +853,102 @@
 
     bindNav();
 
-    document.getElementById("back").onclick =
-      () => {
-        location.hash = "";
-      };
+    document.getElementById(
+      "back"
+    ).onclick = function () {
+      location.hash = "";
+    };
 
-    document.getElementById("send").onclick =
-      async () => {
+    document.getElementById(
+      "auth"
+    ).onclick = async function () {
 
-        const m =
-          document.getElementById("m");
+      const email =
+        document.getElementById(
+          "email"
+        ).value.trim();
 
-        const projectLimit =
-          Number(
-            document.getElementById(
-              "requestedProjects"
-            ).value
+      const password =
+        document.getElementById(
+          "password"
+        ).value;
+
+      const message =
+        document.getElementById(
+          "authMsg"
+        );
+
+      if (
+        !email ||
+        password.length < 6
+      ) {
+
+        message.className =
+          "notice error";
+
+        message.textContent =
+          "Enter valid email and password.";
+
+        return;
+      }
+
+      const result =
+        signup
+          ? await client.auth.signUp({
+              email,
+              password
+            })
+          : await client.auth.signInWithPassword({
+              email,
+              password
+            });
+
+      if (result.error) {
+
+        message.className =
+          "notice error";
+
+        message.textContent =
+          result.error.message;
+
+        return;
+      }
+
+      if (signup) {
+
+        message.className =
+          "notice success-note";
+
+        message.textContent =
+          result.data.session
+            ? "Account created successfully."
+            : "Account created. Please confirm your email.";
+
+        if (result.data.user) {
+          await ensureProfile(
+            result.data.user
           );
-
-        const fileLimit =
-          Number(
-            document.getElementById(
-              "requestedFiles"
-            ).value
-          );
-
-        if (
-          projectLimit < 5 ||
-          fileLimit < 2
-        ) {
-          m.className =
-            "notice error";
-
-          m.textContent =
-            "Requested limits are too low.";
-
-          return;
         }
 
-        const {
-          error
-        } = await client
-          .from("upgrade_requests")
-          .insert({
-            user_id:
-              state.session.user.id,
+      } else {
 
-            requested_project_limit:
-              projectLimit,
+        state.session =
+          result.data.session;
 
-            requested_github_file_limit:
-              fileLimit,
+        if (state.session?.user) {
+          state.profile =
+            await ensureProfile(
+              state.session.user
+            );
+        }
 
-            reason:
-              document
-                .getElementById("reason")
-                .value.trim()
-          });
-
-        m.className =
-          error
-            ? "notice error"
-            : "notice success-note";
-
-        m.textContent =
-          error
-            ? error.message
-            : "Request sent to Admin successfully.";
-      };
+        location.hash = "";
+      }
+    };
   }
 
-  async function adminLogin() {
+  function adminLogin() {
+
     app.innerHTML = `
       <div class="shell">
 
@@ -1196,42 +962,37 @@
               Admin Login
             </h2>
 
-            <p class="muted">
-              Use an account whose profile role is
-              <b>admin</b>.
-            </p>
-
             <div class="stack">
 
               <input
-                id="email"
+                id="adminEmail"
                 class="input"
                 type="email"
-                placeholder="Admin email"
+                placeholder="Admin Email"
               >
 
               <input
-                id="password"
+                id="adminPassword"
                 class="input"
                 type="password"
                 placeholder="Password"
               >
 
               <button
-                id="go"
+                id="adminLoginButton"
                 class="btn primary"
               >
                 Admin Login
               </button>
 
               <div
-                id="m"
+                id="adminMessage"
                 class="notice hidden"
               ></div>
 
               <button
+                id="adminBack"
                 class="btn"
-                id="back"
               >
                 Back
               </button>
@@ -1247,150 +1008,75 @@
 
     bindNav();
 
-    document.getElementById("back").onclick =
-      () => {
-        location.hash = "";
-      };
+    document.getElementById(
+      "adminBack"
+    ).onclick = function () {
+      location.hash = "";
+    };
 
-    document.getElementById("go").onclick =
-      async () => {
+    document.getElementById(
+      "adminLoginButton"
+    ).onclick = async function () {
 
-        const m =
-          document.getElementById("m");
+      const email =
+        document.getElementById(
+          "adminEmail"
+        ).value.trim();
 
-        const {
-          error
-        } = await client.auth
-          .signInWithPassword({
-            email:
-              document
-                .getElementById("email")
-                .value.trim(),
+      const password =
+        document.getElementById(
+          "adminPassword"
+        ).value;
 
-            password:
-              document
-                .getElementById("password")
-                .value
-          });
+      const message =
+        document.getElementById(
+          "adminMessage"
+        );
 
-        if (error) {
-          m.className =
-            "notice error";
+      const result =
+        await client.auth.signInWithPassword({
+          email,
+          password
+        });
 
-          m.textContent =
-            error.message;
+      if (result.error) {
 
-          return;
-        }
+        message.className =
+          "notice error";
 
-        await refreshAuth();
+        message.textContent =
+          result.error.message;
 
-        if (
-          state.profile?.role !==
-          "admin"
-        ) {
+        return;
+      }
 
-          await client.auth.signOut();
+      await refreshAuth();
 
-          state.session = null;
-          state.profile = null;
+      if (
+        state.profile?.role !==
+        "admin"
+      ) {
 
-          m.className =
-            "notice error";
+        await client.auth.signOut();
 
-          m.textContent =
-            "This account is not an Admin.";
+        state.session = null;
+        state.profile = null;
 
-          return;
-        }
+        message.className =
+          "notice error";
 
-        if (
-          state.profile.status !==
-          "active"
-        ) {
+        message.textContent =
+          "This account is not an Admin.";
 
-          await client.auth.signOut();
+        return;
+      }
 
-          state.session = null;
-          state.profile = null;
-
-          m.className =
-            "notice error";
-
-          m.textContent =
-            "Admin account is not active.";
-
-          return;
-        }
-
-        location.hash = "#admin";
-      };
+      location.hash =
+        "#admin";
+    };
   }
 
-  async function adminPage() {
-    await refreshAuth();
-
-    if (
-      !state.session ||
-      state.profile?.role !== "admin" ||
-      state.profile?.status !== "active"
-    ) {
-      location.hash = "#admin-login";
-      return;
-    }
-
-    const [
-      usersResult,
-      projectsResult,
-      requestsResult
-    ] = await Promise.all([
-
-      client
-        .from("profiles")
-        .select("*")
-        .order(
-          "created_at",
-          { ascending: false }
-        ),
-
-      client
-        .from("projects")
-        .select(
-          "id,user_id,name,status,created_at"
-        )
-        .order(
-          "created_at",
-          { ascending: false }
-        )
-        .limit(100),
-
-      client
-        .from("upgrade_requests")
-        .select("*")
-        .order(
-          "created_at",
-          { ascending: false }
-        )
-    ]);
-
-    const users =
-      usersResult.data || [];
-
-    const projects =
-      projectsResult.data || [];
-
-    const requests =
-      requestsResult.data || [];
-
-    const active =
-      users.filter(
-        u => u.status === "active"
-      ).length;
-
-    const blocked =
-      users.filter(
-        u => u.status === "blocked"
-      ).length;
+  function adminPage() {
 
     app.innerHTML = `
       <div class="shell">
@@ -1399,356 +1085,22 @@
 
         <main class="container">
 
-          <div
-            class="row"
-            style="justify-content:space-between"
-          >
+          <div class="card">
 
-            <div>
-              <h2>
-                Admin Dashboard
-              </h2>
+            <h2>
+              Admin Dashboard
+            </h2>
 
-              <p class="muted">
-                Users, limits, projects and upgrade requests.
-              </p>
-            </div>
+            <p class="muted">
+              BuildPilot AI Admin
+            </p>
 
             <button
               class="btn"
-              id="home"
+              id="adminHome"
             >
               User App
             </button>
-
-          </div>
-
-          ${
-            usersResult.error ||
-            projectsResult.error ||
-            requestsResult.error
-              ? `
-                <div class="notice error">
-                  ${esc(
-                    (
-                      usersResult.error ||
-                      projectsResult.error ||
-                      requestsResult.error
-                    ).message
-                  )}
-                </div>
-              `
-              : ""
-          }
-
-          <div class="stats">
-
-            <div class="stat">
-              <span class="muted">
-                Users
-              </span>
-              <b>${users.length}</b>
-            </div>
-
-            <div class="stat">
-              <span class="muted">
-                Active
-              </span>
-              <b>${active}</b>
-            </div>
-
-            <div class="stat">
-              <span class="muted">
-                Blocked
-              </span>
-              <b>${blocked}</b>
-            </div>
-
-            <div class="stat">
-              <span class="muted">
-                Projects
-              </span>
-              <b>${projects.length}</b>
-            </div>
-
-          </div>
-
-          <br>
-
-          <div class="grid">
-
-            <div class="card">
-
-              <h3>
-                Users
-              </h3>
-
-              <div class="table-wrap">
-
-                <table class="table">
-
-                  <thead>
-                    <tr>
-                      <th>User</th>
-                      <th>Plan / Limits</th>
-                      <th>Status</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-
-                    ${
-                      users
-                        .map(
-                          u =>
-                            `
-                            <tr>
-
-                              <td>
-                                ${esc(
-                                  u.full_name ||
-                                  u.id
-                                )}
-
-                                <br>
-
-                                <span class="muted">
-                                  ${esc(u.id)}
-                                </span>
-                              </td>
-
-                              <td>
-                                ${esc(u.plan)}
-                                <br>
-                                ${u.project_limit}
-                                projects /
-                                ${u.github_file_limit}
-                                files
-                              </td>
-
-                              <td>
-                                ${esc(u.status)}
-
-                                ${
-                                  u.role ===
-                                  "admin"
-                                    ? '<span class="pill">ADMIN</span>'
-                                    : ""
-                                }
-                              </td>
-
-                              <td>
-
-                                ${
-                                  u.role !==
-                                  "admin"
-                                    ? `
-                                      <button
-                                        class="btn ${
-                                          u.status ===
-                                          "blocked"
-                                            ? "success"
-                                            : "danger"
-                                        }"
-                                        data-user="${u.id}"
-                                        data-action="${
-                                          u.status ===
-                                          "blocked"
-                                            ? "activate"
-                                            : "block"
-                                        }"
-                                      >
-                                        ${
-                                          u.status ===
-                                          "blocked"
-                                            ? "Reactivate"
-                                            : "Block"
-                                        }
-                                      </button>
-                                    `
-                                    : ""
-                                }
-
-                              </td>
-
-                            </tr>
-                            `
-                        )
-                        .join("")
-                    }
-
-                  </tbody>
-
-                </table>
-
-              </div>
-
-            </div>
-
-            <div class="card">
-
-              <h3>
-                Upgrade Requests
-              </h3>
-
-              <div class="table-wrap">
-
-                <table class="table">
-
-                  <thead>
-                    <tr>
-                      <th>User</th>
-                      <th>Requested</th>
-                      <th>Reason</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-
-                    ${
-                      requests
-                        .map(
-                          r =>
-                            `
-                            <tr>
-
-                              <td>
-                                ${esc(
-                                  r.user_id
-                                )}
-                              </td>
-
-                              <td>
-                                ${r.requested_project_limit}
-                                projects /
-                                ${r.requested_github_file_limit}
-                                files
-                              </td>
-
-                              <td>
-                                ${esc(
-                                  r.reason || ""
-                                )}
-                              </td>
-
-                              <td>
-
-                                ${
-                                  r.status ===
-                                  "pending"
-                                    ? `
-                                      <button
-                                        class="btn success"
-                                        data-req="${r.id}"
-                                        data-rstatus="approved"
-                                      >
-                                        Approve
-                                      </button>
-
-                                      <button
-                                        class="btn danger"
-                                        data-req="${r.id}"
-                                        data-rstatus="rejected"
-                                      >
-                                        Reject
-                                      </button>
-                                    `
-                                    : esc(
-                                        r.status
-                                      )
-                                }
-
-                              </td>
-
-                            </tr>
-                            `
-                        )
-                        .join("") ||
-                      `
-                        <tr>
-                          <td colspan="4">
-                            No requests.
-                          </td>
-                        </tr>
-                      `
-                    }
-
-                  </tbody>
-
-                </table>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          <br>
-
-          <div class="card">
-
-            <h3>
-              Recent Projects
-            </h3>
-
-            <div class="table-wrap">
-
-              <table class="table">
-
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>User</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-
-                  ${
-                    projects
-                      .map(
-                        p =>
-                          `
-                          <tr>
-                            <td>
-                              ${esc(p.name)}
-                            </td>
-
-                            <td>
-                              ${esc(p.user_id)}
-                            </td>
-
-                            <td>
-                              ${esc(p.status)}
-                            </td>
-
-                            <td>
-                              ${new Date(
-                                p.created_at
-                              ).toLocaleString()}
-                            </td>
-                          </tr>
-                          `
-                      )
-                      .join("") ||
-                    `
-                      <tr>
-                        <td colspan="4">
-                          No projects.
-                        </td>
-                      </tr>
-                    `
-                  }
-
-                </tbody>
-
-              </table>
-
-            </div>
 
           </div>
 
@@ -1759,163 +1111,44 @@
 
     bindNav();
 
-    document.getElementById("home").onclick =
-      () => {
-        location.hash = "";
-      };
-
-    document
-      .querySelectorAll("[data-user]")
-      .forEach((button) => {
-        button.onclick = () =>
-          adminUserAction(
-            button.dataset.user,
-            button.dataset.action
-          );
-      });
-
-    document
-      .querySelectorAll("[data-req]")
-      .forEach((button) => {
-        button.onclick = () =>
-          adminRequestAction(
-            button.dataset.req,
-            button.dataset.rstatus
-          );
-      });
-  }
-
-  async function adminUserAction(
-    id,
-    action
-  ) {
-    const status =
-      action === "block"
-        ? "blocked"
-        : "active";
-
-    const {
-      error
-    } = await client
-      .from("profiles")
-      .update({ status })
-      .eq("id", id);
-
-    if (error) {
-      alert(error.message);
-    } else {
-      adminPage();
-    }
-  }
-
-  async function adminRequestAction(
-    id,
-    status
-  ) {
-    const {
-      data: req,
-      error: getError
-    } = await client
-      .from("upgrade_requests")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (getError || !req) {
-      alert(
-        getError?.message ||
-        "Request not found."
-      );
-
-      return;
-    }
-
-    const patch = {
-      status,
-      reviewed_by:
-        state.session.user.id,
-      reviewed_at:
-        new Date().toISOString()
+    document.getElementById(
+      "adminHome"
+    ).onclick = function () {
+      location.hash = "";
     };
-
-    if (status === "approved") {
-      patch.approved_project_limit =
-        req.requested_project_limit;
-
-      patch.approved_github_file_limit =
-        req.requested_github_file_limit;
-    }
-
-    const {
-      error
-    } = await client
-      .from("upgrade_requests")
-      .update(patch)
-      .eq("id", id);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    if (status === "approved") {
-
-      const {
-        error: userError
-      } = await client
-        .from("profiles")
-        .update({
-          project_limit:
-            req.requested_project_limit,
-
-          github_file_limit:
-            req.requested_github_file_limit,
-
-          plan: "premium"
-        })
-        .eq("id", req.user_id);
-
-      if (userError) {
-        alert(userError.message);
-        return;
-      }
-    }
-
-    adminPage();
   }
 
   function router() {
-    const h =
+
+    const hash =
       location.hash;
 
-    if (h === "#login") {
+    if (hash === "#login") {
+
       authPage("login");
 
-    } else if (h === "#signup") {
+    } else if (
+      hash === "#signup"
+    ) {
+
       authPage("signup");
 
     } else if (
-      h === "#admin-login"
+      hash === "#admin-login"
     ) {
+
       adminLogin();
 
     } else if (
-      h === "#admin"
+      hash === "#admin"
     ) {
+
       adminPage();
 
-    } else if (
-      h === "#projects"
-    ) {
-      projectsPage();
-
-    } else if (
-      h === "#upgrade"
-    ) {
-      upgradePage();
-
     } else {
+
       renderHome();
+
     }
   }
 
@@ -1925,35 +1158,21 @@
   );
 
   client.auth.onAuthStateChange(
-    async (_event, session) => {
+    function (_event, session) {
 
       state.session =
         session || null;
 
-      state.profile =
-        session?.user
-          ? await ensureProfile(
-              session.user
-            )
-          : null;
-
-      if (
-        !session &&
-        [
-          "#projects",
-          "#upgrade",
-          "#admin"
-        ].includes(location.hash)
-      ) {
-        location.hash = "#login";
-        return;
+      if (!session) {
+        state.profile = null;
       }
 
       router();
     }
   );
 
-  refreshAuth().then(router);
+  refreshAuth().then(function () {
+    router();
+  });
 
 })();
-```

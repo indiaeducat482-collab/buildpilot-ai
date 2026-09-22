@@ -1,316 +1,1032 @@
-(() => {
+(function () {
   "use strict";
 
-  const CONFIG = window.BUILDPILOT_CONFIG || {};
-  const app = document.getElementById("app");
+  /*
+   * ============================================================
+   * BUILDPILOT AI
+   * Frontend Application
+   * ============================================================
+   */
 
-  if (!app) {
-    console.error("BuildPilot: #app not found");
+  const CONFIG = window.BUILDPILOT_CONFIG || {};
+
+  const SUPABASE_URL = CONFIG.SUPABASE_URL;
+  const SUPABASE_KEY =
+    CONFIG.SUPABASE_PUBLISHABLE_KEY;
+
+  const GENERATE_FUNCTION =
+    CONFIG.FUNCTION_NAME || "super-function";
+
+  const PUBLIC_FUNCTION =
+    CONFIG.PUBLIC_FUNCTION_NAME ||
+    "public-project";
+
+  const PUBLIC_BASE_URL =
+    window.location.origin +
+    window.location.pathname;
+
+  if (!window.supabase) {
+    document.body.innerHTML = `
+      <div style="
+        padding:40px;
+        font-family:Arial,sans-serif;
+        text-align:center;
+      ">
+        <h2>BuildPilot AI</h2>
+        <p>Supabase library load नहीं हुई।</p>
+        <button onclick="location.reload()">Refresh</button>
+      </div>
+    `;
+
     return;
   }
 
-  if (!window.supabase) {
-    app.innerHTML = `
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    document.body.innerHTML = `
+      <div style="
+        padding:40px;
+        font-family:Arial,sans-serif;
+        text-align:center;
+      ">
+        <h2>BuildPilot AI</h2>
+        <p>Supabase configuration missing है।</p>
+        <p>config.js check करें।</p>
+      </div>
+    `;
+
+    return;
+  }
+
+  const sb = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  let activeUser = null;
+  let activeSession = null;
+  let activeProject = null;
+  let activeFiles = [];
+  let currentView = "home";
+  let previewTimer = null;
+
+  const $ = (selector) =>
+    document.querySelector(selector);
+
+  const escapeHtml = (value) =>
+    String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  function appRoot() {
+    let root = document.getElementById("app");
+
+    if (!root) {
+      root = document.createElement("div");
+      root.id = "app";
+      document.body.appendChild(root);
+    }
+
+    return root;
+  }
+
+  function showMessage(message, type = "info") {
+    let box = document.getElementById(
+      "buildpilot-toast"
+    );
+
+    if (!box) {
+      box = document.createElement("div");
+
+      box.id = "buildpilot-toast";
+
+      box.style.position = "fixed";
+      box.style.right = "20px";
+      box.style.bottom = "20px";
+      box.style.zIndex = "99999";
+      box.style.maxWidth = "420px";
+      box.style.padding = "14px 18px";
+      box.style.borderRadius = "12px";
+      box.style.background = "#111827";
+      box.style.color = "#fff";
+      box.style.fontFamily = "Arial,sans-serif";
+      box.style.boxShadow =
+        "0 10px 30px rgba(0,0,0,.25)";
+
+      document.body.appendChild(box);
+    }
+
+    const prefix =
+      type === "success"
+        ? "✓ "
+        : type === "error"
+        ? "✕ "
+        : "";
+
+    box.textContent = prefix + message;
+
+    clearTimeout(box._timer);
+
+    box._timer = setTimeout(() => {
+      box.remove();
+    }, 4000);
+  }
+
+  function setLoading(button, loading, text) {
+    if (!button) return;
+
+    if (loading) {
+      button.dataset.oldText =
+        button.textContent;
+
+      button.disabled = true;
+
+      button.textContent =
+        text || "Please wait...";
+    } else {
+      button.disabled = false;
+
+      button.textContent =
+        button.dataset.oldText ||
+        button.textContent;
+    }
+  }
+
+  /*
+   * ============================================================
+   * PUBLIC PROJECT MODE
+   * ============================================================
+   */
+
+  function getPublicIdFromUrl() {
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
+    return (
+      params.get("public") ||
+      params.get("publicId") ||
+      ""
+    ).trim();
+  }
+
+  async function loadPublicProject(publicId) {
+    const root = appRoot();
+
+    root.innerHTML = `
       <div style="
         min-height:100vh;
-        display:grid;
-        place-items:center;
-        background:#070b12;
-        color:white;
+        display:flex;
+        align-items:center;
+        justify-content:center;
         font-family:Arial,sans-serif;
-        padding:20px;
+        background:#f8fafc;
       ">
         <div style="
-          max-width:500px;
+          text-align:center;
           padding:30px;
-          border:1px solid #26364b;
-          border-radius:18px;
-          background:#0d141f;
         ">
-          <h2>BuildPilot AI</h2>
-          <p>Supabase library load nahi hui.</p>
-          <button onclick="location.reload()">Reload</button>
+          <h2>BuildPilot Preview</h2>
+          <p>Public project load हो रहा है...</p>
         </div>
       </div>
     `;
-    return;
+
+    try {
+      const url =
+        SUPABASE_URL +
+        "/functions/v1/" +
+        encodeURIComponent(
+          PUBLIC_FUNCTION
+        ) +
+        "?id=" +
+        encodeURIComponent(publicId);
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          apikey: SUPABASE_KEY,
+          "Content-Type":
+            "application/json",
+        },
+      });
+
+      const data =
+        await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+            "Public project load failed"
+        );
+      }
+
+      const html = data.html || "";
+
+      /*
+       * Render published project.
+       * We intentionally don't copy the entire response object
+       * into the DOM.
+       */
+      document.open();
+
+      document.write(html);
+
+      document.close();
+    } catch (error) {
+      console.error(error);
+
+      root.innerHTML = `
+        <div style="
+          min-height:100vh;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-family:Arial,sans-serif;
+          background:#f8fafc;
+        ">
+          <div style="
+            width:min(600px,90%);
+            padding:30px;
+            border-radius:16px;
+            background:white;
+            box-shadow:0 10px 40px rgba(0,0,0,.1);
+          ">
+            <h2>Project unavailable</h2>
+            <p>
+              यह public project अभी available नहीं है
+              या publish नहीं किया गया है।
+            </p>
+
+            <p style="
+              color:#64748b;
+              word-break:break-word;
+            ">
+              ${escapeHtml(
+                error.message
+              )}
+            </p>
+          </div>
+        </div>
+      `;
+    }
   }
 
-  const client = window.supabase.createClient(
-    CONFIG.SUPABASE_URL,
-    CONFIG.SUPABASE_PUBLISHABLE_KEY
-  );
-
-  const FUNCTION_NAME =
-    CONFIG.FUNCTION_NAME || "super-function";
-
-  const state = {
-    session: null,
-    project: null,
-    projects: [],
-    files: [],
-    activeFile: null,
-    building: false
-  };
-
-  function escapeHTML(value) {
-    return String(value || "").replace(/[&<>"']/g, function (char) {
-      const map = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      };
-
-      return map[char];
-    });
-  }
+  /*
+   * ============================================================
+   * AUTH
+   * ============================================================
+   */
 
   async function getSession() {
-    const result = await client.auth.getSession();
+    const result =
+      await sb.auth.getSession();
 
-    state.session = result.data.session || null;
+    activeSession =
+      result.data?.session || null;
 
-    return state.session;
+    activeUser =
+      activeSession?.user || null;
+
+    return activeSession;
   }
 
-  function header() {
-    return `
-      <header class="topbar">
+  async function requireSession() {
+    await getSession();
 
-        <div
-          class="brandmark"
-          id="brandHome"
-        >
-          BuildPilot <span>AI</span>
-        </div>
+    if (!activeSession) {
+      renderLogin();
 
-        <div class="top-actions">
+      return false;
+    }
 
-          ${
-            state.session
-              ? `
-                <span class="user-chip">
-                  ${escapeHTML(state.session.user.email)}
-                </span>
-
-                <button
-                  class="btn"
-                  id="projectsButton"
-                >
-                  Projects
-                </button>
-
-                <button
-                  class="btn"
-                  id="logoutButton"
-                >
-                  Logout
-                </button>
-              `
-              : `
-                <button
-                  class="btn"
-                  id="loginButton"
-                >
-                  Login
-                </button>
-
-                <button
-                  class="btn primary"
-                  id="signupButton"
-                >
-                  Sign up
-                </button>
-              `
-          }
-
-        </div>
-
-      </header>
-    `;
+    return true;
   }
 
-  function bindHeader() {
-    const home = document.getElementById("brandHome");
+  function renderLogin() {
+    currentView = "login";
 
-    if (home) {
-      home.onclick = function () {
-        location.hash = "";
-      };
-    }
+    appRoot().innerHTML = `
+      <div style="
+        min-height:100vh;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:#f1f5f9;
+        padding:20px;
+        font-family:Arial,sans-serif;
+      ">
 
-    const login = document.getElementById("loginButton");
+        <div style="
+          width:min(430px,100%);
+          background:white;
+          border-radius:20px;
+          padding:30px;
+          box-shadow:0 15px 50px rgba(0,0,0,.12);
+        ">
 
-    if (login) {
-      login.onclick = function () {
-        location.hash = "#login";
-      };
-    }
-
-    const signup = document.getElementById("signupButton");
-
-    if (signup) {
-      signup.onclick = function () {
-        location.hash = "#signup";
-      };
-    }
-
-    const projects = document.getElementById("projectsButton");
-
-    if (projects) {
-      projects.onclick = function () {
-        location.hash = "#projects";
-      };
-    }
-
-    const logout = document.getElementById("logoutButton");
-
-    if (logout) {
-      logout.onclick = async function () {
-        await client.auth.signOut();
-
-        state.session = null;
-        state.project = null;
-        state.files = [];
-
-        location.hash = "";
-      };
-    }
-  }
-
-  function homePage() {
-    app.innerHTML = `
-      <div class="site">
-
-        ${header()}
-
-        <main class="landing">
-
-          <section class="hero2">
-
-            <div class="eyebrow">
-              AI SOFTWARE BUILDER
-            </div>
-
-            <h1>
-              Describe it.
-              <span>Build it.</span>
+          <div style="text-align:center;">
+            <h1 style="margin-bottom:5px;">
+              BuildPilot AI
             </h1>
 
-            <p>
-              BuildPilot AI turns your idea into a real website
-              and lets you modify it using normal language.
+            <p style="color:#64748b;">
+              Describe it. Build it. Deploy it.
             </p>
+          </div>
+
+          <div style="
+            display:flex;
+            gap:8px;
+            margin:25px 0;
+          ">
+            <button
+              id="loginTab"
+              onclick="window.BuildPilot.showLoginForm()"
+              style="
+                flex:1;
+                padding:11px;
+                border:0;
+                border-radius:10px;
+                cursor:pointer;
+              "
+            >
+              Login
+            </button>
+
+            <button
+              id="signupTab"
+              onclick="window.BuildPilot.showSignupForm()"
+              style="
+                flex:1;
+                padding:11px;
+                border:0;
+                border-radius:10px;
+                cursor:pointer;
+              "
+            >
+              Sign Up
+            </button>
+          </div>
+
+          <div id="authForm"></div>
+
+        </div>
+      </div>
+    `;
+
+    showLoginForm();
+  }
+
+  function showLoginForm() {
+    const form = document.getElementById(
+      "authForm"
+    );
+
+    if (!form) return;
+
+    form.innerHTML = `
+      <form id="loginForm">
+
+        <label>Email</label>
+
+        <input
+          id="loginEmail"
+          type="email"
+          required
+          placeholder="you@example.com"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            padding:13px;
+            margin:7px 0 16px;
+            border:1px solid #cbd5e1;
+            border-radius:10px;
+          "
+        />
+
+        <label>Password</label>
+
+        <input
+          id="loginPassword"
+          type="password"
+          required
+          placeholder="Password"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            padding:13px;
+            margin:7px 0 16px;
+            border:1px solid #cbd5e1;
+            border-radius:10px;
+          "
+        />
+
+        <button
+          type="submit"
+          id="loginButton"
+          style="
+            width:100%;
+            padding:13px;
+            border:0;
+            border-radius:10px;
+            background:#111827;
+            color:white;
+            cursor:pointer;
+          "
+        >
+          Login
+        </button>
+
+      </form>
+    `;
+
+    document
+      .getElementById("loginForm")
+      .addEventListener(
+        "submit",
+        loginUser
+      );
+  }
+
+  function showSignupForm() {
+    const form = document.getElementById(
+      "authForm"
+    );
+
+    if (!form) return;
+
+    form.innerHTML = `
+      <form id="signupForm">
+
+        <label>Full Name</label>
+
+        <input
+          id="signupName"
+          type="text"
+          required
+          placeholder="Your name"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            padding:13px;
+            margin:7px 0 16px;
+            border:1px solid #cbd5e1;
+            border-radius:10px;
+          "
+        />
+
+        <label>Email</label>
+
+        <input
+          id="signupEmail"
+          type="email"
+          required
+          placeholder="you@example.com"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            padding:13px;
+            margin:7px 0 16px;
+            border:1px solid #cbd5e1;
+            border-radius:10px;
+          "
+        />
+
+        <label>Password</label>
+
+        <input
+          id="signupPassword"
+          type="password"
+          required
+          minlength="6"
+          placeholder="Minimum 6 characters"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            padding:13px;
+            margin:7px 0 16px;
+            border:1px solid #cbd5e1;
+            border-radius:10px;
+          "
+        />
+
+        <button
+          type="submit"
+          id="signupButton"
+          style="
+            width:100%;
+            padding:13px;
+            border:0;
+            border-radius:10px;
+            background:#111827;
+            color:white;
+            cursor:pointer;
+          "
+        >
+          Create Account
+        </button>
+
+      </form>
+    `;
+
+    document
+      .getElementById("signupForm")
+      .addEventListener(
+        "submit",
+        signupUser
+      );
+  }
+
+  async function loginUser(event) {
+    event.preventDefault();
+
+    const button =
+      document.getElementById(
+        "loginButton"
+      );
+
+    setLoading(
+      button,
+      true,
+      "Logging in..."
+    );
+
+    try {
+      const email =
+        document.getElementById(
+          "loginEmail"
+        ).value.trim();
+
+      const password =
+        document.getElementById(
+          "loginPassword"
+        ).value;
+
+      const {
+        data,
+        error,
+      } = await sb.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      activeSession = data.session;
+      activeUser = data.user;
+
+      showMessage(
+        "Login successful",
+        "success"
+      );
+
+      renderHome();
+    } catch (error) {
+      showMessage(
+        error.message ||
+          "Login failed",
+        "error"
+      );
+    } finally {
+      setLoading(button, false);
+    }
+  }
+
+  async function signupUser(event) {
+    event.preventDefault();
+
+    const button =
+      document.getElementById(
+        "signupButton"
+      );
+
+    setLoading(
+      button,
+      true,
+      "Creating account..."
+    );
+
+    try {
+      const name =
+        document.getElementById(
+          "signupName"
+        ).value.trim();
+
+      const email =
+        document.getElementById(
+          "signupEmail"
+        ).value.trim();
+
+      const password =
+        document.getElementById(
+          "signupPassword"
+        ).value;
+
+      const {
+        data,
+        error,
+      } = await sb.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.session) {
+        activeSession = data.session;
+        activeUser = data.user;
+
+        await ensureProfile();
+
+        showMessage(
+          "Account created",
+          "success"
+        );
+
+        renderHome();
+      } else {
+        showMessage(
+          "Account created. Email confirmation required.",
+          "success"
+        );
+
+        showLoginForm();
+      }
+    } catch (error) {
+      showMessage(
+        error.message ||
+          "Signup failed",
+        "error"
+      );
+    } finally {
+      setLoading(button, false);
+    }
+  }
+
+  async function logoutUser() {
+    await sb.auth.signOut();
+
+    activeSession = null;
+    activeUser = null;
+    activeProject = null;
+    activeFiles = [];
+
+    renderLogin();
+  }
+
+  async function ensureProfile() {
+    if (!activeUser) return;
+
+    const { data: profile } =
+      await sb
+        .from("profiles")
+        .select("id")
+        .eq("id", activeUser.id)
+        .maybeSingle();
+
+    if (profile) return;
+
+    await sb
+      .from("profiles")
+      .insert({
+        id: activeUser.id,
+        full_name:
+          activeUser.user_metadata
+            ?.full_name ||
+          activeUser.email ||
+          "User",
+      });
+  }
+
+  /*
+   * ============================================================
+   * HOME
+   * ============================================================
+   */
+
+  async function renderHome() {
+    if (!(await requireSession())) {
+      return;
+    }
+
+    currentView = "home";
+
+    const root = appRoot();
+
+    root.innerHTML = `
+      <div style="
+        min-height:100vh;
+        background:#f8fafc;
+        font-family:Arial,sans-serif;
+      ">
+
+        <header style="
+          height:64px;
+          background:#111827;
+          color:white;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          padding:0 24px;
+          box-sizing:border-box;
+        ">
+
+          <strong>
+            BuildPilot AI
+          </strong>
+
+          <div style="
+            display:flex;
+            align-items:center;
+            gap:12px;
+          ">
+
+            <span style="
+              font-size:13px;
+              opacity:.8;
+            ">
+              ${escapeHtml(
+                activeUser?.email ||
+                  ""
+              )}
+            </span>
+
+            <button
+              onclick="window.BuildPilot.logout()"
+              style="
+                border:1px solid #475569;
+                background:transparent;
+                color:white;
+                padding:8px 12px;
+                border-radius:8px;
+                cursor:pointer;
+              "
+            >
+              Logout
+            </button>
+
+          </div>
+
+        </header>
+
+        <main style="
+          max-width:1100px;
+          margin:0 auto;
+          padding:35px 20px;
+        ">
+
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:20px;
+            flex-wrap:wrap;
+          ">
+
+            <div>
+              <h1 style="margin:0 0 8px;">
+                What do you want to build?
+              </h1>
+
+              <p style="
+                margin:0;
+                color:#64748b;
+              ">
+                Describe your project and BuildPilot AI will build it.
+              </p>
+            </div>
+
+          </div>
+
+          <div style="
+            display:grid;
+            grid-template-columns:
+              repeat(auto-fit,minmax(220px,1fr));
+            gap:18px;
+            margin-top:30px;
+          ">
+
+            <button
+              onclick="window.BuildPilot.startProject('complete_system')"
+              style="
+                text-align:left;
+                border:1px solid #e2e8f0;
+                background:white;
+                padding:25px;
+                border-radius:16px;
+                cursor:pointer;
+                box-shadow:0 5px 20px rgba(0,0,0,.04);
+              "
+            >
+              <div style="font-size:32px;">🚀</div>
+
+              <h3>
+                Complete System
+              </h3>
+
+              <p style="
+                color:#64748b;
+                line-height:1.5;
+              ">
+                Website, dashboard, database,
+                authentication and business logic.
+              </p>
+            </button>
+
+            <button
+              onclick="window.BuildPilot.startProject('website')"
+              style="
+                text-align:left;
+                border:1px solid #e2e8f0;
+                background:white;
+                padding:25px;
+                border-radius:16px;
+                cursor:pointer;
+                box-shadow:0 5px 20px rgba(0,0,0,.04);
+              "
+            >
+              <div style="font-size:32px;">🌐</div>
+
+              <h3>
+                Website
+              </h3>
+
+              <p style="
+                color:#64748b;
+                line-height:1.5;
+              ">
+                Responsive HTML, CSS and JavaScript
+                website.
+              </p>
+            </button>
+
+          </div>
+
+          <section style="
+            margin-top:45px;
+          ">
+
+            <div style="
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+              margin-bottom:15px;
+            ">
+
+              <h2>
+                My Projects
+              </h2>
+
+              <button
+                onclick="window.BuildPilot.loadProjects()"
+                style="
+                  padding:9px 13px;
+                  border:1px solid #cbd5e1;
+                  background:white;
+                  border-radius:8px;
+                  cursor:pointer;
+                "
+              >
+                Refresh
+              </button>
+
+            </div>
+
+            <div id="projectsList">
+              Loading projects...
+            </div>
 
           </section>
 
-          <section class="builder-card">
+        </main>
 
-            <div class="builder-head">
+      </div>
+    `;
+
+    await loadProjects();
+  }
+
+  /*
+   * ============================================================
+   * PROJECT CREATION
+   * ============================================================
+   */
+
+  async function startProject(projectType) {
+    currentView = "builder";
+
+    appRoot().innerHTML = `
+      <div style="
+        min-height:100vh;
+        background:#f8fafc;
+        font-family:Arial,sans-serif;
+        padding:30px 20px;
+        box-sizing:border-box;
+      ">
+
+        <div style="
+          max-width:850px;
+          margin:auto;
+        ">
+
+          <button
+            onclick="window.BuildPilot.home()"
+            style="
+              border:0;
+              background:none;
+              cursor:pointer;
+              margin-bottom:20px;
+            "
+          >
+            ← Back
+          </button>
+
+          <div style="
+            background:white;
+            padding:30px;
+            border-radius:18px;
+            box-shadow:0 10px 35px rgba(0,0,0,.08);
+          ">
+
+            <h1>
+              Build your project
+            </h1>
+
+            <p style="color:#64748b;">
+              ${projectType === "website"
+                ? "Website"
+                : "Complete System"}
+            </p>
+
+            <label>
+              Project Name
+            </label>
+
+            <input
+              id="newProjectName"
+              type="text"
+              placeholder="My Business Website"
+              style="
+                width:100%;
+                box-sizing:border-box;
+                padding:14px;
+                margin:8px 0 20px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            />
+
+            <label>
+              Describe your project
+            </label>
+
+            <textarea
+              id="newProjectPrompt"
+              rows="8"
+              placeholder="Example: Create a modern coaching website with Home, Courses, Teachers, About and Contact pages."
+              style="
+                width:100%;
+                box-sizing:border-box;
+                padding:14px;
+                margin:8px 0 20px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+                resize:vertical;
+              "
+            ></textarea>
+
+            <div style="
+              display:grid;
+              grid-template-columns:
+                repeat(auto-fit,minmax(220px,1fr));
+              gap:15px;
+            ">
 
               <div>
-
-                <div class="tiny-label">
-                  NEW PROJECT
-                </div>
-
-                <h2>
-                  What do you want to build?
-                </h2>
-
-              </div>
-
-              <div class="status-dot">
-                ● AI Ready
-              </div>
-
-            </div>
-
-            <div class="type-grid">
-
-              <button
-                class="type-card selected"
-                data-type="complete_system"
-              >
-
-                <div class="type-icon">
-                  ⚡
-                </div>
-
-                <div>
-
-                  <strong>
-                    Complete System
-                  </strong>
-
-                  <p>
-                    Website + application structure
-                    + backend-ready project.
-                  </p>
-
-                  <small>
-                    Recommended
-                  </small>
-
-                </div>
-
-              </button>
-
-              <button
-                class="type-card"
-                data-type="website"
-              >
-
-                <div class="type-icon">
-                  ◈
-                </div>
-
-                <div>
-
-                  <strong>
-                    Website Only
-                  </strong>
-
-                  <p>
-                    Responsive HTML, CSS and
-                    JavaScript website.
-                  </p>
-
-                  <small>
-                    Simple & fast
-                  </small>
-
-                </div>
-
-              </button>
-
-            </div>
-
-            <div class="builder-fields">
-
-              <label>
-
-                Project name
-
-                <input
-                  id="projectName"
-                  class="input"
-                  placeholder="Kartar Classes"
-                >
-
-              </label>
-
-              <label>
-
-                Frontend
+                <label>Frontend</label>
 
                 <select
                   id="frontend"
-                  class="input"
+                  style="
+                    width:100%;
+                    padding:12px;
+                    margin-top:7px;
+                    border:1px solid #cbd5e1;
+                    border-radius:10px;
+                  "
                 >
-
                   <option value="html">
                     HTML / CSS / JavaScript
                   </option>
@@ -322,20 +1038,22 @@
                   <option value="nextjs">
                     Next.js
                   </option>
-
                 </select>
+              </div>
 
-              </label>
-
-              <label>
-
-                Backend
+              <div>
+                <label>Backend</label>
 
                 <select
                   id="backend"
-                  class="input"
+                  style="
+                    width:100%;
+                    padding:12px;
+                    margin-top:7px;
+                    border:1px solid #cbd5e1;
+                    border-radius:10px;
+                  "
                 >
-
                   <option value="supabase">
                     Supabase
                   </option>
@@ -347,1076 +1065,902 @@
                   <option value="github">
                     GitHub
                   </option>
-
                 </select>
-
-              </label>
-
-              <label>
-
-                Brand / Contact
-
-                <input
-                  id="brandInfo"
-                  class="input"
-                  placeholder="Logo, phone, WhatsApp..."
-                >
-
-              </label>
-
-            </div>
-
-            <label
-              class="req-label"
-              style="margin-top:18px"
-            >
-              Describe your project
-            </label>
-
-            <textarea
-              id="projectPrompt"
-              class="textarea promptbox"
-              placeholder="Example: Coaching institute website banao. Header blue ho, logo left me, Home, Courses, Teachers, Contact pages ho aur WhatsApp button ho."
-            ></textarea>
-
-            <div class="quick-row">
-
-              <button
-                class="quick"
-                data-text="Coaching institute website with courses, teachers, admission enquiry and WhatsApp button"
-              >
-                Coaching Website
-              </button>
-
-              <button
-                class="quick"
-                data-text="Business website with services, gallery, contact form and WhatsApp"
-              >
-                Business Website
-              </button>
-
-              <button
-                class="quick"
-                data-text="Modern portfolio website with projects, skills and contact section"
-              >
-                Portfolio
-              </button>
-
-              <button
-                class="quick"
-                data-text="Login and dashboard system with Supabase authentication"
-              >
-                Login + Dashboard
-              </button>
-
-            </div>
-
-            <div class="builder-bottom">
-
-              <div class="selected-stack">
-
-                <span class="pill">
-                  AI Code
-                </span>
-
-                <span class="pill">
-                  Live Preview
-                </span>
-
-                <span class="pill">
-                  AI Editing
-                </span>
-
               </div>
 
-              <button
-                id="buildButton"
-                class="btn primary big"
-              >
-                ✦ Build with AI
-              </button>
-
             </div>
 
-            <div
-              id="homeMessage"
-              class="hidden"
-            ></div>
+            <button
+              id="createProjectButton"
+              onclick="window.BuildPilot.createProject('${projectType}')"
+              style="
+                margin-top:25px;
+                width:100%;
+                padding:15px;
+                border:0;
+                border-radius:10px;
+                background:#111827;
+                color:white;
+                cursor:pointer;
+                font-size:16px;
+              "
+            >
+              Build Project
+            </button>
 
-          </section>
+          </div>
 
-          <section class="support-grid">
-
-            <div class="mini-card">
-
-              <b>
-                💬 Natural Language Editing
-              </b>
-
-              <span>
-                Header ka color blue karo,
-                WhatsApp button add karo,
-                AI actual files modify karega.
-              </span>
-
-            </div>
-
-            <div class="mini-card">
-
-              <b>
-                👁 Live Preview
-              </b>
-
-              <span>
-                Generated HTML project ka preview
-                workspace me dikhega.
-              </span>
-
-            </div>
-
-            <div class="mini-card">
-
-              <b>
-                📁 Project Files
-              </b>
-
-              <span>
-                Project files Supabase database
-                me save hongi.
-              </span>
-
-            </div>
-
-          </section>
-
-        </main>
+        </div>
 
       </div>
     `;
-
-    bindHeader();
-
-    document.querySelectorAll(".type-card").forEach(function (button) {
-      button.onclick = function () {
-        document
-          .querySelectorAll(".type-card")
-          .forEach(function (item) {
-            item.classList.remove("selected");
-          });
-
-        button.classList.add("selected");
-      };
-    });
-
-    document.querySelectorAll(".quick").forEach(function (button) {
-      button.onclick = function () {
-        document.getElementById("projectPrompt").value =
-          button.dataset.text;
-      };
-    });
-
-    document.getElementById("buildButton").onclick =
-      buildProject;
   }
 
-  function showMessage(text, type) {
-    const box = document.getElementById("homeMessage");
-
-    if (!box) {
-      return;
-    }
-
-    box.className =
-      "notice " +
-      (type === "error"
-        ? "error"
-        : type === "success"
-        ? "success-note"
-        : "");
-
-    box.textContent = text;
-  }
-
-  /*
-   * Creates the minimum runnable files needed by Live Preview.
-   */
-  async function ensureStarterFiles(projectId, projectName, description) {
-    const starterFiles = [
-      {
-        project_id: projectId,
-        file_path: "index.html",
-        file_content: starterHTML(
-          projectName,
-          description
-        ),
-        language: "html",
-        generated_by: "system"
-      },
-      {
-        project_id: projectId,
-        file_path: "style.css",
-        file_content: starterCSS(),
-        language: "css",
-        generated_by: "system"
-      },
-      {
-        project_id: projectId,
-        file_path: "script.js",
-        file_content: starterJS(),
-        language: "javascript",
-        generated_by: "system"
-      }
-    ];
-
-    const result = await client
-      .from("project_files")
-      .upsert(
-        starterFiles,
-        {
-          onConflict: "project_id,file_path",
-          ignoreDuplicates: true
-        }
-      );
-
-    if (result.error) {
-      console.error(
-        "Starter files error:",
-        result.error
-      );
-    }
-
-    return result;
-  }
-
-  function starterHTML(name, description) {
-    return `<!doctype html>
+  function starterHTML(name) {
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>${escapeHTML(name)}</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(name)}</title>
 </head>
-
 <body>
 
-  <header class="starter-header">
+  <main class="container">
+    <h1>${escapeHtml(name)}</h1>
 
-    <strong>
-      ${escapeHTML(name)}
-    </strong>
+    <p>
+      Your BuildPilot AI project is ready.
+    </p>
 
-    <nav>
-      <a href="#home">Home</a>
-      <a href="#about">About</a>
-      <a href="#services">Services</a>
-      <a href="#contact">Contact</a>
-    </nav>
-
-  </header>
-
-  <main>
-
-    <section
-      id="home"
-      class="hero"
-    >
-
-      <span class="badge">
-        BUILDPILOT AI
-      </span>
-
-      <h1>
-        ${escapeHTML(name)}
-      </h1>
-
-      <p>
-        ${escapeHTML(description)}
-      </p>
-
-      <button
-        onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})"
-      >
-        Get Started
-      </button>
-
-    </section>
-
-    <section
-      id="about"
-      class="cards"
-    >
-
-      <article>
-        <h2>About</h2>
-        <p>
-          Your AI generated website starts here.
-        </p>
-      </article>
-
-      <article id="services">
-        <h2>Services</h2>
-        <p>
-          Tell BuildPilot what you want to change.
-        </p>
-      </article>
-
-      <article id="contact">
-        <h2>Contact</h2>
-        <p>
-          Add your phone, WhatsApp and contact details.
-        </p>
-      </article>
-
-    </section>
-
+    <button id="helloButton">
+      Get Started
+    </button>
   </main>
-
-  <script src="script.js"></script>
 
 </body>
 </html>`;
   }
 
   function starterCSS() {
-    return `
-* {
+    return `* {
   box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f5f8fc;
-  color: #172033;
+  font-family:
+    Inter,
+    Arial,
+    sans-serif;
+  background: #f8fafc;
+  color: #111827;
 }
 
-.starter-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 6%;
-  background: #ffffff;
-  border-bottom: 1px solid #e6ebf2;
-}
-
-.starter-header strong {
-  font-size: 20px;
-}
-
-.starter-header nav {
-  display: flex;
-  gap: 20px;
-}
-
-.starter-header a {
-  color: #345;
-  text-decoration: none;
-}
-
-.starter-header a:hover {
-  color: #1677e8;
-}
-
-.hero {
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 80px 20px;
   text-align: center;
-  padding: 100px 20px;
-  background:
-    linear-gradient(
-      135deg,
-      #eef7ff,
-      #ffffff
-    );
 }
 
-.badge {
-  font-size: 12px;
-  color: #1677e8;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
-.hero h1 {
-  font-size: 56px;
-  margin: 15px 0;
-}
-
-.hero p {
-  max-width: 700px;
-  margin: 0 auto 25px;
-  color: #607089;
-  line-height: 1.7;
-}
-
-.hero button {
+button {
+  padding: 12px 18px;
   border: 0;
   border-radius: 10px;
-  padding: 13px 22px;
-  background: #1677e8;
-  color: #ffffff;
   cursor: pointer;
-}
-
-.hero button:hover {
-  background: #0e64c5;
-}
-
-.cards {
-  max-width: 1100px;
-  margin: auto;
-  display: grid;
-  grid-template-columns:
-    repeat(3, 1fr);
-  gap: 18px;
-  padding: 40px 20px 80px;
-}
-
-.cards article {
-  background: #ffffff;
-  padding: 25px;
-  border-radius: 16px;
-  border: 1px solid #e5eaf1;
-  box-shadow:
-    0 10px 30px
-    rgba(16,32,64,.07);
-}
-
-.cards p {
-  color: #66758a;
-  line-height: 1.6;
-}
-
-@media(max-width:700px) {
-
-  .hero h1 {
-    font-size: 40px;
-  }
-
-  .starter-header {
-    padding: 15px 4%;
-  }
-
-  .starter-header nav {
-    gap: 9px;
-    font-size: 13px;
-  }
-
-  .cards {
-    grid-template-columns: 1fr;
-  }
-
-}
-`;
+  background: #111827;
+  color: white;
+}`;
   }
 
   function starterJS() {
-    return `
-console.log("BuildPilot project ready");
+    return `document.addEventListener("DOMContentLoaded", function () {
+  const button =
+    document.getElementById("helloButton");
 
-document.addEventListener(
-  "DOMContentLoaded",
-  function () {
-    console.log(
-      "Live Preview loaded successfully"
+  if (button) {
+    button.addEventListener("click", function () {
+      alert("BuildPilot AI project is working!");
+    });
+  }
+});`;
+  }
+
+  async function ensureStarterFiles(
+    projectId,
+    projectName
+  ) {
+    if (!projectId) {
+      throw new Error(
+        "Project ID missing"
+      );
+    }
+
+    const { data: existing, error } =
+      await sb
+        .from("project_files")
+        .select(
+          "id,file_path,file_content,language"
+        )
+        .eq("project_id", projectId);
+
+    if (error) {
+      throw new Error(
+        "Could not load project files: " +
+          error.message
+      );
+    }
+
+    const files = existing || [];
+
+    const existingPaths = new Set(
+      files.map((file) =>
+        String(
+          file.file_path
+        ).toLowerCase()
+      )
     );
-  }
-);
-`;
-  }
 
-  async function buildProject() {
-    if (state.building) {
+    const starterFiles = [];
+
+    if (!existingPaths.has("index.html")) {
+      starterFiles.push({
+        project_id: projectId,
+        file_path: "index.html",
+        file_content:
+          starterHTML(projectName),
+        language: "html",
+        generated_by: "system",
+      });
+    }
+
+    if (!existingPaths.has("style.css")) {
+      starterFiles.push({
+        project_id: projectId,
+        file_path: "style.css",
+        file_content: starterCSS(),
+        language: "css",
+        generated_by: "system",
+      });
+    }
+
+    if (!existingPaths.has("script.js")) {
+      starterFiles.push({
+        project_id: projectId,
+        file_path: "script.js",
+        file_content: starterJS(),
+        language: "javascript",
+        generated_by: "system",
+      });
+    }
+
+    if (!starterFiles.length) {
       return;
     }
 
-    if (!state.session) {
-      location.hash = "#login";
+    const { error: insertError } =
+      await sb
+        .from("project_files")
+        .insert(starterFiles);
+
+    if (insertError) {
+      throw new Error(
+        "Could not create starter files: " +
+          insertError.message
+      );
+    }
+  }
+
+  async function createProject(
+    projectType
+  ) {
+    if (!(await requireSession())) {
       return;
     }
+
+    const button =
+      document.getElementById(
+        "createProjectButton"
+      );
 
     const name =
       document
-        .getElementById("projectName")
-        .value
-        .trim() ||
-      "BuildPilot Project";
+        .getElementById(
+          "newProjectName"
+        )
+        .value.trim();
 
     const prompt =
       document
-        .getElementById("projectPrompt")
-        .value
-        .trim();
+        .getElementById(
+          "newProjectPrompt"
+        )
+        .value.trim();
 
     const frontend =
-      document.getElementById("frontend").value;
+      document.getElementById(
+        "frontend"
+      ).value;
 
     const backend =
-      document.getElementById("backend").value;
+      document.getElementById(
+        "backend"
+      ).value;
 
-    const brand =
-      document
-        .getElementById("brandInfo")
-        .value
-        .trim();
+    if (!name) {
+      showMessage(
+        "Project name required",
+        "error"
+      );
+
+      return;
+    }
 
     if (!prompt) {
       showMessage(
-        "Project description likhiye.",
+        "Project description required",
         "error"
       );
 
       return;
     }
 
-    state.building = true;
-
-    const button =
-      document.getElementById("buildButton");
-
-    button.disabled = true;
-    button.textContent =
-      "Creating project...";
+    setLoading(
+      button,
+      true,
+      "Creating project..."
+    );
 
     try {
-      const typeResult =
-        await client
+      const { data: typeData } =
+        await sb
           .from("project_types")
-          .select("id,code")
-          .eq(
-            "code",
-            "complete_system"
-          )
+          .select("id,name,code")
+          .eq("code", projectType)
           .maybeSingle();
 
-      const description =
-        prompt +
-        (
-          brand
-            ? "\nBrand details: " + brand
-            : ""
-        );
-
-      const projectResult =
-        await client
-          .from("projects")
-          .insert({
-            user_id:
-              state.session.user.id,
-            name: name,
-            description:
-              description,
-            frontend:
-              frontend,
-            backend:
-              backend,
-            project_type_id:
-              typeResult.data
-                ? typeResult.data.id
-                : null,
-            status: "building"
-          })
-          .select("*")
-          .single();
-
-      if (projectResult.error) {
-        throw projectResult.error;
-      }
-
-      state.project =
-        projectResult.data;
-
-      /*
-       * IMPORTANT:
-       * Create index.html BEFORE calling AI.
-       * This fixes the Live Preview problem.
-       */
-      await ensureStarterFiles(
-        state.project.id,
+      const projectPayload = {
+        user_id: activeUser.id,
         name,
-        description
-      );
-
-      await loadFiles(
-        state.project.id
-      );
-
-      button.textContent =
-        "AI is building...";
-
-      const aiResult =
-        await callFunction(
-          state.project.id,
-          description
-        );
-
-      /*
-       * Current small test Edge Function
-       * returns success without changes.
-       * We still keep the normal workflow ready.
-       */
-      if (!aiResult.success) {
-        throw new Error(
-          aiResult.error ||
-          "AI build failed"
-        );
-      }
-
-      await client
-        .from("projects")
-        .update({
-          status: "completed"
-        })
-        .eq(
-          "id",
-          state.project.id
-        );
-
-      await loadFiles(
-        state.project.id
-      );
-
-      location.hash =
-        "#workspace";
-
-    } catch (error) {
-
-      console.error(
-        "BuildPilot error:",
-        error
-      );
-
-      showMessage(
-        error.message ||
-          "Project build failed.",
-        "error"
-      );
-
-      if (state.project) {
-        await client
-          .from("projects")
-          .update({
-            status: "failed"
-          })
-          .eq(
-            "id",
-            state.project.id
-          );
-      }
-
-    } finally {
-
-      state.building = false;
-
-      button.disabled = false;
-
-      button.textContent =
-        "✦ Build with AI";
-    }
-  }
-
-  async function callFunction(
-    projectId,
-    instruction
-  ) {
-    const result =
-      await client.functions.invoke(
-        FUNCTION_NAME,
-        {
-          headers: {
-            Authorization:
-              "Bearer " +
-              state.session.access_token
-          },
-
-          body: {
-            projectId:
-              projectId,
-            instruction:
-              instruction
-          }
-        }
-      );
-
-    if (result.error) {
-      return {
-        success: false,
-        error:
-          result.error.message ||
-          "Edge Function error"
-      };
-    }
-
-    return (
-      result.data || {
-        success: false,
-        error:
-          "Empty response"
-      }
-    );
-  }
-
-  async function loadFiles(projectId) {
-    const result =
-      await client
-        .from("project_files")
-        .select("*")
-        .eq(
-          "project_id",
-          projectId
-        )
-        .order(
-          "file_path",
-          {
-            ascending: true
-          }
-        );
-
-    if (result.error) {
-      throw result.error;
-    }
-
-    state.files =
-      result.data || [];
-
-    state.activeFile =
-      state.files[0] || null;
-  }
-
-  async function projectsPage() {
-    if (!state.session) {
-      location.hash = "#login";
-      return;
-    }
-
-    const result =
-      await client
-        .from("projects")
-        .select("*")
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        );
-
-    if (result.error) {
-      console.error(
-        result.error
-      );
-    }
-
-    state.projects =
-      result.data || [];
-
-    app.innerHTML = `
-      <div class="site">
-
-        ${header()}
-
-        <main class="container">
-
-          <div class="page-head">
-
-            <div>
-
-              <div class="tiny-label">
-                WORKSPACE
-              </div>
-
-              <h1>
-                My Projects
-              </h1>
-
-              <p class="muted">
-                Apne projects open karke AI se
-                changes karein.
-              </p>
-
-            </div>
-
-            <button
-              id="newProjectButton"
-              class="btn primary"
-            >
-              + New Project
-            </button>
-
-          </div>
-
-          <div class="project-list">
-
-            ${
-              state.projects.length
-                ? state.projects
-                    .map(function (
-                      project
-                    ) {
-
-                      return `
-                        <div
-                          class="project-item"
-                        >
-
-                          <div>
-
-                            <b>
-                              ${escapeHTML(
-                                project.name
-                              )}
-                            </b>
-
-                            <p>
-                              ${escapeHTML(
-                                project.description ||
-                                ""
-                              )}
-
-                              ·
-
-                              ${escapeHTML(
-                                project.status ||
-                                "draft"
-                              )}
-                            </p>
-
-                          </div>
-
-                          <button
-                            class="btn"
-                            data-project-id="${project.id}"
-                          >
-                            Open
-                          </button>
-
-                        </div>
-                      `;
-
-                    })
-                    .join("")
-                : `
-                    <div class="empty-card">
-                      Abhi koi project nahi hai.
-                    </div>
-                  `
-            }
-
-          </div>
-
-        </main>
-
-      </div>
-    `;
-
-    bindHeader();
-
-    document.getElementById(
-      "newProjectButton"
-    ).onclick =
-      function () {
-        location.hash = "";
+        description: prompt,
+        frontend,
+        backend,
+        status: "draft",
+        project_type_id:
+          typeData?.id || null,
       };
 
-    document
-      .querySelectorAll(
-        "[data-project-id]"
-      )
-      .forEach(
-        function (button) {
-
-          button.onclick =
-            function () {
-
-              openProject(
-                button.dataset.projectId
-              );
-
-            };
-
-        }
-      );
-  }
-
-  async function openProject(id) {
-    const result =
-      await client
+      const {
+        data: project,
+        error,
+      } = await sb
         .from("projects")
-        .select("*")
-        .eq(
-          "id",
-          id
-        )
-        .eq(
-          "user_id",
-          state.session.user.id
+        .insert(projectPayload)
+        .select(
+          "id,name,description,frontend,backend,project_plan,public_id,public_enabled,published_at"
         )
         .single();
 
-    if (result.error) {
-      alert(
-        result.error.message
+      if (error) {
+        throw error;
+      }
+
+      await ensureStarterFiles(
+        project.id,
+        name
       );
 
-      return;
+      activeProject = project;
+
+      showMessage(
+        "Project created",
+        "success"
+      );
+
+      await loadProjectFiles();
+
+      /*
+       * AI generation is attempted only after
+       * starter files are safely created.
+       */
+      await callGenerateFunction(
+        project.id,
+        prompt,
+        name,
+        frontend,
+        backend
+      );
+
+      await loadProjectFiles();
+
+      openWorkspace(project.id);
+    } catch (error) {
+      console.error(error);
+
+      showMessage(
+        error.message ||
+          "Project creation failed",
+        "error"
+      );
+    } finally {
+      setLoading(button, false);
     }
-
-    state.project =
-      result.data;
-
-    await ensureStarterFiles(
-      state.project.id,
-      state.project.name,
-      state.project.description || ""
-    );
-
-    await loadFiles(
-      id
-    );
-
-    location.hash =
-      "#workspace";
   }
 
-  async function workspacePage() {
-    if (!state.project) {
-      location.hash =
-        "#projects";
+  /*
+   * ============================================================
+   * AI GENERATION
+   * ============================================================
+   */
+
+  async function callGenerateFunction(
+    projectId,
+    prompt,
+    name,
+    frontend,
+    backend
+  ) {
+    if (!activeSession) {
+      await getSession();
+    }
+
+    if (!activeSession) {
+      throw new Error(
+        "Please login again."
+      );
+    }
+
+    const {
+      data,
+      error,
+    } = await sb.functions.invoke(
+      GENERATE_FUNCTION,
+      {
+        headers: {
+          Authorization:
+            "Bearer " +
+            activeSession.access_token,
+        },
+
+        body: {
+          projectId,
+          instruction: prompt,
+
+          /*
+           * Compatibility fields for
+           * older BuildPilot functions.
+           */
+          prompt,
+          projectName: name,
+          frontend,
+          backend,
+        },
+      }
+    );
+
+    if (error) {
+      console.error(
+        "Generate function error:",
+        error
+      );
+
+      throw new Error(
+        error.message ||
+          "AI generation failed"
+      );
+    }
+
+    if (
+      data &&
+      data.success === false
+    ) {
+      throw new Error(
+        data.error ||
+          "AI generation failed"
+      );
+    }
+
+    return data;
+  }
+
+  /*
+   * ============================================================
+   * PROJECT LIST
+   * ============================================================
+   */
+
+  async function loadProjects() {
+    if (!activeUser) {
+      await getSession();
+    }
+
+    const container =
+      document.getElementById(
+        "projectsList"
+      );
+
+    if (!container) return;
+
+    container.innerHTML =
+      "Loading projects...";
+
+    const {
+      data,
+      error,
+    } = await sb
+      .from("projects")
+      .select(
+        "id,name,description,status,frontend,backend,public_id,public_enabled,published_at,created_at"
+      )
+      .eq("user_id", activeUser.id)
+      .order(
+        "created_at",
+        {
+          ascending: false,
+        }
+      );
+
+    if (error) {
+      container.innerHTML = `
+        <div style="
+          color:#dc2626;
+        ">
+          ${escapeHtml(
+            error.message
+          )}
+        </div>
+      `;
 
       return;
     }
 
-    /*
-     * Existing old projects may not have index.html.
-     * Ensure preview files exist.
-     */
-    await ensureStarterFiles(
-      state.project.id,
-      state.project.name,
-      state.project.description || ""
-    );
-
-    await loadFiles(
-      state.project.id
-    );
-
-    app.innerHTML = `
-      <div class="workspace">
-
-        <div class="workspace-top">
-
-          <button
-            class="btn"
-            id="backButton"
-          >
-            ←
-          </button>
-
-          <div class="workspace-name">
-
-            ${escapeHTML(
-              state.project.name
-            )}
-
-            <span class="live-badge">
-              ● AI WORKSPACE
-            </span>
-
-          </div>
-
-          <button
-            class="btn"
-            id="refreshButton"
-          >
-            Refresh
-          </button>
-
-          <button
-            class="btn"
-            id="chatButton"
-          >
-            AI Chat
-          </button>
-
+    if (!data?.length) {
+      container.innerHTML = `
+        <div style="
+          background:white;
+          border:1px dashed #cbd5e1;
+          padding:30px;
+          border-radius:15px;
+          text-align:center;
+          color:#64748b;
+        ">
+          No projects yet.
         </div>
+      `;
 
-        <div
-          class="workspace-grid"
-          id="workspaceGrid"
-        >
+      return;
+    }
 
-          <aside
-            class="panel files-panel"
-          >
+    container.innerHTML =
+      data
+        .map(
+          (project) => `
+          <div style="
+            background:white;
+            border:1px solid #e2e8f0;
+            border-radius:15px;
+            padding:20px;
+            margin-bottom:12px;
+          ">
 
-            <div class="panel-title">
-              PROJECT FILES
-            </div>
+            <div style="
+              display:flex;
+              justify-content:space-between;
+              gap:20px;
+              flex-wrap:wrap;
+            ">
 
-            <div
-              class="file-list"
-              id="fileList"
-            >
-              ${fileListHTML()}
-            </div>
+              <div>
 
-            <div class="panel-footer">
+                <h3 style="
+                  margin:0 0 7px;
+                ">
+                  ${escapeHtml(
+                    project.name
+                  )}
+                </h3>
 
-              <button
-                class="btn full"
-                id="reloadFiles"
-              >
-                Reload Files
-              </button>
+                <p style="
+                  margin:0;
+                  color:#64748b;
+                ">
+                  ${escapeHtml(
+                    project.description ||
+                      ""
+                  )}
+                </p>
 
-            </div>
-
-          </aside>
-
-          <section class="preview-panel">
-
-            <div class="preview-tabs">
-              <b>PREVIEW</b>
-              <span>CODE</span>
-              <span>APP</span>
-            </div>
-
-            <div class="preview-frame">
-
-              <div class="browser-bar">
-
-                <span></span>
-                <span></span>
-                <span></span>
-
-                <div>
-                  buildpilot.local
+                <div style="
+                  margin-top:10px;
+                  font-size:13px;
+                  color:#64748b;
+                ">
+                  Status:
+                  ${escapeHtml(
+                    project.status ||
+                      "draft"
+                  )}
                 </div>
 
               </div>
 
-              <div
-                class="preview-content"
-                id="previewContent"
-              >
+              <div style="
+                display:flex;
+                gap:8px;
+                flex-wrap:wrap;
+                align-items:center;
+              ">
 
-                <iframe
-                  id="previewFrame"
-                  title="BuildPilot Live Preview"
+                <button
+                  onclick="window.BuildPilot.openProject('${project.id}')"
                   style="
-                    width:100%;
-                    height:100%;
-                    min-height:500px;
+                    padding:9px 13px;
                     border:0;
-                    background:#fff;
+                    border-radius:8px;
+                    background:#111827;
+                    color:white;
+                    cursor:pointer;
                   "
-                  sandbox="allow-scripts allow-forms allow-modals"
-                ></iframe>
+                >
+                  Open
+                </button>
+
+                ${
+                  project.public_enabled
+                    ? `
+                    <button
+                      onclick="window.BuildPilot.copyPublicLink('${project.public_id}')"
+                      style="
+                        padding:9px 13px;
+                        border:1px solid #cbd5e1;
+                        background:white;
+                        border-radius:8px;
+                        cursor:pointer;
+                      "
+                    >
+                      Copy Public Link
+                    </button>
+                  `
+                    : ""
+                }
+
+              </div>
+
+            </div>
+
+          </div>
+        `
+        )
+        .join("");
+  }
+
+  /*
+   * ============================================================
+   * OPEN PROJECT
+   * ============================================================
+   */
+
+  async function openProject(projectId) {
+    if (!(await requireSession())) {
+      return;
+    }
+
+    try {
+      const {
+        data: project,
+        error,
+      } = await sb
+        .from("projects")
+        .select(
+          "id,name,description,frontend,backend,project_plan,public_id,public_enabled,published_at,status"
+        )
+        .eq("id", projectId)
+        .eq(
+          "user_id",
+          activeUser.id
+        )
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      activeProject = project;
+
+      await ensureStarterFiles(
+        project.id,
+        project.name
+      );
+
+      await loadProjectFiles();
+
+      openWorkspace(project.id);
+    } catch (error) {
+      showMessage(
+        error.message ||
+          "Project could not be opened",
+        "error"
+      );
+    }
+  }
+
+  async function loadProjectFiles() {
+    if (!activeProject) {
+      return [];
+    }
+
+    const {
+      data,
+      error,
+    } = await sb
+      .from("project_files")
+      .select(
+        "id,file_path,file_content,language,generated_by"
+      )
+      .eq(
+        "project_id",
+        activeProject.id
+      )
+      .order("file_path");
+
+    if (error) {
+      throw error;
+    }
+
+    activeFiles = data || [];
+
+    return activeFiles;
+  }
+
+  /*
+   * ============================================================
+   * WORKSPACE
+   * ============================================================
+   */
+
+  function openWorkspace(projectId) {
+    currentView = "workspace";
+
+    appRoot().innerHTML = `
+      <div style="
+        min-height:100vh;
+        background:#f1f5f9;
+        font-family:Arial,sans-serif;
+      ">
+
+        <header style="
+          height:64px;
+          background:#111827;
+          color:white;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          padding:0 18px;
+          box-sizing:border-box;
+        ">
+
+          <div style="
+            display:flex;
+            gap:12px;
+            align-items:center;
+          ">
+
+            <button
+              onclick="window.BuildPilot.home()"
+              style="
+                border:1px solid #475569;
+                background:transparent;
+                color:white;
+                padding:8px 12px;
+                border-radius:8px;
+                cursor:pointer;
+              "
+            >
+              ← Projects
+            </button>
+
+            <strong>
+              ${escapeHtml(
+                activeProject?.name ||
+                  "Project"
+              )}
+            </strong>
+
+          </div>
+
+          <div style="
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+          ">
+
+            <button
+              onclick="window.BuildPilot.refreshFiles()"
+              style="
+                border:1px solid #475569;
+                background:transparent;
+                color:white;
+                padding:8px 12px;
+                border-radius:8px;
+                cursor:pointer;
+              "
+            >
+              Refresh Files
+            </button>
+
+            <button
+              id="publishButton"
+              onclick="window.BuildPilot.togglePublish()"
+              style="
+                border:0;
+                background:#22c55e;
+                color:white;
+                padding:8px 12px;
+                border-radius:8px;
+                cursor:pointer;
+              "
+            >
+              ${
+                activeProject?.public_enabled
+                  ? "Public Link"
+                  : "Publish"
+              }
+            </button>
+
+          </div>
+
+        </header>
+
+        <main style="
+          display:grid;
+          grid-template-columns:
+            250px minmax(0,1fr);
+          min-height:calc(100vh - 64px);
+        ">
+
+          <aside style="
+            background:white;
+            border-right:1px solid #e2e8f0;
+            padding:15px;
+            overflow:auto;
+          ">
+
+            <h3>
+              Project Files
+            </h3>
+
+            <div id="filesList">
+              Loading...
+            </div>
+
+          </aside>
+
+          <section style="
+            padding:15px;
+            min-width:0;
+          ">
+
+            <div style="
+              display:grid;
+              grid-template-columns:
+                minmax(0,1fr)
+                minmax(0,1fr);
+              gap:15px;
+            ">
+
+              <div style="
+                background:white;
+                border-radius:14px;
+                border:1px solid #e2e8f0;
+                overflow:hidden;
+              ">
+
+                <div style="
+                  padding:12px 15px;
+                  border-bottom:1px solid #e2e8f0;
+                  font-weight:bold;
+                ">
+                  Live Preview
+                </div>
+
+                <div
+                  id="previewContent"
+                  style="
+                    min-height:600px;
+                    background:white;
+                  "
+                >
+                  Loading preview...
+                </div>
+
+              </div>
+
+              <div style="
+                background:white;
+                border-radius:14px;
+                border:1px solid #e2e8f0;
+                overflow:hidden;
+                display:flex;
+                flex-direction:column;
+              ">
+
+                <div style="
+                  padding:12px 15px;
+                  border-bottom:1px solid #e2e8f0;
+                  font-weight:bold;
+                ">
+                  AI Builder
+                </div>
+
+                <div
+                  id="chatMessages"
+                  style="
+                    flex:1;
+                    min-height:420px;
+                    max-height:520px;
+                    overflow:auto;
+                    padding:15px;
+                  "
+                >
+                  <div style="
+                    background:#f8fafc;
+                    padding:12px;
+                    border-radius:10px;
+                    color:#475569;
+                  ">
+                    Tell me what you want to change.
+                    <br><br>
+                    Example:
+                    <br>
+                    "Header का color blue कर दो"
+                    <br>
+                    "Contact section add करो"
+                    <br>
+                    "WhatsApp button लगा दो"
+                  </div>
+                </div>
+
+                <form
+                  id="aiChatForm"
+                  style="
+                    padding:12px;
+                    border-top:1px solid #e2e8f0;
+                  "
+                >
+
+                  <textarea
+                    id="aiInstruction"
+                    rows="4"
+                    placeholder="Describe the change..."
+                    style="
+                      width:100%;
+                      box-sizing:border-box;
+                      padding:12px;
+                      border:1px solid #cbd5e1;
+                      border-radius:10px;
+                      resize:vertical;
+                    "
+                  ></textarea>
+
+                  <button
+                    type="submit"
+                    id="aiSendButton"
+                    style="
+                      width:100%;
+                      margin-top:8px;
+                      padding:12px;
+                      border:0;
+                      border-radius:10px;
+                      background:#111827;
+                      color:white;
+                      cursor:pointer;
+                    "
+                  >
+                    Build / Modify Project
+                  </button>
+
+                </form>
 
               </div>
 
@@ -1424,938 +1968,1033 @@ document.addEventListener(
 
           </section>
 
-          <aside class="panel ai-panel">
-
-            <div class="panel-title">
-              BUILD WITH AI
-            </div>
-
-            <div
-              class="builder-messages"
-              id="messages"
-            >
-
-              <div class="ai-bubble">
-
-                Project ready.
-
-                <br><br>
-
-                Aap mujhe direct changes bol sakte hain:
-
-                <br><br>
-
-                • Header ka color blue karo
-
-                <br>
-
-                • Home page me section add karo
-
-                <br>
-
-                • Contact number change karo
-
-                <br>
-
-                • WhatsApp button add karo
-
-                <br>
-
-                • Login page banao
-
-              </div>
-
-            </div>
-
-            <div class="ai-compose">
-
-              <textarea
-                id="editPrompt"
-                placeholder="Describe a change..."
-              ></textarea>
-
-              <button
-                class="btn primary"
-                id="sendButton"
-              >
-                ✦ Apply Change
-              </button>
-
-            </div>
-
-          </aside>
-
-        </div>
-
-        <div class="workspace-footer">
-
-          <span>
-            ${escapeHTML(
-              state.project.frontend ||
-              "html"
-            )}
-          </span>
-
-          <span>
-            ${state.files.length}
-            files
-          </span>
-
-        </div>
+        </main>
 
       </div>
     `;
 
-    bindWorkspace();
+    document
+      .getElementById(
+        "aiChatForm"
+      )
+      .addEventListener(
+        "submit",
+        submitAIInstruction
+      );
+
+    renderFilesList();
 
     updatePreview();
   }
 
-  function fileListHTML() {
-    if (!state.files.length) {
-      return `
-        <div class="empty">
-          No files yet.
-        </div>
+  /*
+   * ============================================================
+   * FILE LIST
+   * ============================================================
+   */
+
+  function renderFilesList() {
+    const list =
+      document.getElementById(
+        "filesList"
+      );
+
+    if (!list) return;
+
+    if (!activeFiles.length) {
+      list.innerHTML = `
+        <p style="color:#64748b;">
+          No files found.
+        </p>
       `;
-    }
 
-    return state.files
-      .map(function (file) {
-
-        return `
-          <button
-            class="file-row ${
-              state.activeFile &&
-              state.activeFile.id === file.id
-                ? "active"
-                : ""
-            }"
-            data-file-id="${file.id}"
-          >
-
-            <span>
-              ${fileIcon(
-                file.file_path
-              )}
-            </span>
-
-            <span>
-              ${escapeHTML(
-                file.file_path
-              )}
-            </span>
-
-          </button>
-        `;
-
-      })
-      .join("");
-  }
-
-  function fileIcon(path) {
-    if (/\.html?$/i.test(path)) {
-      return "◇";
-    }
-
-    if (/\.css$/i.test(path)) {
-      return "◈";
-    }
-
-    if (/\.js$/i.test(path)) {
-      return "JS";
-    }
-
-    return "•";
-  }
-
-  function bindWorkspace() {
-    document.getElementById(
-      "backButton"
-    ).onclick =
-      function () {
-        location.hash =
-          "#projects";
-      };
-
-    document.getElementById(
-      "chatButton"
-    ).onclick =
-      function () {
-
-        document
-          .getElementById(
-            "workspaceGrid"
-          )
-          .classList.toggle(
-            "show-ai"
-          );
-
-      };
-
-    document.getElementById(
-      "refreshButton"
-    ).onclick =
-      async function () {
-
-        await loadFiles(
-          state.project.id
-        );
-
-        updatePreview();
-
-      };
-
-    document.getElementById(
-      "reloadFiles"
-    ).onclick =
-      async function () {
-
-        await loadFiles(
-          state.project.id
-        );
-
-        workspacePage();
-      };
-
-    document
-      .querySelectorAll(
-        "[data-file-id]"
-      )
-      .forEach(
-        function (button) {
-
-          button.onclick =
-            function () {
-
-              const file =
-                state.files.find(
-                  function (item) {
-                    return (
-                      item.id ===
-                      button.dataset.fileId
-                    );
-                  }
-                );
-
-              state.activeFile =
-                file || null;
-
-              openEditor();
-            };
-
-        }
-      );
-
-    document.getElementById(
-      "sendButton"
-    ).onclick =
-      sendAI;
-
-    document
-      .getElementById(
-        "editPrompt"
-      )
-      .addEventListener(
-        "keydown",
-        function (event) {
-
-          if (
-            event.key === "Enter" &&
-            (
-              event.ctrlKey ||
-              event.metaKey
-            )
-          ) {
-            sendAI();
-          }
-
-        }
-      );
-  }
-
-  function openEditor() {
-    if (!state.activeFile) {
       return;
     }
 
-    const file =
-      state.activeFile;
+    list.innerHTML =
+      activeFiles
+        .map(
+          (file) => `
+          <button
+            onclick="window.BuildPilot.editFile('${file.id}')"
+            style="
+              display:block;
+              width:100%;
+              text-align:left;
+              padding:10px;
+              margin-bottom:5px;
+              border:1px solid #e2e8f0;
+              background:#f8fafc;
+              border-radius:8px;
+              cursor:pointer;
+            "
+          >
+            ${escapeHtml(
+              file.file_path
+            )}
+          </button>
+        `
+        )
+        .join("");
+  }
 
-    const content =
+  /*
+   * ============================================================
+   * PREVIEW
+   * ============================================================
+   */
+
+  function buildPreviewHTML() {
+    const htmlFile =
+      activeFiles.find(
+        (file) =>
+          file.file_path
+            .toLowerCase() ===
+          "index.html"
+      ) ||
+      activeFiles.find(
+        (file) =>
+          file.file_path
+            .toLowerCase()
+            .endsWith(".html")
+      );
+
+    if (!htmlFile) {
+      return null;
+    }
+
+    let html =
+      htmlFile.file_content || "";
+
+    const css = activeFiles
+      .filter((file) =>
+        file.file_path
+          .toLowerCase()
+          .endsWith(".css")
+      )
+      .map(
+        (file) =>
+          file.file_content || ""
+      )
+      .join("\n\n");
+
+    const js = activeFiles
+      .filter((file) =>
+        file.file_path
+          .toLowerCase()
+          .endsWith(".js")
+      )
+      .map(
+        (file) =>
+          file.file_content || ""
+      )
+      .join("\n\n");
+
+    if (css.trim()) {
+      const styleTag = `
+<style data-buildpilot-preview="css">
+${css}
+</style>
+`;
+
+      if (
+        /<\/head>/i.test(html)
+      ) {
+        html = html.replace(
+          /<\/head>/i,
+          styleTag + "</head>"
+        );
+      } else {
+        html =
+          styleTag + html;
+      }
+    }
+
+    if (js.trim()) {
+      const scriptTag = `
+<script data-buildpilot-preview="js">
+${js}
+</script>
+`;
+
+      if (
+        /<\/body>/i.test(html)
+      ) {
+        html = html.replace(
+          /<\/body>/i,
+          scriptTag + "</body>"
+        );
+      } else {
+        html += scriptTag;
+      }
+    }
+
+    return html;
+  }
+
+  function updatePreview() {
+    const container =
       document.getElementById(
         "previewContent"
       );
 
-    content.innerHTML = `
-      <div
-        style="
-          width:100%;
-          height:100%;
-          display:flex;
-          flex-direction:column;
-        "
-      >
+    if (!container) return;
 
-        <div
-          style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            padding:10px;
-            background:#101a29;
-            border-bottom:1px solid #26364b;
-          "
-        >
+    const html =
+      buildPreviewHTML();
 
-          <span>
-            ${escapeHTML(
-              file.file_path
-            )}
-          </span>
+    if (!html) {
+      container.innerHTML = `
+        <div style="
+          padding:30px;
+          text-align:center;
+          color:#64748b;
+        ">
 
-          <div style="display:flex;gap:8px">
+          <h3>
+            Project Preview
+          </h3>
 
-            <button
-              class="btn"
-              id="closeEditor"
-            >
-              Close
-            </button>
+          <p>
+            index.html अभी available नहीं है।
+          </p>
 
-            <button
-              class="btn primary"
-              id="saveEditor"
-            >
-              Save
-            </button>
-
-          </div>
+          <button
+            onclick="window.BuildPilot.refreshFiles()"
+            style="
+              padding:10px 15px;
+              border:0;
+              border-radius:8px;
+              background:#111827;
+              color:white;
+              cursor:pointer;
+            "
+          >
+            Refresh Files
+          </button>
 
         </div>
+      `;
 
-        <textarea
-          id="codeEditor"
-          style="
-            flex:1;
-            width:100%;
-            resize:none;
-            border:0;
-            outline:none;
-            padding:18px;
-            background:#080e16;
-            color:#dcecff;
-            font-family:Consolas,monospace;
-            font-size:13px;
-            line-height:1.6;
-          "
-        ></textarea>
+      return;
+    }
 
-      </div>
-    `;
+    const iframe =
+      document.createElement(
+        "iframe"
+      );
 
-    document.getElementById(
-      "codeEditor"
-    ).value =
-      file.file_content || "";
+    iframe.setAttribute(
+      "sandbox",
+      "allow-scripts allow-forms allow-modals allow-popups"
+    );
 
-    document.getElementById(
-      "closeEditor"
-    ).onclick =
-      function () {
-        workspacePage();
-      };
+    iframe.style.width = "100%";
+    iframe.style.height = "650px";
+    iframe.style.border = "0";
+    iframe.srcdoc = html;
 
-    document.getElementById(
-      "saveEditor"
-    ).onclick =
-      async function () {
+    container.innerHTML = "";
 
-        const value =
-          document.getElementById(
-            "codeEditor"
-          ).value;
+    container.appendChild(
+      iframe
+    );
+  }
 
-        const result =
-          await client
-            .from("project_files")
-            .update({
-              file_content:
-                value,
-              updated_at:
-                new Date().toISOString()
-            })
-            .eq(
-              "id",
-              file.id
-            );
+  async function refreshFiles() {
+    try {
+      if (!activeProject) {
+        showMessage(
+          "No active project",
+          "error"
+        );
 
-        if (result.error) {
+        return;
+      }
 
-          alert(
-            result.error.message
-          );
+      showMessage(
+        "Refreshing project files..."
+      );
 
-          return;
-        }
+      await ensureStarterFiles(
+        activeProject.id,
+        activeProject.name
+      );
 
-        file.file_content =
-          value;
+      await loadProjectFiles();
 
-        workspacePage();
-      };
+      renderFilesList();
+
+      updatePreview();
+
+      showMessage(
+        "Files refreshed",
+        "success"
+      );
+    } catch (error) {
+      console.error(error);
+
+      showMessage(
+        error.message ||
+          "Refresh failed",
+        "error"
+      );
+    }
   }
 
   /*
-   * LIVE PREVIEW
-   *
-   * HTML + ALL CSS + ALL JS
-   * are combined into iframe.srcdoc.
+   * ============================================================
+   * AI EDIT
+   * ============================================================
    */
-  function buildPreview() {
 
-    const htmlFile =
-      state.files.find(
-        function (file) {
+  async function submitAIInstruction(
+    event
+  ) {
+    event.preventDefault();
 
-          return /^index\.html?$/i.test(
-            file.file_path
-              .split("/")
-              .pop()
-          );
-
-        }
-      ) ||
-      state.files.find(
-        function (file) {
-
-          return /\.html?$/i.test(
-            file.file_path
-          );
-
-        }
+    if (!activeProject) {
+      showMessage(
+        "Open a project first",
+        "error"
       );
 
-    if (!htmlFile) {
-
-      return `
-        <!doctype html>
-
-        <html>
-
-          <body
-            style="
-              font-family:Arial;
-              padding:40px;
-            "
-          >
-
-            <h2>
-              BuildPilot Preview
-            </h2>
-
-            <p>
-              index.html abhi available nahi hai.
-            </p>
-
-            <p>
-              Refresh Files ya project ko dobara open karein.
-            </p>
-
-          </body>
-
-        </html>
-      `;
-    }
-
-    let documentHTML =
-      htmlFile.file_content || "";
-
-    /*
-     * Load ALL CSS files.
-     */
-    const css =
-      state.files
-        .filter(
-          function (file) {
-            return /\.css$/i.test(
-              file.file_path
-            );
-          }
-        )
-        .map(
-          function (file) {
-            return file.file_content || "";
-          }
-        )
-        .join("\n");
-
-    /*
-     * Load ALL JavaScript files.
-     */
-    const js =
-      state.files
-        .filter(
-          function (file) {
-            return /\.js$/i.test(
-              file.file_path
-            );
-          }
-        )
-        .map(
-          function (file) {
-            return file.file_content || "";
-          }
-        )
-        .join("\n");
-
-    if (css) {
-
-      if (
-        /<\/head>/i.test(
-          documentHTML
-        )
-      ) {
-
-        documentHTML =
-          documentHTML.replace(
-            /<\/head>/i,
-            "<style>\n" +
-              css +
-              "\n</style></head>"
-          );
-
-      } else {
-
-        documentHTML =
-          "<style>\n" +
-          css +
-          "\n</style>" +
-          documentHTML;
-
-      }
-    }
-
-    if (js) {
-
-      if (
-        /<\/body>/i.test(
-          documentHTML
-        )
-      ) {
-
-        documentHTML =
-          documentHTML.replace(
-            /<\/body>/i,
-            "<script>\n" +
-              js +
-              "\n</script></body>"
-          );
-
-      } else {
-
-        documentHTML +=
-          "<script>\n" +
-          js +
-          "\n</script>";
-      }
-    }
-
-    return documentHTML;
-  }
-
-  function updatePreview() {
-
-    const frame =
-      document.getElementById(
-        "previewFrame"
-      );
-
-    if (!frame) {
       return;
     }
-
-    frame.srcdoc =
-      buildPreview();
-  }
-
-  async function sendAI() {
 
     const input =
       document.getElementById(
-        "editPrompt"
+        "aiInstruction"
       );
 
-    const prompt =
+    const button =
+      document.getElementById(
+        "aiSendButton"
+      );
+
+    const instruction =
       input.value.trim();
 
-    if (!prompt) {
+    if (!instruction) {
       return;
     }
 
-    const messages =
-      document.getElementById(
-        "messages"
-      );
-
-    messages.insertAdjacentHTML(
-      "beforeend",
-      `
-        <div class="user-bubble">
-          ${escapeHTML(prompt)}
-        </div>
-
-        <div
-          class="ai-bubble"
-          id="aiWorking"
-        >
-          AI project edit kar raha hai...
-        </div>
-      `
+    appendChat(
+      "You",
+      instruction,
+      "user"
     );
 
     input.value = "";
 
-    try {
+    setLoading(
+      button,
+      true,
+      "AI is building..."
+    );
 
-      await getSession();
+    try {
+      await ensureStarterFiles(
+        activeProject.id,
+        activeProject.name
+      );
+
+      await loadProjectFiles();
 
       const result =
-        await callFunction(
-          state.project.id,
-          prompt
+        await callGenerateFunction(
+          activeProject.id,
+          instruction,
+          activeProject.name,
+          activeProject.frontend,
+          activeProject.backend
         );
 
-      const working =
-        document.getElementById(
-          "aiWorking"
-        );
+      await loadProjectFiles();
 
-      if (working) {
-        working.remove();
-      }
+      renderFilesList();
 
-      if (!result.success) {
+      updatePreview();
 
-        throw new Error(
-          result.error ||
-          "AI update failed"
-        );
-
-      }
-
-      await loadFiles(
-        state.project.id
+      appendChat(
+        "BuildPilot AI",
+        result?.message ||
+          "Project updated successfully.",
+        "ai"
       );
 
-      messages.insertAdjacentHTML(
-        "beforeend",
-        `
-          <div class="ai-bubble">
-
-            ✓ ${
-              escapeHTML(
-                result.message ||
-                "Project updated."
-              )
-            }
-
-          </div>
-        `
+      showMessage(
+        "Project updated successfully",
+        "success"
       );
-
-      updateWorkspaceWithoutReload();
-
     } catch (error) {
+      console.error(error);
 
-      const working =
-        document.getElementById(
-          "aiWorking"
-        );
-
-      if (working) {
-        working.remove();
-      }
-
-      messages.insertAdjacentHTML(
-        "beforeend",
-        `
-          <div class="ai-bubble">
-
-            ❌ ${
-              escapeHTML(
-                error.message ||
-                "AI error"
-              )
-            }
-
-          </div>
-        `
+      appendChat(
+        "BuildPilot AI",
+        error.message ||
+          "AI update failed",
+        "error"
       );
+
+      showMessage(
+        error.message ||
+          "AI update failed",
+        "error"
+      );
+    } finally {
+      setLoading(button, false);
     }
   }
 
-  function updateWorkspaceWithoutReload() {
-
-    const list =
+  function appendChat(
+    sender,
+    message,
+    type
+  ) {
+    const box =
       document.getElementById(
-        "fileList"
+        "chatMessages"
       );
 
-    if (list) {
+    if (!box) return;
 
-      list.innerHTML =
-        fileListHTML();
-
-    }
-
-    document
-      .querySelectorAll(
-        "[data-file-id]"
-      )
-      .forEach(
-        function (button) {
-
-          button.onclick =
-            function () {
-
-              state.activeFile =
-                state.files.find(
-                  function (file) {
-
-                    return (
-                      file.id ===
-                      button.dataset.fileId
-                    );
-
-                  }
-                ) || null;
-
-              openEditor();
-
-            };
-
-        }
+    const item =
+      document.createElement(
+        "div"
       );
 
-    updatePreview();
+    item.style.marginBottom =
+      "12px";
+
+    item.style.padding =
+      "11px";
+
+    item.style.borderRadius =
+      "10px";
+
+    item.style.background =
+      type === "user"
+        ? "#e0f2fe"
+        : type === "error"
+        ? "#fee2e2"
+        : "#f1f5f9";
+
+    item.innerHTML = `
+      <strong>
+        ${escapeHtml(sender)}
+      </strong>
+
+      <div style="
+        margin-top:5px;
+        white-space:pre-wrap;
+      ">
+        ${escapeHtml(message)}
+      </div>
+    `;
+
+    box.appendChild(item);
+
+    box.scrollTop =
+      box.scrollHeight;
   }
 
-  function loginPage(signup) {
+  /*
+   * ============================================================
+   * EDIT FILE
+   * ============================================================
+   */
 
-    app.innerHTML = `
-      <div class="site">
+  function editFile(fileId) {
+    const file =
+      activeFiles.find(
+        (item) =>
+          item.id === fileId
+      );
 
-        ${header()}
+    if (!file) return;
 
-        <div class="auth-wrap">
+    const root = appRoot();
 
-          <div class="auth-card">
+    root.innerHTML = `
+      <div style="
+        min-height:100vh;
+        background:#f1f5f9;
+        padding:20px;
+        box-sizing:border-box;
+        font-family:Arial,sans-serif;
+      ">
 
-            <div class="eyebrow">
+        <div style="
+          max-width:1200px;
+          margin:auto;
+        ">
 
-              ${
-                signup
-                  ? "CREATE ACCOUNT"
-                  : "WELCOME BACK"
-              }
-
-            </div>
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:15px;
+          ">
 
             <h2>
-
-              ${
-                signup
-                  ? "Create your account"
-                  : "Login to BuildPilot"
-              }
-
+              ${escapeHtml(
+                file.file_path
+              )}
             </h2>
 
-            <p class="muted">
-
-              ${
-                signup
-                  ? "Start building with AI."
-                  : "Continue your projects."
-              }
-
-            </p>
-
-            <div class="stack">
-
-              <input
-                id="email"
-                class="input"
-                type="email"
-                placeholder="Email"
-              >
-
-              <input
-                id="password"
-                class="input"
-                type="password"
-                placeholder="Password"
-              >
-
-              <button
-                id="authButton"
-                class="btn primary"
-              >
-
-                ${
-                  signup
-                    ? "Create Account"
-                    : "Login"
-                }
-
-              </button>
-
-              <div
-                id="authMessage"
-                class="hidden"
-              ></div>
-
-              <button
-                id="backButton"
-                class="btn"
-              >
-                Back
-              </button>
-
-            </div>
+            <button
+              onclick="window.BuildPilot.backWorkspace()"
+              style="
+                padding:10px 14px;
+                border:0;
+                border-radius:8px;
+                cursor:pointer;
+              "
+            >
+              ← Back
+            </button>
 
           </div>
+
+          <textarea
+            id="fileEditor"
+            style="
+              width:100%;
+              min-height:650px;
+              box-sizing:border-box;
+              padding:15px;
+              font-family:monospace;
+              font-size:14px;
+              border:1px solid #cbd5e1;
+              border-radius:12px;
+              resize:vertical;
+            "
+          >${escapeHtml(
+            file.file_content
+          )}</textarea>
+
+          <button
+            id="saveFileButton"
+            onclick="window.BuildPilot.saveFile('${file.id}')"
+            style="
+              margin-top:12px;
+              padding:12px 18px;
+              border:0;
+              border-radius:9px;
+              background:#111827;
+              color:white;
+              cursor:pointer;
+            "
+          >
+            Save File
+          </button>
+
+        </div>
+
+      </div>
+    `;
+  }
+
+  async function saveFile(fileId) {
+    const file =
+      activeFiles.find(
+        (item) =>
+          item.id === fileId
+      );
+
+    if (!file) return;
+
+    const button =
+      document.getElementById(
+        "saveFileButton"
+      );
+
+    const editor =
+      document.getElementById(
+        "fileEditor"
+      );
+
+    if (!editor) return;
+
+    setLoading(
+      button,
+      true,
+      "Saving..."
+    );
+
+    try {
+      const {
+        error,
+      } = await sb
+        .from("project_files")
+        .update({
+          file_content:
+            editor.value,
+          generated_by:
+            "user",
+        })
+        .eq(
+          "id",
+          fileId
+        )
+        .eq(
+          "project_id",
+          activeProject.id
+        );
+
+      if (error) {
+        throw error;
+      }
+
+      await loadProjectFiles();
+
+      showMessage(
+        "File saved",
+        "success"
+      );
+
+      openWorkspace(
+        activeProject.id
+      );
+    } catch (error) {
+      showMessage(
+        error.message ||
+          "Save failed",
+        "error"
+      );
+    } finally {
+      setLoading(
+        button,
+        false
+      );
+    }
+  }
+
+  /*
+   * ============================================================
+   * PUBLIC PUBLISH
+   * ============================================================
+   */
+
+  async function togglePublish() {
+    if (!activeProject) {
+      return;
+    }
+
+    try {
+      const newState =
+        !Boolean(
+          activeProject.public_enabled
+        );
+
+      /*
+       * Make sure project has a public_id.
+       */
+      let publicId =
+        activeProject.public_id;
+
+      if (!publicId) {
+        publicId =
+          crypto.randomUUID();
+      }
+
+      const updatePayload = {
+        public_id: publicId,
+        public_enabled:
+          newState,
+        published_at:
+          newState
+            ? new Date().toISOString()
+            : null,
+      };
+
+      const {
+        data,
+        error,
+      } = await sb
+        .from("projects")
+        .update(
+          updatePayload
+        )
+        .eq(
+          "id",
+          activeProject.id
+        )
+        .eq(
+          "user_id",
+          activeUser.id
+        )
+        .select(
+          "id,name,description,frontend,backend,project_plan,public_id,public_enabled,published_at,status"
+        )
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      activeProject = data;
+
+      if (newState) {
+        const link =
+          createPublicLink(
+            data.public_id
+          );
+
+        await copyText(link);
+
+        showPublicLinkDialog(
+          link
+        );
+      } else {
+        showMessage(
+          "Public link disabled",
+          "success"
+        );
+
+        openWorkspace(
+          activeProject.id
+        );
+      }
+    } catch (error) {
+      console.error(error);
+
+      showMessage(
+        error.message ||
+          "Publish failed",
+        "error"
+      );
+    }
+  }
+
+  function createPublicLink(
+    publicId
+  ) {
+    return (
+      PUBLIC_BASE_URL +
+      "?public=" +
+      encodeURIComponent(
+        publicId
+      )
+    );
+  }
+
+  async function copyPublicLink(
+    publicId
+  ) {
+    const link =
+      createPublicLink(
+        publicId
+      );
+
+    await copyText(link);
+
+    showPublicLinkDialog(
+      link
+    );
+  }
+
+  async function copyText(
+    text
+  ) {
+    try {
+      if (
+        navigator.clipboard &&
+        window.isSecureContext
+      ) {
+        await navigator.clipboard.writeText(
+          text
+        );
+
+        return true;
+      }
+
+      const textarea =
+        document.createElement(
+          "textarea"
+        );
+
+      textarea.value = text;
+
+      textarea.style.position =
+        "fixed";
+
+      textarea.style.left =
+        "-9999px";
+
+      document.body.appendChild(
+        textarea
+      );
+
+      textarea.select();
+
+      document.execCommand(
+        "copy"
+      );
+
+      textarea.remove();
+
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function showPublicLinkDialog(
+    link
+  ) {
+    const old =
+      document.getElementById(
+        "publicLinkModal"
+      );
+
+    if (old) {
+      old.remove();
+    }
+
+    const modal =
+      document.createElement(
+        "div"
+      );
+
+    modal.id =
+      "publicLinkModal";
+
+    modal.style.position =
+      "fixed";
+
+    modal.style.inset = "0";
+
+    modal.style.background =
+      "rgba(15,23,42,.65)";
+
+    modal.style.zIndex =
+      "99998";
+
+    modal.style.display =
+      "flex";
+
+    modal.style.alignItems =
+      "center";
+
+    modal.style.justifyContent =
+      "center";
+
+    modal.innerHTML = `
+      <div style="
+        width:min(600px,90%);
+        background:white;
+        border-radius:18px;
+        padding:25px;
+        box-shadow:0 20px 70px rgba(0,0,0,.3);
+        font-family:Arial,sans-serif;
+      ">
+
+        <h2>
+          🎉 Public Project Link
+        </h2>
+
+        <p style="
+          color:#64748b;
+        ">
+          अब कोई भी इस link को खोल सकता है।
+        </p>
+
+        <input
+          id="publicLinkInput"
+          readonly
+          value="${escapeHtml(link)}"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            padding:13px;
+            border:1px solid #cbd5e1;
+            border-radius:10px;
+          "
+        />
+
+        <div style="
+          display:flex;
+          gap:8px;
+          margin-top:15px;
+          flex-wrap:wrap;
+        ">
+
+          <button
+            onclick="window.BuildPilot.copyCurrentPublicLink()"
+            style="
+              padding:11px 15px;
+              border:0;
+              border-radius:8px;
+              background:#111827;
+              color:white;
+              cursor:pointer;
+            "
+          >
+            Copy Link
+          </button>
+
+          <button
+            onclick="window.open('${escapeHtml(
+              link
+            )}', '_blank')"
+            style="
+              padding:11px 15px;
+              border:1px solid #cbd5e1;
+              background:white;
+              border-radius:8px;
+              cursor:pointer;
+            "
+          >
+            Open Public Page
+          </button>
+
+          <button
+            onclick="document.getElementById('publicLinkModal').remove()"
+            style="
+              padding:11px 15px;
+              border:1px solid #cbd5e1;
+              background:white;
+              border-radius:8px;
+              cursor:pointer;
+            "
+          >
+            Close
+          </button>
 
         </div>
 
       </div>
     `;
 
-    bindHeader();
+    document.body.appendChild(
+      modal
+    );
 
-    document.getElementById(
-      "backButton"
-    ).onclick =
-      function () {
-        location.hash = "";
-      };
-
-    document.getElementById(
-      "authButton"
-    ).onclick =
-      async function () {
-
-        const email =
-          document.getElementById(
-            "email"
-          ).value.trim();
-
-        const password =
-          document.getElementById(
-            "password"
-          ).value;
-
-        let result;
-
-        if (signup) {
-
-          result =
-            await client.auth.signUp({
-              email: email,
-              password:
-                password
-            });
-
-        } else {
-
-          result =
-            await client.auth.signInWithPassword({
-              email: email,
-              password:
-                password
-            });
-
-        }
-
-        const message =
-          document.getElementById(
-            "authMessage"
-          );
-
-        if (result.error) {
-
-          message.className =
-            "notice error";
-
-          message.textContent =
-            result.error.message;
-
-          return;
-        }
-
-        if (
-          signup &&
-          !result.data.session
-        ) {
-
-          message.className =
-            "notice success-note";
-
-          message.textContent =
-            "Account created. Email confirm karke login karein.";
-
-          return;
-        }
-
-        await getSession();
-
-        location.hash = "";
-      };
+    window._buildpilotPublicLink =
+      link;
   }
 
-  async function router() {
+  async function copyCurrentPublicLink() {
+    const link =
+      window._buildpilotPublicLink;
+
+    if (!link) return;
+
+    await copyText(link);
+
+    showMessage(
+      "Public link copied",
+      "success"
+    );
+  }
+
+  /*
+   * ============================================================
+   * NAVIGATION
+   * ============================================================
+   */
+
+  function backWorkspace() {
+    if (!activeProject) {
+      renderHome();
+
+      return;
+    }
+
+    openWorkspace(
+      activeProject.id
+    );
+  }
+
+  /*
+   * ============================================================
+   * AUTH STATE
+   * ============================================================
+   */
+
+  sb.auth.onAuthStateChange(
+    async (_event, session) => {
+      activeSession =
+        session || null;
+
+      activeUser =
+        session?.user || null;
+    }
+  );
+
+  /*
+   * ============================================================
+   * PUBLIC API
+   * ============================================================
+   */
+
+  window.BuildPilot = {
+    login: loginUser,
+    signup: signupUser,
+    logout: logoutUser,
+
+    showLoginForm,
+    showSignupForm,
+
+    home: renderHome,
+
+    startProject,
+
+    createProject,
+
+    loadProjects,
+
+    openProject,
+
+    refreshFiles,
+
+    editFile,
+
+    saveFile,
+
+    backWorkspace,
+
+    togglePublish,
+
+    copyPublicLink,
+
+    copyCurrentPublicLink,
+  };
+
+  /*
+   * ============================================================
+   * START APPLICATION
+   * ============================================================
+   */
+
+  (async function boot() {
+    const publicId =
+      getPublicIdFromUrl();
+
+    /*
+     * PUBLIC PROJECT
+     *
+     * Important:
+     * This is checked before authentication.
+     */
+    if (publicId) {
+      await loadPublicProject(
+        publicId
+      );
+
+      return;
+    }
 
     await getSession();
 
-    const hash =
-      location.hash;
+    if (activeUser) {
+      await ensureProfile();
 
-    if (hash === "#login") {
-      loginPage(false);
-      return;
+      renderHome();
+    } else {
+      renderLogin();
     }
-
-    if (hash === "#signup") {
-      loginPage(true);
-      return;
-    }
-
-    if (hash === "#projects") {
-      await projectsPage();
-      return;
-    }
-
-    if (hash === "#workspace") {
-      await workspacePage();
-      return;
-    }
-
-    homePage();
-  }
-
-  client.auth.onAuthStateChange(
-    function (_event, session) {
-      state.session =
-        session || null;
-    }
-  );
-
-  window.addEventListener(
-    "hashchange",
-    router
-  );
-
-  router();
-
+  })();
 })();

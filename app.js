@@ -1,185 +1,146 @@
 (() => {
-  const C = window.BUILDPILOT_CONFIG || {};
+  "use strict";
+
+  const CONFIG = window.BUILDPILOT_CONFIG || {};
+  const app = document.getElementById("app");
+
+  if (!app) {
+    console.error("BuildPilot: #app not found");
+    return;
+  }
 
   if (!window.supabase) {
-    document.body.innerHTML =
-      "<h2 style='font-family:Arial;padding:30px'>Supabase library not loaded.</h2>";
+    app.innerHTML = `
+      <div style="
+        min-height:100vh;
+        display:grid;
+        place-items:center;
+        background:#070b12;
+        color:white;
+        font-family:Arial,sans-serif;
+        padding:20px;
+      ">
+        <div style="
+          max-width:500px;
+          padding:30px;
+          border:1px solid #26364b;
+          border-radius:18px;
+          background:#0d141f;
+        ">
+          <h2>BuildPilot AI</h2>
+          <p>Supabase library load nahi hui.</p>
+          <button onclick="location.reload()">Reload</button>
+        </div>
+      </div>
+    `;
     return;
   }
 
   const client = window.supabase.createClient(
-    C.SUPABASE_URL,
-    C.SUPABASE_PUBLISHABLE_KEY
+    CONFIG.SUPABASE_URL,
+    CONFIG.SUPABASE_PUBLISHABLE_KEY
   );
 
-  const app = document.getElementById("app");
+  const FUNCTION_NAME = CONFIG.FUNCTION_NAME || "super-function";
 
   const state = {
     session: null,
-    profile: null,
-    loading: false
+    project: null,
+    projects: [],
+    files: [],
+    activeFile: null,
+    building: false
   };
 
-  // Your deployed Supabase Edge Function
-  const FUNCTION_NAME = "super-function";
-
-  function esc(value) {
-    return String(value ?? "").replace(/[&<>"']/g, function (char) {
+  function escapeHTML(value) {
+    return String(value || "").replace(/[&<>"']/g, function (char) {
       const map = {
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
-        "'": "&#39;"
+        "'": "&#039;"
       };
 
       return map[char];
     });
   }
 
-  async function ensureProfile(user) {
-    if (!user) return null;
+  async function getSession() {
+    const result = await client.auth.getSession();
 
-    const result = await client
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
+    state.session = result.data.session || null;
 
-    if (result.error) {
-      console.error("Profile error:", result.error);
-      return null;
-    }
-
-    if (result.data) {
-      return result.data;
-    }
-
-    const created = await client
-      .from("profiles")
-      .insert({
-        id: user.id,
-        full_name: user.email
-          ? user.email.split("@")[0]
-          : "User"
-      })
-      .select("*")
-      .single();
-
-    if (created.error) {
-      console.error(
-        "Profile create error:",
-        created.error
-      );
-
-      return null;
-    }
-
-    return created.data;
+    return state.session;
   }
 
-  async function refreshAuth() {
-    try {
-      const result =
-        await client.auth.getSession();
-
-      if (result.error) {
-        throw result.error;
-      }
-
-      state.session =
-        result.data.session || null;
-
-      if (state.session?.user) {
-        state.profile =
-          await ensureProfile(
-            state.session.user
-          );
-      } else {
-        state.profile = null;
-      }
-
-      return state.session;
-
-    } catch (error) {
-      console.error(
-        "Auth error:",
-        error
-      );
-
-      state.session = null;
-      state.profile = null;
-
-      return null;
-    }
-  }
-
-  function nav() {
-    let actions = "";
-
-    if (state.session) {
-      actions = `
-        <span class="pill">
-          ${esc(state.session.user.email)}
-        </span>
-
-        <button
-          class="btn"
-          id="logout"
-        >
-          Logout
-        </button>
-      `;
-    } else {
-      actions = `
-        <button
-          class="btn"
-          id="loginBtn"
-        >
-          Login
-        </button>
-
-        <button
-          class="btn primary"
-          id="signupBtn"
-        >
-          Sign up
-        </button>
-      `;
-    }
-
+  function header() {
     return `
-      <div class="nav">
+      <header class="topbar">
 
-        <div class="brand">
+        <div
+          class="brandmark"
+          id="brandHome"
+        >
           BuildPilot <span>AI</span>
         </div>
 
-        <div class="nav-actions">
-          ${actions}
+        <div class="top-actions">
+
+          ${
+            state.session
+              ? `
+                <span class="user-chip">
+                  ${escapeHTML(state.session.user.email)}
+                </span>
+
+                <button
+                  class="btn"
+                  id="projectsButton"
+                >
+                  Projects
+                </button>
+
+                <button
+                  class="btn"
+                  id="logoutButton"
+                >
+                  Logout
+                </button>
+              `
+              : `
+                <button
+                  class="btn"
+                  id="loginButton"
+                >
+                  Login
+                </button>
+
+                <button
+                  class="btn primary"
+                  id="signupButton"
+                >
+                  Sign up
+                </button>
+              `
+          }
+
         </div>
 
-      </div>
+      </header>
     `;
   }
 
-  function bindNav() {
-    const logout =
-      document.getElementById("logout");
+  function bindHeader() {
+    const home = document.getElementById("brandHome");
 
-    if (logout) {
-      logout.onclick = async function () {
-        await client.auth.signOut();
-
-        state.session = null;
-        state.profile = null;
-
+    if (home) {
+      home.onclick = function () {
         location.hash = "";
       };
     }
 
-    const login =
-      document.getElementById("loginBtn");
+    const login = document.getElementById("loginButton");
 
     if (login) {
       login.onclick = function () {
@@ -187,25 +148,50 @@
       };
     }
 
-    const signup =
-      document.getElementById("signupBtn");
+    const signup = document.getElementById("signupButton");
 
     if (signup) {
       signup.onclick = function () {
         location.hash = "#signup";
       };
     }
+
+    const projects = document.getElementById("projectsButton");
+
+    if (projects) {
+      projects.onclick = function () {
+        location.hash = "#projects";
+      };
+    }
+
+    const logout = document.getElementById("logoutButton");
+
+    if (logout) {
+      logout.onclick = async function () {
+        await client.auth.signOut();
+
+        state.session = null;
+        state.project = null;
+        state.files = [];
+
+        location.hash = "";
+      };
+    }
   }
 
-  function renderHome() {
+  function homePage() {
     app.innerHTML = `
-      <div class="shell">
+      <div class="site">
 
-        ${nav()}
+        ${header()}
 
-        <main class="container">
+        <main class="landing">
 
-          <section class="hero">
+          <section class="hero2">
+
+            <div class="eyebrow">
+              AI SOFTWARE BUILDER
+            </div>
 
             <h1>
               Describe it.
@@ -213,84 +199,124 @@
             </h1>
 
             <p>
-              BuildPilot AI
-              turns your idea into software.
+              BuildPilot AI turns your idea into a real website
+              and lets you modify it using normal language.
             </p>
 
           </section>
 
-          <section class="chat card">
 
-            <div class="row">
+          <section class="builder-card">
 
-              <span class="pill">
-                Frontend: HTML / React / Next.js
-              </span>
+            <div class="builder-head">
 
-              <span class="pill">
-                Backend: Supabase / Firebase / GitHub
-              </span>
+              <div>
 
-            </div>
+                <div class="tiny-label">
+                  NEW PROJECT
+                </div>
 
-            <div
-              id="messages"
-              class="messages"
-            >
+                <h2>
+                  What do you want to build?
+                </h2>
 
-              <div class="msg ai">
+              </div>
 
-                Hi! Tell me what you want to build.
-
-                <br><br>
-
-                Examples:
-
-                <br>
-                Header ka color blue karo
-
-                <br>
-                Home page me section add karo
-
-                <br>
-                Login page banao
-
-                <br>
-                Contact number change karo
-
+              <div class="status-dot">
+                ● AI Ready
               </div>
 
             </div>
 
-            <div class="grid">
 
-              <div>
+            <div class="type-grid">
 
-                <label class="label">
-                  Project name
-                </label>
+              <button
+                class="type-card selected"
+                data-type="complete_system"
+              >
+
+                <div class="type-icon">
+                  ⚡
+                </div>
+
+                <div>
+
+                  <strong>
+                    Complete System
+                  </strong>
+
+                  <p>
+                    Website + application structure
+                    + backend-ready project.
+                  </p>
+
+                  <small>
+                    Recommended
+                  </small>
+
+                </div>
+
+              </button>
+
+
+              <button
+                class="type-card"
+                data-type="website"
+              >
+
+                <div class="type-icon">
+                  ◈
+                </div>
+
+                <div>
+
+                  <strong>
+                    Website Only
+                  </strong>
+
+                  <p>
+                    Responsive HTML, CSS and
+                    JavaScript website.
+                  </p>
+
+                  <small>
+                    Simple & fast
+                  </small>
+
+                </div>
+
+              </button>
+
+            </div>
+
+
+            <div class="builder-fields">
+
+              <label>
+
+                Project name
 
                 <input
                   id="projectName"
                   class="input"
-                  placeholder="Coaching Management App"
+                  placeholder="Kartar Classes"
                 >
 
-              </div>
+              </label>
 
-              <div>
 
-                <label class="label">
-                  Frontend
-                </label>
+              <label>
+
+                Frontend
 
                 <select
                   id="frontend"
-                  class="select"
+                  class="input"
                 >
 
                   <option value="html">
-                    HTML
+                    HTML / CSS / JavaScript
                   </option>
 
                   <option value="react">
@@ -303,23 +329,16 @@
 
                 </select>
 
-              </div>
+              </label>
 
-            </div>
 
-            <br>
+              <label>
 
-            <div class="grid">
-
-              <div>
-
-                <label class="label">
-                  Backend
-                </label>
+                Backend
 
                 <select
                   id="backend"
-                  class="select"
+                  class="input"
                 >
 
                   <option value="supabase">
@@ -331,79 +350,157 @@
                   </option>
 
                   <option value="github">
-                    GitHub Only
+                    GitHub
                   </option>
 
                 </select>
 
-              </div>
+              </label>
 
-              <div>
 
-                <label class="label">
-                  Request
-                </label>
+              <label>
+
+                Brand / Contact
 
                 <input
-                  id="prompt"
+                  id="brandInfo"
                   class="input"
-                  placeholder="Build a coaching website..."
+                  placeholder="Logo, phone, WhatsApp..."
                 >
 
-              </div>
+              </label>
 
             </div>
 
-            <br>
 
-            <button
-              id="generate"
-              class="btn primary"
+            <label
+              class="req-label"
+              style="margin-top:18px"
             >
-              Build with AI
-            </button>
+
+              Describe your project
+
+            </label>
+
+
+            <textarea
+              id="projectPrompt"
+              class="textarea promptbox"
+              placeholder="Example: Coaching institute website banao. Header blue ho, logo left me, Home, Courses, Teachers, Contact pages ho aur WhatsApp button ho."
+            ></textarea>
+
+
+            <div class="quick-row">
+
+              <button
+                class="quick"
+                data-text="Coaching institute website with courses, teachers, admission enquiry and WhatsApp button"
+              >
+                Coaching Website
+              </button>
+
+              <button
+                class="quick"
+                data-text="Business website with services, gallery, contact form and WhatsApp"
+              >
+                Business Website
+              </button>
+
+              <button
+                class="quick"
+                data-text="Modern portfolio website with projects, skills and contact section"
+              >
+                Portfolio
+              </button>
+
+              <button
+                class="quick"
+                data-text="Login and dashboard system with Supabase authentication"
+              >
+                Login + Dashboard
+              </button>
+
+            </div>
+
+
+            <div class="builder-bottom">
+
+              <div class="selected-stack">
+
+                <span class="pill">
+                  AI Code
+                </span>
+
+                <span class="pill">
+                  Live Preview
+                </span>
+
+                <span class="pill">
+                  AI Editing
+                </span>
+
+              </div>
+
+
+              <button
+                id="buildButton"
+                class="btn primary big"
+              >
+                ✦ Build with AI
+              </button>
+
+            </div>
+
 
             <div
-              id="homeNotice"
-              class="notice hidden"
-              style="margin-top:14px"
+              id="homeMessage"
+              class="hidden"
             ></div>
 
           </section>
 
-          <section
-            class="grid"
-            style="margin-top:18px"
-          >
 
-            <div class="card">
+          <section class="support-grid">
 
-              <h3>
-                Free limits
-              </h3>
+            <div class="mini-card">
 
-              <p class="muted">
-                5 projects and 2 generated-file actions.
-              </p>
+              <b>
+                💬 Natural Language Editing
+              </b>
+
+              <span>
+                Header ka color blue karo,
+                WhatsApp button add karo,
+                AI actual files modify karega.
+              </span>
 
             </div>
 
-            <div class="card">
 
-              <h3>
-                Admin
-              </h3>
+            <div class="mini-card">
 
-              <p class="muted">
-                Open Admin Login.
-              </p>
+              <b>
+                👁 Live Preview
+              </b>
 
-              <button
-                class="btn"
-                id="adminOpen"
-              >
-                Admin Login
-              </button>
+              <span>
+                Generated HTML project ka preview
+                workspace me dikhega.
+              </span>
+
+            </div>
+
+
+            <div class="mini-card">
+
+              <b>
+                📁 Project Files
+              </b>
+
+              <span>
+                Project files Supabase database
+                me save hongi.
+              </span>
 
             </div>
 
@@ -414,336 +511,187 @@
       </div>
     `;
 
-    bindNav();
+    bindHeader();
 
-    const admin =
-      document.getElementById(
-        "adminOpen"
-      );
+    document.querySelectorAll(".type-card").forEach(function (button) {
+      button.onclick = function () {
 
-    if (admin) {
-      admin.onclick = function () {
-        location.hash = "#admin-login";
+        document
+          .querySelectorAll(".type-card")
+          .forEach(function (item) {
+            item.classList.remove("selected");
+          });
+
+        button.classList.add("selected");
       };
-    }
+    });
 
-    const generateButton =
-      document.getElementById(
-        "generate"
-      );
+    document.querySelectorAll(".quick").forEach(function (button) {
+      button.onclick = function () {
+        document.getElementById("projectPrompt").value =
+          button.dataset.text;
+      };
+    });
 
-    if (generateButton) {
-      generateButton.onclick =
-        generate;
-    }
-
-    const prompt =
-      document.getElementById(
-        "prompt"
-      );
-
-    if (prompt) {
-      prompt.addEventListener(
-        "keydown",
-        function (event) {
-
-          if (event.key !== "Enter") {
-            return;
-          }
-
-          event.preventDefault();
-
-          generate();
-
-        }
-      );
-    }
+    document.getElementById("buildButton").onclick =
+      buildProject;
   }
 
-  async function generate() {
 
-    if (state.loading) {
+  function showMessage(text, type) {
+
+    const box = document.getElementById("homeMessage");
+
+    if (!box) {
       return;
     }
 
-    const promptElement =
-      document.getElementById(
-        "prompt"
-      );
+    box.className =
+      "notice " +
+      (type === "error"
+        ? "error"
+        : type === "success"
+        ? "success-note"
+        : "");
 
-    const nameElement =
-      document.getElementById(
-        "projectName"
-      );
+    box.textContent = text;
+  }
 
-    const frontendElement =
-      document.getElementById(
-        "frontend"
-      );
 
-    const backendElement =
-      document.getElementById(
-        "backend"
-      );
+  async function buildProject() {
 
-    const messages =
-      document.getElementById(
-        "messages"
-      );
-
-    const notice =
-      document.getElementById(
-        "homeNotice"
-      );
-
-    if (!promptElement) {
+    if (state.building) {
       return;
     }
 
-    const instruction =
-      promptElement.value.trim();
+    if (!state.session) {
+      location.hash = "#login";
+      return;
+    }
 
-    const projectName =
-      nameElement
-        ? nameElement.value.trim()
-        : "BuildPilot Project";
+    const name =
+      document
+        .getElementById("projectName")
+        .value
+        .trim() ||
+      "BuildPilot Project";
+
+    const prompt =
+      document
+        .getElementById("projectPrompt")
+        .value
+        .trim();
 
     const frontend =
-      frontendElement
-        ? frontendElement.value
-        : "html";
+      document.getElementById("frontend").value;
 
     const backend =
-      backendElement
-        ? backendElement.value
-        : "supabase";
+      document.getElementById("backend").value;
 
-    if (!instruction) {
+    const brand =
+      document
+        .getElementById("brandInfo")
+        .value
+        .trim();
 
-      notice.className =
-        "notice error";
-
-      notice.textContent =
-        "Please enter your request.";
-
-      return;
-    }
-
-    if (
-      instruction.toLowerCase() ===
-      "admin login"
-    ) {
-
-      location.hash =
-        "#admin-login";
-
-      return;
-    }
-
-    const session =
-      await refreshAuth();
-
-    if (!session?.access_token) {
-
-      notice.className =
-        "notice error";
-
-      notice.textContent =
-        "Please login first.";
-
-      location.hash =
-        "#login";
-
-      return;
-    }
-
-    state.loading = true;
-
-    const button =
-      document.getElementById(
-        "generate"
+    if (!prompt) {
+      showMessage(
+        "Project description likhiye.",
+        "error"
       );
 
-    if (button) {
-      button.disabled = true;
-      button.textContent =
-        "AI is working...";
+      return;
     }
 
-    messages.insertAdjacentHTML(
-      "beforeend",
-      `
-        <div class="msg user">
-          ${esc(instruction)}
-        </div>
+    state.building = true;
 
-        <div
-          class="msg ai"
-          id="workingMessage"
-        >
-          BuildPilot AI is working...
-        </div>
-      `
-    );
+    const button =
+      document.getElementById("buildButton");
 
-    messages.scrollTop =
-      messages.scrollHeight;
+    button.disabled = true;
+
+    button.textContent =
+      "AI is building...";
+
 
     try {
 
-      const result =
-        await client.functions.invoke(
-          FUNCTION_NAME,
-          {
-            headers: {
-              Authorization:
-                "Bearer " +
-                session.access_token
-            },
+      const typeResult =
+        await client
+          .from("project_types")
+          .select("id,code")
+          .eq("code", "complete_system")
+          .maybeSingle();
 
-            body: {
 
-              projectId: null,
+      const description =
+        prompt +
+        (brand
+          ? "\nBrand details: " + brand
+          : "");
 
-              instruction:
-                instruction,
 
-              prompt:
-                instruction,
+      const projectResult =
+        await client
+          .from("projects")
+          .insert({
+            user_id: state.session.user.id,
+            name: name,
+            description: description,
+            frontend: frontend,
+            backend: backend,
+            project_type_id:
+              typeResult.data
+                ? typeResult.data.id
+                : null,
+            status: "building"
+          })
+          .select("*")
+          .single();
 
-              projectName:
-                projectName,
 
-              frontend:
-                frontend,
-
-              backend:
-                backend
-            }
-          }
-        );
-
-      const working =
-        document.getElementById(
-          "workingMessage"
-        );
-
-      if (working) {
-        working.remove();
+      if (projectResult.error) {
+        throw projectResult.error;
       }
 
-      if (result.error) {
 
-        console.error(
-          "Function error:",
-          result.error
+      state.project =
+        projectResult.data;
+
+
+      const aiResult =
+        await callFunction(
+          state.project.id,
+          description
         );
 
-        const message =
-          result.error.message ||
-          "Edge Function request failed.";
 
-        notice.className =
-          "notice error";
-
-        notice.textContent =
-          message;
-
-        messages.insertAdjacentHTML(
-          "beforeend",
-          `
-            <div class="msg ai">
-              ❌ ${esc(message)}
-            </div>
-          `
-        );
-
-        return;
-      }
-
-      const data =
-        result.data || {};
-
-      if (data.success) {
-
-        notice.className =
-          "notice success-note";
-
-        notice.textContent =
-          data.message ||
-          "AI request completed.";
-
-        let filesText =
-          "No changed files.";
-
-        if (
-          Array.isArray(
-            data.changes
-          ) &&
-          data.changes.length
-        ) {
-
-          filesText =
-            data.changes
-              .map(function (file) {
-                return (
-                  "<li>" +
-                  esc(file.path) +
-                  "</li>"
-                );
-              })
-              .join("");
-        }
-
-        messages.insertAdjacentHTML(
-          "beforeend",
-          `
-            <div class="msg ai">
-
-              <b>
-                ${esc(
-                  data.message ||
-                  "Project updated successfully."
-                )}
-              </b>
-
-              <br><br>
-
-              Changed files:
-
-              <ul>
-                ${filesText}
-              </ul>
-
-            </div>
-          `
-        );
-
-      } else {
-
-        const message =
-          data.error ||
-          data.message ||
-          "AI request failed.";
-
-        notice.className =
-          "notice error";
-
-        notice.textContent =
-          message;
-
-        messages.insertAdjacentHTML(
-          "beforeend",
-          `
-            <div class="msg ai">
-              ❌ ${esc(message)}
-            </div>
-          `
+      if (!aiResult.success) {
+        throw new Error(
+          aiResult.error ||
+          "AI build failed"
         );
       }
 
-      messages.scrollTop =
-        messages.scrollHeight;
+
+      await client
+        .from("projects")
+        .update({
+          status: "completed"
+        })
+        .eq(
+          "id",
+          state.project.id
+        );
+
+
+      await loadFiles(
+        state.project.id
+      );
+
+
+      location.hash =
+        "#workspace";
 
     } catch (error) {
 
@@ -752,56 +700,1095 @@
         error
       );
 
+      showMessage(
+        error.message ||
+          "Project build failed.",
+        "error"
+      );
+
+      if (state.project) {
+
+        await client
+          .from("projects")
+          .update({
+            status: "failed"
+          })
+          .eq(
+            "id",
+            state.project.id
+          );
+
+      }
+
+    } finally {
+
+      state.building = false;
+
+      button.disabled = false;
+
+      button.textContent =
+        "✦ Build with AI";
+    }
+  }
+
+
+  async function callFunction(
+    projectId,
+    instruction
+  ) {
+
+    const result =
+      await client.functions.invoke(
+        FUNCTION_NAME,
+        {
+          headers: {
+            Authorization:
+              "Bearer " +
+              state.session.access_token
+          },
+
+          body: {
+            projectId: projectId,
+            instruction: instruction
+          }
+        }
+      );
+
+
+    if (result.error) {
+
+      return {
+        success: false,
+        error:
+          result.error.message ||
+          "Edge Function error"
+      };
+
+    }
+
+
+    return (
+      result.data || {
+        success: false,
+        error: "Empty response"
+      }
+    );
+  }
+
+
+  async function loadFiles(projectId) {
+
+    const result =
+      await client
+        .from("project_files")
+        .select("*")
+        .eq(
+          "project_id",
+          projectId
+        )
+        .order(
+          "file_path",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (result.error) {
+      throw result.error;
+    }
+
+
+    state.files =
+      result.data || [];
+
+    state.activeFile =
+      state.files[0] || null;
+  }
+
+
+  async function projectsPage() {
+
+    if (!state.session) {
+      location.hash = "#login";
+      return;
+    }
+
+    const result =
+      await client
+        .from("projects")
+        .select("*")
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (result.error) {
+      console.error(result.error);
+    }
+
+
+    state.projects =
+      result.data || [];
+
+
+    app.innerHTML = `
+      <div class="site">
+
+        ${header()}
+
+        <main class="container">
+
+          <div class="page-head">
+
+            <div>
+
+              <div class="tiny-label">
+                WORKSPACE
+              </div>
+
+              <h1>
+                My Projects
+              </h1>
+
+              <p class="muted">
+                Apne projects open karke AI se
+                changes karein.
+              </p>
+
+            </div>
+
+            <button
+              id="newProjectButton"
+              class="btn primary"
+            >
+              + New Project
+            </button>
+
+          </div>
+
+
+          <div class="project-list">
+
+            ${
+              state.projects.length
+                ? state.projects
+                    .map(function (project) {
+
+                      return `
+                        <div class="project-item">
+
+                          <div>
+
+                            <b>
+                              ${escapeHTML(
+                                project.name
+                              )}
+                            </b>
+
+                            <p>
+                              ${escapeHTML(
+                                project.description ||
+                                  ""
+                              )}
+
+                              ·
+
+                              ${escapeHTML(
+                                project.status ||
+                                  "draft"
+                              )}
+                            </p>
+
+                          </div>
+
+
+                          <button
+                            class="btn"
+                            data-project-id="${project.id}"
+                          >
+                            Open
+                          </button>
+
+                        </div>
+                      `;
+
+                    })
+                    .join("")
+                : `
+                    <div class="empty-card">
+                      Abhi koi project nahi hai.
+                    </div>
+                  `
+            }
+
+          </div>
+
+        </main>
+
+      </div>
+    `;
+
+
+    bindHeader();
+
+
+    document
+      .getElementById("newProjectButton")
+      .onclick = function () {
+        location.hash = "";
+      };
+
+
+    document
+      .querySelectorAll("[data-project-id]")
+      .forEach(function (button) {
+
+        button.onclick =
+          function () {
+
+            openProject(
+              button.dataset.projectId
+            );
+
+          };
+
+      });
+  }
+
+
+  async function openProject(id) {
+
+    const result =
+      await client
+        .from("projects")
+        .select("*")
+        .eq("id", id)
+        .eq(
+          "user_id",
+          state.session.user.id
+        )
+        .single();
+
+
+    if (result.error) {
+
+      alert(
+        result.error.message
+      );
+
+      return;
+    }
+
+
+    state.project =
+      result.data;
+
+
+    await loadFiles(id);
+
+    location.hash =
+      "#workspace";
+  }
+
+
+  function workspacePage() {
+
+    if (!state.project) {
+      location.hash =
+        "#projects";
+
+      return;
+    }
+
+
+    app.innerHTML = `
+      <div class="workspace">
+
+        <div class="workspace-top">
+
+          <button
+            class="btn"
+            id="backButton"
+          >
+            ←
+          </button>
+
+
+          <div class="workspace-name">
+
+            ${escapeHTML(
+              state.project.name
+            )}
+
+            <span class="live-badge">
+              ● AI WORKSPACE
+            </span>
+
+          </div>
+
+
+          <button
+            class="btn"
+            id="refreshButton"
+          >
+            Refresh
+          </button>
+
+
+          <button
+            class="btn"
+            id="chatButton"
+          >
+            AI Chat
+          </button>
+
+        </div>
+
+
+        <div
+          class="workspace-grid"
+          id="workspaceGrid"
+        >
+
+          <aside
+            class="panel files-panel"
+          >
+
+            <div class="panel-title">
+              PROJECT FILES
+            </div>
+
+
+            <div
+              class="file-list"
+              id="fileList"
+            >
+              ${fileListHTML()}
+            </div>
+
+
+            <div class="panel-footer">
+
+              <button
+                class="btn full"
+                id="reloadFiles"
+              >
+                Reload Files
+              </button>
+
+            </div>
+
+          </aside>
+
+
+          <section class="preview-panel">
+
+            <div class="preview-tabs">
+              <b>PREVIEW</b>
+              <span>CODE</span>
+              <span>APP</span>
+            </div>
+
+
+            <div class="preview-frame">
+
+              <div class="browser-bar">
+
+                <span></span>
+                <span></span>
+                <span></span>
+
+                <div>
+                  buildpilot.local
+                </div>
+
+              </div>
+
+
+              <div
+                class="preview-content"
+                id="previewContent"
+              >
+
+                <iframe
+                  id="previewFrame"
+                  sandbox="allow-scripts allow-forms"
+                ></iframe>
+
+              </div>
+
+            </div>
+
+          </section>
+
+
+          <aside class="panel ai-panel">
+
+            <div class="panel-title">
+              BUILD WITH AI
+            </div>
+
+
+            <div
+              class="builder-messages"
+              id="messages"
+            >
+
+              <div class="ai-bubble">
+
+                Project ready.
+
+                <br><br>
+
+                Aap mujhe direct changes bol sakte hain:
+
+                <br><br>
+
+                • Header ka color blue karo
+
+                <br>
+
+                • Home page me section add karo
+
+                <br>
+
+                • Contact number change karo
+
+                <br>
+
+                • WhatsApp button add karo
+
+                <br>
+
+                • Login page banao
+
+              </div>
+
+            </div>
+
+
+            <div class="ai-compose">
+
+              <textarea
+                id="editPrompt"
+                placeholder="Describe a change..."
+              ></textarea>
+
+
+              <button
+                class="btn primary"
+                id="sendButton"
+              >
+                ✦ Apply Change
+              </button>
+
+            </div>
+
+          </aside>
+
+        </div>
+
+
+        <div class="workspace-footer">
+
+          <span>
+            ${escapeHTML(
+              state.project.frontend ||
+                "html"
+            )}
+          </span>
+
+          <span>
+            ${state.files.length}
+            files
+          </span>
+
+        </div>
+
+      </div>
+    `;
+
+
+    bindWorkspace();
+
+    updatePreview();
+  }
+
+
+  function fileListHTML() {
+
+    if (!state.files.length) {
+
+      return `
+        <div class="empty">
+          No files yet.
+        </div>
+      `;
+    }
+
+
+    return state.files
+      .map(function (file) {
+
+        return `
+          <button
+            class="file-row ${
+              state.activeFile &&
+              state.activeFile.id === file.id
+                ? "active"
+                : ""
+            }"
+            data-file-id="${file.id}"
+          >
+
+            <span>
+              ${fileIcon(file.file_path)}
+            </span>
+
+            <span>
+              ${escapeHTML(
+                file.file_path
+              )}
+            </span>
+
+          </button>
+        `;
+
+      })
+      .join("");
+  }
+
+
+  function fileIcon(path) {
+
+    if (/\.html?$/i.test(path)) {
+      return "◇";
+    }
+
+    if (/\.css$/i.test(path)) {
+      return "◈";
+    }
+
+    if (/\.js$/i.test(path)) {
+      return "JS";
+    }
+
+    return "•";
+  }
+
+
+  function bindWorkspace() {
+
+    document.getElementById("backButton").onclick =
+      function () {
+        location.hash =
+          "#projects";
+      };
+
+
+    document.getElementById("chatButton").onclick =
+      function () {
+
+        document
+          .getElementById("workspaceGrid")
+          .classList.toggle(
+            "show-ai"
+          );
+
+      };
+
+
+    document.getElementById("refreshButton").onclick =
+      updatePreview;
+
+
+    document.getElementById("reloadFiles").onclick =
+      async function () {
+
+        await loadFiles(
+          state.project.id
+        );
+
+        workspacePage();
+      };
+
+
+    document
+      .querySelectorAll("[data-file-id]")
+      .forEach(function (button) {
+
+        button.onclick =
+          function () {
+
+            const file =
+              state.files.find(
+                function (item) {
+                  return (
+                    item.id ===
+                    button.dataset.fileId
+                  );
+                }
+              );
+
+            state.activeFile =
+              file || null;
+
+            openEditor();
+          };
+
+      });
+
+
+    document.getElementById("sendButton").onclick =
+      sendAI;
+
+
+    document
+      .getElementById("editPrompt")
+      .addEventListener(
+        "keydown",
+        function (event) {
+
+          if (
+            event.key === "Enter" &&
+            (event.ctrlKey ||
+              event.metaKey)
+          ) {
+            sendAI();
+          }
+
+        }
+      );
+  }
+
+
+  function openEditor() {
+
+    if (!state.activeFile) {
+      return;
+    }
+
+
+    const file =
+      state.activeFile;
+
+
+    const content =
+      document.getElementById(
+        "previewContent"
+      );
+
+
+    content.innerHTML = `
+      <div class="editor-wrap">
+
+        <div class="editor-head">
+
+          <span class="editor-path">
+            ${escapeHTML(
+              file.file_path
+            )}
+          </span>
+
+          <div class="editor-actions">
+
+            <button
+              class="btn"
+              id="closeEditor"
+            >
+              Close
+            </button>
+
+            <button
+              class="btn primary"
+              id="saveEditor"
+            >
+              Save
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <textarea
+          id="codeEditor"
+          class="code-editor"
+        ></textarea>
+
+      </div>
+    `;
+
+
+    document.getElementById(
+      "codeEditor"
+    ).value =
+      file.file_content || "";
+
+
+    document.getElementById(
+      "closeEditor"
+    ).onclick =
+      function () {
+
+        workspacePage();
+
+      };
+
+
+    document.getElementById(
+      "saveEditor"
+    ).onclick =
+      async function () {
+
+        const value =
+          document.getElementById(
+            "codeEditor"
+          ).value;
+
+
+        const result =
+          await client
+            .from("project_files")
+            .update({
+              file_content: value,
+              updated_at:
+                new Date().toISOString()
+            })
+            .eq(
+              "id",
+              file.id
+            );
+
+
+        if (result.error) {
+
+          alert(
+            result.error.message
+          );
+
+          return;
+        }
+
+
+        file.file_content =
+          value;
+
+
+        workspacePage();
+      };
+  }
+
+
+  function buildPreview() {
+
+    const html =
+      state.files.find(
+        function (file) {
+
+          return /(^|\/)index\.html?$/i.test(
+            file.file_path
+          );
+
+        }
+      ) ||
+      state.files.find(
+        function (file) {
+
+          return /\.html?$/i.test(
+            file.file_path
+          );
+
+        }
+      );
+
+
+    if (!html) {
+
+      return `
+        <html>
+          <body
+            style="
+              font-family:Arial;
+              padding:40px;
+            "
+          >
+
+            <h2>
+              BuildPilot Preview
+            </h2>
+
+            <p>
+              index.html abhi available nahi hai.
+            </p>
+
+          </body>
+        </html>
+      `;
+    }
+
+
+    let documentHTML =
+      html.file_content || "";
+
+
+    const css =
+      state.files.find(
+        function (file) {
+          return /\.css$/i.test(
+            file.file_path
+          );
+        }
+      );
+
+
+    if (
+      css &&
+      !/<style[\s\S]*?>/i.test(
+        documentHTML
+      )
+    ) {
+
+      documentHTML =
+        documentHTML.replace(
+          /<\/head>/i,
+          "<style>" +
+            css.file_content +
+            "</style></head>"
+        );
+    }
+
+
+    return documentHTML;
+  }
+
+
+  function updatePreview() {
+
+    const frame =
+      document.getElementById(
+        "previewFrame"
+      );
+
+
+    if (!frame) {
+      return;
+    }
+
+
+    frame.srcdoc =
+      buildPreview();
+  }
+
+
+  async function sendAI() {
+
+    const input =
+      document.getElementById(
+        "editPrompt"
+      );
+
+
+    const prompt =
+      input.value.trim();
+
+
+    if (!prompt) {
+      return;
+    }
+
+
+    const messages =
+      document.getElementById(
+        "messages"
+      );
+
+
+    messages.insertAdjacentHTML(
+      "beforeend",
+      `
+        <div class="user-bubble">
+          ${escapeHTML(prompt)}
+        </div>
+
+        <div
+          class="ai-bubble"
+          id="aiWorking"
+        >
+          AI project edit kar raha hai...
+        </div>
+      `
+    );
+
+
+    input.value = "";
+
+
+    try {
+
+      await getSession();
+
+
+      const result =
+        await callFunction(
+          state.project.id,
+          prompt
+        );
+
+
       const working =
         document.getElementById(
-          "workingMessage"
+          "aiWorking"
         );
+
 
       if (working) {
         working.remove();
       }
 
-      notice.className =
-        "notice error";
 
-      notice.textContent =
-        error.message ||
-        "Something went wrong.";
-
-    } finally {
-
-      state.loading = false;
-
-      if (button) {
-        button.disabled = false;
-        button.textContent =
-          "Build with AI";
+      if (!result.success) {
+        throw new Error(
+          result.error ||
+          "AI update failed"
+        );
       }
 
+
+      await loadFiles(
+        state.project.id
+      );
+
+
+      messages.insertAdjacentHTML(
+        "beforeend",
+        `
+          <div class="ai-bubble">
+            ✓ ${
+              escapeHTML(
+                result.message ||
+                "Project updated."
+              )
+            }
+          </div>
+        `
+      );
+
+
+      updateWorkspaceWithoutReload();
+
+    } catch (error) {
+
+      const working =
+        document.getElementById(
+          "aiWorking"
+        );
+
+
+      if (working) {
+        working.remove();
+      }
+
+
+      messages.insertAdjacentHTML(
+        "beforeend",
+        `
+          <div class="ai-bubble">
+            ❌ ${
+              escapeHTML(
+                error.message ||
+                "AI error"
+              )
+            }
+          </div>
+        `
+      );
     }
   }
 
-  function authPage(mode) {
 
-    const signup =
-      mode === "signup";
+  function updateWorkspaceWithoutReload() {
+
+    const list =
+      document.getElementById(
+        "fileList"
+      );
+
+
+    if (list) {
+      list.innerHTML =
+        fileListHTML();
+    }
+
+
+    document
+      .querySelectorAll(
+        "[data-file-id]"
+      )
+      .forEach(function (button) {
+
+        button.onclick =
+          function () {
+
+            state.activeFile =
+              state.files.find(
+                function (file) {
+                  return (
+                    file.id ===
+                    button.dataset.fileId
+                  );
+                }
+              ) || null;
+
+            openEditor();
+          };
+
+      });
+
+
+    updatePreview();
+  }
+
+
+  function loginPage(signup) {
 
     app.innerHTML = `
-      <div class="shell">
+      <div class="site">
 
-        ${nav()}
+        ${header()}
 
-        <main class="container">
+        <div class="auth-wrap">
 
-          <div class="center card">
+          <div class="auth-card">
+
+            <div class="eyebrow">
+              ${
+                signup
+                  ? "CREATE ACCOUNT"
+                  : "WELCOME BACK"
+              }
+            </div>
 
             <h2>
               ${
                 signup
-                  ? "Create account"
-                  : "Login"
+                  ? "Create your account"
+                  : "Login to BuildPilot"
               }
             </h2>
+
+            <p class="muted">
+              ${
+                signup
+                  ? "Start building with AI."
+                  : "Continue your projects."
+              }
+            </p>
+
 
             <div class="stack">
 
@@ -812,6 +1799,7 @@
                 placeholder="Email"
               >
 
+
               <input
                 id="password"
                 class="input"
@@ -819,24 +1807,27 @@
                 placeholder="Password"
               >
 
+
               <button
-                id="auth"
+                id="authButton"
                 class="btn primary"
               >
                 ${
                   signup
-                    ? "Create account"
+                    ? "Create Account"
                     : "Login"
                 }
               </button>
 
+
               <div
-                id="authMsg"
-                class="notice hidden"
+                id="authMessage"
+                class="hidden"
               ></div>
 
+
               <button
-                id="back"
+                id="backButton"
                 class="btn"
               >
                 Back
@@ -846,333 +1837,154 @@
 
           </div>
 
-        </main>
+        </div>
 
       </div>
     `;
 
-    bindNav();
+
+    bindHeader();
+
 
     document.getElementById(
-      "back"
-    ).onclick = function () {
-      location.hash = "";
-    };
+      "backButton"
+    ).onclick =
+      function () {
+        location.hash = "";
+      };
+
 
     document.getElementById(
-      "auth"
-    ).onclick = async function () {
+      "authButton"
+    ).onclick =
+      async function () {
 
-      const email =
-        document.getElementById(
-          "email"
-        ).value.trim();
+        const email =
+          document.getElementById(
+            "email"
+          ).value.trim();
 
-      const password =
-        document.getElementById(
-          "password"
-        ).value;
 
-      const message =
-        document.getElementById(
-          "authMsg"
-        );
+        const password =
+          document.getElementById(
+            "password"
+          ).value;
 
-      if (
-        !email ||
-        password.length < 6
-      ) {
 
-        message.className =
-          "notice error";
+        let result;
 
-        message.textContent =
-          "Enter valid email and password.";
 
-        return;
-      }
+        if (signup) {
 
-      const result =
-        signup
-          ? await client.auth.signUp({
-              email,
-              password
-            })
-          : await client.auth.signInWithPassword({
-              email,
-              password
+          result =
+            await client.auth.signUp({
+              email: email,
+              password: password
             });
 
-      if (result.error) {
+        } else {
 
-        message.className =
-          "notice error";
+          result =
+            await client.auth.signInWithPassword({
+              email: email,
+              password: password
+            });
 
-        message.textContent =
-          result.error.message;
+        }
 
-        return;
-      }
 
-      if (signup) {
-
-        message.className =
-          "notice success-note";
-
-        message.textContent =
-          result.data.session
-            ? "Account created successfully."
-            : "Account created. Please confirm your email.";
-
-        if (result.data.user) {
-          await ensureProfile(
-            result.data.user
+        const message =
+          document.getElementById(
+            "authMessage"
           );
+
+
+        if (result.error) {
+
+          message.className =
+            "notice error";
+
+          message.textContent =
+            result.error.message;
+
+          return;
         }
 
-      } else {
 
-        state.session =
-          result.data.session;
+        if (
+          signup &&
+          !result.data.session
+        ) {
 
-        if (state.session?.user) {
-          state.profile =
-            await ensureProfile(
-              state.session.user
-            );
+          message.className =
+            "notice success-note";
+
+          message.textContent =
+            "Account created. Email confirm karke login karein.";
+
+          return;
         }
+
+
+        await getSession();
 
         location.hash = "";
-      }
-    };
+      };
   }
 
-  function adminLogin() {
 
-    app.innerHTML = `
-      <div class="shell">
+  async function router() {
 
-        ${nav()}
+    await getSession();
 
-        <main class="container">
-
-          <div class="center card">
-
-            <h2>
-              Admin Login
-            </h2>
-
-            <div class="stack">
-
-              <input
-                id="adminEmail"
-                class="input"
-                type="email"
-                placeholder="Admin Email"
-              >
-
-              <input
-                id="adminPassword"
-                class="input"
-                type="password"
-                placeholder="Password"
-              >
-
-              <button
-                id="adminLoginButton"
-                class="btn primary"
-              >
-                Admin Login
-              </button>
-
-              <div
-                id="adminMessage"
-                class="notice hidden"
-              ></div>
-
-              <button
-                id="adminBack"
-                class="btn"
-              >
-                Back
-              </button>
-
-            </div>
-
-          </div>
-
-        </main>
-
-      </div>
-    `;
-
-    bindNav();
-
-    document.getElementById(
-      "adminBack"
-    ).onclick = function () {
-      location.hash = "";
-    };
-
-    document.getElementById(
-      "adminLoginButton"
-    ).onclick = async function () {
-
-      const email =
-        document.getElementById(
-          "adminEmail"
-        ).value.trim();
-
-      const password =
-        document.getElementById(
-          "adminPassword"
-        ).value;
-
-      const message =
-        document.getElementById(
-          "adminMessage"
-        );
-
-      const result =
-        await client.auth.signInWithPassword({
-          email,
-          password
-        });
-
-      if (result.error) {
-
-        message.className =
-          "notice error";
-
-        message.textContent =
-          result.error.message;
-
-        return;
-      }
-
-      await refreshAuth();
-
-      if (
-        state.profile?.role !==
-        "admin"
-      ) {
-
-        await client.auth.signOut();
-
-        state.session = null;
-        state.profile = null;
-
-        message.className =
-          "notice error";
-
-        message.textContent =
-          "This account is not an Admin.";
-
-        return;
-      }
-
-      location.hash =
-        "#admin";
-    };
-  }
-
-  function adminPage() {
-
-    app.innerHTML = `
-      <div class="shell">
-
-        ${nav()}
-
-        <main class="container">
-
-          <div class="card">
-
-            <h2>
-              Admin Dashboard
-            </h2>
-
-            <p class="muted">
-              BuildPilot AI Admin
-            </p>
-
-            <button
-              class="btn"
-              id="adminHome"
-            >
-              User App
-            </button>
-
-          </div>
-
-        </main>
-
-      </div>
-    `;
-
-    bindNav();
-
-    document.getElementById(
-      "adminHome"
-    ).onclick = function () {
-      location.hash = "";
-    };
-  }
-
-  function router() {
 
     const hash =
       location.hash;
 
+
     if (hash === "#login") {
-
-      authPage("login");
-
-    } else if (
-      hash === "#signup"
-    ) {
-
-      authPage("signup");
-
-    } else if (
-      hash === "#admin-login"
-    ) {
-
-      adminLogin();
-
-    } else if (
-      hash === "#admin"
-    ) {
-
-      adminPage();
-
-    } else {
-
-      renderHome();
-
+      loginPage(false);
+      return;
     }
+
+
+    if (hash === "#signup") {
+      loginPage(true);
+      return;
+    }
+
+
+    if (hash === "#projects") {
+      await projectsPage();
+      return;
+    }
+
+
+    if (hash === "#workspace") {
+
+      workspacePage();
+      return;
+    }
+
+
+    homePage();
   }
+
+
+  client.auth.onAuthStateChange(
+    function (_event, session) {
+      state.session =
+        session || null;
+    }
+  );
+
 
   window.addEventListener(
     "hashchange",
     router
   );
 
-  client.auth.onAuthStateChange(
-    function (_event, session) {
 
-      state.session =
-        session || null;
-
-      if (!session) {
-        state.profile = null;
-      }
-
-      router();
-    }
-  );
-
-  refreshAuth().then(function () {
-    router();
-  });
+  router();
 
 })();

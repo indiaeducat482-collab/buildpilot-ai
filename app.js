@@ -2,7 +2,7 @@
   const C = window.BUILDPILOT_CONFIG || {};
   const client = window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_PUBLISHABLE_KEY);
   const app = document.getElementById("app");
-  const state = { session: null, profile: null };
+  const state = { session: null, profile: null, projectTypes: [], selectedProjectType: null };
 
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -51,6 +51,60 @@
     return session;
   }
 
+
+  async function loadProjectTypes() {
+    const { data, error } = await client
+      .from("project_types")
+      .select("id,name,code,description")
+      .order("name");
+
+    if (error) {
+      console.error("Project type load error:", error);
+      state.projectTypes = [];
+      return [];
+    }
+
+    state.projectTypes = data || [];
+    if (!state.selectedProjectType && state.projectTypes.length) {
+      state.selectedProjectType =
+        state.projectTypes.find((x) => x.code === "website") ||
+        state.projectTypes[0];
+    }
+    return state.projectTypes;
+  }
+
+  function projectTypeCards() {
+    const types = state.projectTypes;
+    if (!types.length) {
+      return `<div class="notice error">Project types could not be loaded. Please refresh and try again.</div>`;
+    }
+
+    return `<div class="project-type-grid">
+      ${types.map((t) => {
+        const selected = state.selectedProjectType?.id === t.id;
+        const isComplete = t.code === "complete_system";
+        return `<button type="button" class="project-type-card ${selected ? "selected" : ""}" data-project-type="${esc(t.id)}">
+          <div class="project-type-icon">${isComplete ? "⚙️" : "🌐"}</div>
+          <div class="project-type-body">
+            <h3>${esc(t.name)}</h3>
+            <p>${esc(t.description || "")}</p>
+            <span class="pill">${isComplete ? "Auth + Database + Admin" : "Frontend Only"}</span>
+          </div>
+        </button>`;
+      }).join("")}
+    </div>`;
+  }
+
+  function bindProjectTypeCards() {
+    document.querySelectorAll("[data-project-type]").forEach((button) => {
+      button.onclick = () => {
+        const id = button.dataset.projectType;
+        state.selectedProjectType = state.projectTypes.find((t) => t.id === id) || null;
+        renderHome();
+      };
+    });
+  }
+
   function nav() {
     return `<div class="nav"><div class="brand">BuildPilot <span>AI</span></div>
       <div class="nav-actions">
@@ -71,32 +125,100 @@
     document.getElementById("signupBtn")?.addEventListener("click", () => location.hash = "#signup");
   }
 
-  function renderHome() {
+  async function renderHome() {
+    await loadProjectTypes();
+
     app.innerHTML = `<div class="shell">${nav()}<main class="container">
       <section class="hero"><h1>Describe it. <span>Build it.</span></h1>
         <p>BuildPilot AI turns your idea into a structured software project.</p></section>
-      <section class="chat card">
-        <div class="row"><span class="pill">Frontend: HTML / React / Next.js</span><span class="pill">Backend: Supabase / Firebase / GitHub</span></div>
-        <div id="messages" class="messages"><div class="msg ai">Hi! Tell me what website or app you want to build.<br><br>Type <b>admin login</b> to open Admin Login.</div></div>
+
+      <section class="card">
+        <h2>Choose Your Project Type</h2>
+        <p class="muted">First choose what you want BuildPilot AI to create.</p>
+        <div id="projectTypeOptions">${projectTypeCards()}</div>
+      </section>
+
+      <section class="chat card" style="margin-top:18px">
+        <div class="row">
+          <span class="pill">Selected: ${esc(state.selectedProjectType?.name || "Not selected")}</span>
+          <span class="pill">Frontend: HTML / React / Next.js</span>
+        </div>
+
+        <div id="messages" class="messages">
+          <div class="msg ai">Hi! Tell me what website or app you want to build.<br><br>Type <b>admin login</b> to open Admin Login.</div>
+        </div>
+
         <div class="grid">
-          <div><label class="label">Project name</label><input id="projectName" class="input" placeholder="e.g. Coaching Management App"></div>
-          <div><label class="label">Frontend</label><select id="frontend" class="select"><option value="html">HTML</option><option value="react">React</option><option value="nextjs">Next.js</option></select></div>
+          <div>
+            <label class="label">Project name</label>
+            <input id="projectName" class="input" placeholder="e.g. Coaching Management App">
+          </div>
+          <div>
+            <label class="label">Frontend</label>
+            <select id="frontend" class="select">
+              <option value="html">HTML</option>
+              <option value="react">React</option>
+              <option value="nextjs">Next.js</option>
+            </select>
+          </div>
         </div><br>
+
         <div class="grid">
-          <div><label class="label">Backend</label><select id="backend" class="select"><option value="supabase">Supabase</option><option value="firebase">Firebase</option><option value="github">GitHub Only</option></select></div>
-          <div><label class="label">Request</label><input id="prompt" class="input" placeholder="Build a coaching website with student login..."></div>
+          <div>
+            <label class="label">Backend</label>
+            <select id="backend" class="select">
+              <option value="none">No Backend — Website Only</option>
+              <option value="supabase">Supabase</option>
+              <option value="firebase">Firebase</option>
+              <option value="github">GitHub Only</option>
+            </select>
+          </div>
+          <div>
+            <label class="label">Request / Requirements</label>
+            <input id="prompt" class="input" placeholder="e.g. Build a coaching website with student login...">
+          </div>
         </div><br>
+
         <button id="generate" class="btn primary">Generate Project Plan</button>
         <div id="homeNotice" class="notice hidden" style="margin-top:14px"></div>
       </section>
+
+      <section class="grid" style="margin-top:18px">
+        <div class="card">
+          <h3>🌐 Website Only</h3>
+          <p class="muted">Landing pages, business websites, portfolios and frontend projects. No application backend required.</p>
+        </div>
+        <div class="card">
+          <h3>⚙️ Complete System</h3>
+          <p class="muted">Login/register, user dashboard, admin panel, database, CRUD, RLS and secure backend architecture.</p>
+        </div>
+      </section>
+
       <section class="grid" style="margin-top:18px">
         <div class="card"><h3>Free limits</h3><p class="muted">5 projects and 2 generated-file actions by default. Request an upgrade when you reach a limit.</p></div>
         <div class="card"><h3>Admin</h3><p class="muted">Type <b>admin login</b> in chat or use the button.</p><button class="btn" id="adminOpen">Admin Login</button></div>
       </section>
+
+      <section class="card" style="margin-top:18px">
+        <h3>Need Help?</h3>
+        <p class="muted">Website नहीं बन रही है या BuildPilot में कोई problem आ रही है?</p>
+        <div class="row">
+          <a class="btn" href="tel:9006977016">📞 Call 9006977016</a>
+          <a class="btn" href="https://wa.me/919006977016" target="_blank" rel="noopener">💬 WhatsApp Support</a>
+        </div>
+      </section>
     </main></div>`;
+
     bindNav();
+    bindProjectTypeCards();
+
+    const backend = document.getElementById("backend");
+    const isWebsite = state.selectedProjectType?.code === "website";
+    backend.value = isWebsite ? "none" : "supabase";
+
     document.getElementById("adminOpen").onclick = () => location.hash = "#admin-login";
     document.getElementById("generate").onclick = generate;
+
     document.getElementById("prompt").addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;
       if (e.currentTarget.value.trim().toLowerCase() === "admin login") {
@@ -136,6 +258,7 @@
       location.hash = "#login";
       return;
     }
+    if (!state.selectedProjectType) { notice.className = "notice error"; notice.textContent = "Please select Website Only or Complete System."; return; }
     if (!prompt) { notice.className = "notice error"; notice.textContent = "Please describe your project."; return; }
 
     msgs.insertAdjacentHTML("beforeend", `<div class="msg user">${esc(prompt)}</div><div class="msg ai">Building your project...</div>`);
@@ -148,6 +271,9 @@
       body: {
         prompt,
         projectName: name,
+        projectTypeId: state.selectedProjectType.id,
+        projectTypeCode: state.selectedProjectType.code,
+        projectTypeName: state.selectedProjectType.name,
         frontend: document.getElementById("frontend").value,
         backend: document.getElementById("backend").value
       }
@@ -221,13 +347,13 @@
     await refreshAuth();
     if (!state.session) { location.hash = "#login"; return; }
     const { data: projects, error } = await client.from("projects")
-      .select("id,name,description,status,frontend,backend,created_at")
+      .select("id,name,description,status,frontend,backend,project_type_id,created_at")
       .order("created_at", { ascending: false });
     app.innerHTML = `<div class="shell">${nav()}<main class="container">
       <div class="row" style="justify-content:space-between"><div><h2>My Projects</h2><p class="muted">Your BuildPilot project history.</p></div><button class="btn" id="home">Build another</button></div>
       ${error ? `<div class="notice error">${esc(error.message)}</div>` : ""}
-      <div class="card table-wrap"><table class="table"><thead><tr><th>Name</th><th>Stack</th><th>Status</th><th>Created</th></tr></thead><tbody>
-      ${(projects || []).map(p => `<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.description || "")}</span></td><td>${esc(p.frontend)} / ${esc(p.backend)}</td><td>${esc(p.status)}</td><td>${new Date(p.created_at).toLocaleString()}</td></tr>`).join("") || `<tr><td colspan="4">No projects yet.</td></tr>`}
+      <div class="card table-wrap"><table class="table"><thead><tr><th>Name</th><th>Type</th><th>Stack</th><th>Status</th><th>Created</th></tr></thead><tbody>
+      ${(projects || []).map(p => `<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.description || "")}</span></td><td>${esc(p.project_type_id || "—")}</td><td>${esc(p.frontend)} / ${esc(p.backend)}</td><td>${esc(p.status)}</td><td>${new Date(p.created_at).toLocaleString()}</td></tr>`).join("") || `<tr><td colspan="5">No projects yet.</td></tr>`}
       </tbody></table></div></main></div>`;
     bindNav(); document.getElementById("home").onclick = () => location.hash = "";
   }

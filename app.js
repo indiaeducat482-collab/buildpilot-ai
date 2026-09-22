@@ -41,7 +41,8 @@
     CONFIG.SUPABASE_PUBLISHABLE_KEY
   );
 
-  const FUNCTION_NAME = CONFIG.FUNCTION_NAME || "super-function";
+  const FUNCTION_NAME =
+    CONFIG.FUNCTION_NAME || "super-function";
 
   const state = {
     session: null,
@@ -205,7 +206,6 @@
 
           </section>
 
-
           <section class="builder-card">
 
             <div class="builder-head">
@@ -227,7 +227,6 @@
               </div>
 
             </div>
-
 
             <div class="type-grid">
 
@@ -259,7 +258,6 @@
 
               </button>
 
-
               <button
                 class="type-card"
                 data-type="website"
@@ -290,7 +288,6 @@
 
             </div>
 
-
             <div class="builder-fields">
 
               <label>
@@ -304,7 +301,6 @@
                 >
 
               </label>
-
 
               <label>
 
@@ -331,7 +327,6 @@
 
               </label>
 
-
               <label>
 
                 Backend
@@ -357,7 +352,6 @@
 
               </label>
 
-
               <label>
 
                 Brand / Contact
@@ -372,23 +366,18 @@
 
             </div>
 
-
             <label
               class="req-label"
               style="margin-top:18px"
             >
-
               Describe your project
-
             </label>
-
 
             <textarea
               id="projectPrompt"
               class="textarea promptbox"
               placeholder="Example: Coaching institute website banao. Header blue ho, logo left me, Home, Courses, Teachers, Contact pages ho aur WhatsApp button ho."
             ></textarea>
-
 
             <div class="quick-row">
 
@@ -422,7 +411,6 @@
 
             </div>
 
-
             <div class="builder-bottom">
 
               <div class="selected-stack">
@@ -441,7 +429,6 @@
 
               </div>
 
-
               <button
                 id="buildButton"
                 class="btn primary big"
@@ -451,14 +438,12 @@
 
             </div>
 
-
             <div
               id="homeMessage"
               class="hidden"
             ></div>
 
           </section>
-
 
           <section class="support-grid">
 
@@ -476,7 +461,6 @@
 
             </div>
 
-
             <div class="mini-card">
 
               <b>
@@ -489,7 +473,6 @@
               </span>
 
             </div>
-
 
             <div class="mini-card">
 
@@ -515,7 +498,6 @@
 
     document.querySelectorAll(".type-card").forEach(function (button) {
       button.onclick = function () {
-
         document
           .querySelectorAll(".type-card")
           .forEach(function (item) {
@@ -537,9 +519,7 @@
       buildProject;
   }
 
-
   function showMessage(text, type) {
-
     const box = document.getElementById("homeMessage");
 
     if (!box) {
@@ -557,9 +537,301 @@
     box.textContent = text;
   }
 
+  /*
+   * Creates the minimum runnable files needed by Live Preview.
+   */
+  async function ensureStarterFiles(projectId, projectName, description) {
+    const starterFiles = [
+      {
+        project_id: projectId,
+        file_path: "index.html",
+        file_content: starterHTML(
+          projectName,
+          description
+        ),
+        language: "html",
+        generated_by: "system"
+      },
+      {
+        project_id: projectId,
+        file_path: "style.css",
+        file_content: starterCSS(),
+        language: "css",
+        generated_by: "system"
+      },
+      {
+        project_id: projectId,
+        file_path: "script.js",
+        file_content: starterJS(),
+        language: "javascript",
+        generated_by: "system"
+      }
+    ];
+
+    const result = await client
+      .from("project_files")
+      .upsert(
+        starterFiles,
+        {
+          onConflict: "project_id,file_path",
+          ignoreDuplicates: true
+        }
+      );
+
+    if (result.error) {
+      console.error(
+        "Starter files error:",
+        result.error
+      );
+    }
+
+    return result;
+  }
+
+  function starterHTML(name, description) {
+    return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${escapeHTML(name)}</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="starter-header">
+
+    <strong>
+      ${escapeHTML(name)}
+    </strong>
+
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#services">Services</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+  </header>
+
+  <main>
+
+    <section
+      id="home"
+      class="hero"
+    >
+
+      <span class="badge">
+        BUILDPILOT AI
+      </span>
+
+      <h1>
+        ${escapeHTML(name)}
+      </h1>
+
+      <p>
+        ${escapeHTML(description)}
+      </p>
+
+      <button
+        onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})"
+      >
+        Get Started
+      </button>
+
+    </section>
+
+    <section
+      id="about"
+      class="cards"
+    >
+
+      <article>
+        <h2>About</h2>
+        <p>
+          Your AI generated website starts here.
+        </p>
+      </article>
+
+      <article id="services">
+        <h2>Services</h2>
+        <p>
+          Tell BuildPilot what you want to change.
+        </p>
+      </article>
+
+      <article id="contact">
+        <h2>Contact</h2>
+        <p>
+          Add your phone, WhatsApp and contact details.
+        </p>
+      </article>
+
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+
+</body>
+</html>`;
+  }
+
+  function starterCSS() {
+    return `
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f8fc;
+  color: #172033;
+}
+
+.starter-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 6%;
+  background: #ffffff;
+  border-bottom: 1px solid #e6ebf2;
+}
+
+.starter-header strong {
+  font-size: 20px;
+}
+
+.starter-header nav {
+  display: flex;
+  gap: 20px;
+}
+
+.starter-header a {
+  color: #345;
+  text-decoration: none;
+}
+
+.starter-header a:hover {
+  color: #1677e8;
+}
+
+.hero {
+  text-align: center;
+  padding: 100px 20px;
+  background:
+    linear-gradient(
+      135deg,
+      #eef7ff,
+      #ffffff
+    );
+}
+
+.badge {
+  font-size: 12px;
+  color: #1677e8;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.hero h1 {
+  font-size: 56px;
+  margin: 15px 0;
+}
+
+.hero p {
+  max-width: 700px;
+  margin: 0 auto 25px;
+  color: #607089;
+  line-height: 1.7;
+}
+
+.hero button {
+  border: 0;
+  border-radius: 10px;
+  padding: 13px 22px;
+  background: #1677e8;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.hero button:hover {
+  background: #0e64c5;
+}
+
+.cards {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  grid-template-columns:
+    repeat(3, 1fr);
+  gap: 18px;
+  padding: 40px 20px 80px;
+}
+
+.cards article {
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  border: 1px solid #e5eaf1;
+  box-shadow:
+    0 10px 30px
+    rgba(16,32,64,.07);
+}
+
+.cards p {
+  color: #66758a;
+  line-height: 1.6;
+}
+
+@media(max-width:700px) {
+
+  .hero h1 {
+    font-size: 40px;
+  }
+
+  .starter-header {
+    padding: 15px 4%;
+  }
+
+  .starter-header nav {
+    gap: 9px;
+    font-size: 13px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+}
+`;
+  }
+
+  function starterJS() {
+    return `
+console.log("BuildPilot project ready");
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+    console.log(
+      "Live Preview loaded successfully"
+    );
+  }
+);
+`;
+  }
 
   async function buildProject() {
-
     if (state.building) {
       return;
     }
@@ -609,37 +881,41 @@
       document.getElementById("buildButton");
 
     button.disabled = true;
-
     button.textContent =
-      "AI is building...";
-
+      "Creating project...";
 
     try {
-
       const typeResult =
         await client
           .from("project_types")
           .select("id,code")
-          .eq("code", "complete_system")
+          .eq(
+            "code",
+            "complete_system"
+          )
           .maybeSingle();
-
 
       const description =
         prompt +
-        (brand
-          ? "\nBrand details: " + brand
-          : "");
-
+        (
+          brand
+            ? "\nBrand details: " + brand
+            : ""
+        );
 
       const projectResult =
         await client
           .from("projects")
           .insert({
-            user_id: state.session.user.id,
+            user_id:
+              state.session.user.id,
             name: name,
-            description: description,
-            frontend: frontend,
-            backend: backend,
+            description:
+              description,
+            frontend:
+              frontend,
+            backend:
+              backend,
             project_type_id:
               typeResult.data
                 ? typeResult.data.id
@@ -649,15 +925,30 @@
           .select("*")
           .single();
 
-
       if (projectResult.error) {
         throw projectResult.error;
       }
 
-
       state.project =
         projectResult.data;
 
+      /*
+       * IMPORTANT:
+       * Create index.html BEFORE calling AI.
+       * This fixes the Live Preview problem.
+       */
+      await ensureStarterFiles(
+        state.project.id,
+        name,
+        description
+      );
+
+      await loadFiles(
+        state.project.id
+      );
+
+      button.textContent =
+        "AI is building...";
 
       const aiResult =
         await callFunction(
@@ -665,14 +956,17 @@
           description
         );
 
-
+      /*
+       * Current small test Edge Function
+       * returns success without changes.
+       * We still keep the normal workflow ready.
+       */
       if (!aiResult.success) {
         throw new Error(
           aiResult.error ||
           "AI build failed"
         );
       }
-
 
       await client
         .from("projects")
@@ -684,11 +978,9 @@
           state.project.id
         );
 
-
       await loadFiles(
         state.project.id
       );
-
 
       location.hash =
         "#workspace";
@@ -707,7 +999,6 @@
       );
 
       if (state.project) {
-
         await client
           .from("projects")
           .update({
@@ -717,7 +1008,6 @@
             "id",
             state.project.id
           );
-
       }
 
     } finally {
@@ -731,12 +1021,10 @@
     }
   }
 
-
   async function callFunction(
     projectId,
     instruction
   ) {
-
     const result =
       await client.functions.invoke(
         FUNCTION_NAME,
@@ -748,36 +1036,33 @@
           },
 
           body: {
-            projectId: projectId,
-            instruction: instruction
+            projectId:
+              projectId,
+            instruction:
+              instruction
           }
         }
       );
 
-
     if (result.error) {
-
       return {
         success: false,
         error:
           result.error.message ||
           "Edge Function error"
       };
-
     }
-
 
     return (
       result.data || {
         success: false,
-        error: "Empty response"
+        error:
+          "Empty response"
       }
     );
   }
 
-
   async function loadFiles(projectId) {
-
     const result =
       await client
         .from("project_files")
@@ -793,11 +1078,9 @@
           }
         );
 
-
     if (result.error) {
       throw result.error;
     }
-
 
     state.files =
       result.data || [];
@@ -806,9 +1089,7 @@
       state.files[0] || null;
   }
 
-
   async function projectsPage() {
-
     if (!state.session) {
       location.hash = "#login";
       return;
@@ -825,15 +1106,14 @@
           }
         );
 
-
     if (result.error) {
-      console.error(result.error);
+      console.error(
+        result.error
+      );
     }
-
 
     state.projects =
       result.data || [];
-
 
     app.innerHTML = `
       <div class="site">
@@ -870,16 +1150,19 @@
 
           </div>
 
-
           <div class="project-list">
 
             ${
               state.projects.length
                 ? state.projects
-                    .map(function (project) {
+                    .map(function (
+                      project
+                    ) {
 
                       return `
-                        <div class="project-item">
+                        <div
+                          class="project-item"
+                        >
 
                           <div>
 
@@ -892,19 +1175,18 @@
                             <p>
                               ${escapeHTML(
                                 project.description ||
-                                  ""
+                                ""
                               )}
 
                               ·
 
                               ${escapeHTML(
                                 project.status ||
-                                  "draft"
+                                "draft"
                               )}
                             </p>
 
                           </div>
-
 
                           <button
                             class="btn"
@@ -932,50 +1214,51 @@
       </div>
     `;
 
-
     bindHeader();
 
-
-    document
-      .getElementById("newProjectButton")
-      .onclick = function () {
+    document.getElementById(
+      "newProjectButton"
+    ).onclick =
+      function () {
         location.hash = "";
       };
 
-
     document
-      .querySelectorAll("[data-project-id]")
-      .forEach(function (button) {
+      .querySelectorAll(
+        "[data-project-id]"
+      )
+      .forEach(
+        function (button) {
 
-        button.onclick =
-          function () {
+          button.onclick =
+            function () {
 
-            openProject(
-              button.dataset.projectId
-            );
+              openProject(
+                button.dataset.projectId
+              );
 
-          };
+            };
 
-      });
+        }
+      );
   }
 
-
   async function openProject(id) {
-
     const result =
       await client
         .from("projects")
         .select("*")
-        .eq("id", id)
+        .eq(
+          "id",
+          id
+        )
         .eq(
           "user_id",
           state.session.user.id
         )
         .single();
 
-
     if (result.error) {
-
       alert(
         result.error.message
       );
@@ -983,20 +1266,24 @@
       return;
     }
 
-
     state.project =
       result.data;
 
+    await ensureStarterFiles(
+      state.project.id,
+      state.project.name,
+      state.project.description || ""
+    );
 
-    await loadFiles(id);
+    await loadFiles(
+      id
+    );
 
     location.hash =
       "#workspace";
   }
 
-
-  function workspacePage() {
-
+  async function workspacePage() {
     if (!state.project) {
       location.hash =
         "#projects";
@@ -1004,6 +1291,19 @@
       return;
     }
 
+    /*
+     * Existing old projects may not have index.html.
+     * Ensure preview files exist.
+     */
+    await ensureStarterFiles(
+      state.project.id,
+      state.project.name,
+      state.project.description || ""
+    );
+
+    await loadFiles(
+      state.project.id
+    );
 
     app.innerHTML = `
       <div class="workspace">
@@ -1017,7 +1317,6 @@
             ←
           </button>
 
-
           <div class="workspace-name">
 
             ${escapeHTML(
@@ -1030,14 +1329,12 @@
 
           </div>
 
-
           <button
             class="btn"
             id="refreshButton"
           >
             Refresh
           </button>
-
 
           <button
             class="btn"
@@ -1047,7 +1344,6 @@
           </button>
 
         </div>
-
 
         <div
           class="workspace-grid"
@@ -1062,14 +1358,12 @@
               PROJECT FILES
             </div>
 
-
             <div
               class="file-list"
               id="fileList"
             >
               ${fileListHTML()}
             </div>
-
 
             <div class="panel-footer">
 
@@ -1084,7 +1378,6 @@
 
           </aside>
 
-
           <section class="preview-panel">
 
             <div class="preview-tabs">
@@ -1092,7 +1385,6 @@
               <span>CODE</span>
               <span>APP</span>
             </div>
-
 
             <div class="preview-frame">
 
@@ -1108,7 +1400,6 @@
 
               </div>
 
-
               <div
                 class="preview-content"
                 id="previewContent"
@@ -1116,7 +1407,15 @@
 
                 <iframe
                   id="previewFrame"
-                  sandbox="allow-scripts allow-forms"
+                  title="BuildPilot Live Preview"
+                  style="
+                    width:100%;
+                    height:100%;
+                    min-height:500px;
+                    border:0;
+                    background:#fff;
+                  "
+                  sandbox="allow-scripts allow-forms allow-modals"
                 ></iframe>
 
               </div>
@@ -1125,13 +1424,11 @@
 
           </section>
 
-
           <aside class="panel ai-panel">
 
             <div class="panel-title">
               BUILD WITH AI
             </div>
-
 
             <div
               class="builder-messages"
@@ -1170,14 +1467,12 @@
 
             </div>
 
-
             <div class="ai-compose">
 
               <textarea
                 id="editPrompt"
                 placeholder="Describe a change..."
               ></textarea>
-
 
               <button
                 class="btn primary"
@@ -1192,13 +1487,12 @@
 
         </div>
 
-
         <div class="workspace-footer">
 
           <span>
             ${escapeHTML(
               state.project.frontend ||
-                "html"
+              "html"
             )}
           </span>
 
@@ -1212,24 +1506,19 @@
       </div>
     `;
 
-
     bindWorkspace();
 
     updatePreview();
   }
 
-
   function fileListHTML() {
-
     if (!state.files.length) {
-
       return `
         <div class="empty">
           No files yet.
         </div>
       `;
     }
-
 
     return state.files
       .map(function (file) {
@@ -1246,7 +1535,9 @@
           >
 
             <span>
-              ${fileIcon(file.file_path)}
+              ${fileIcon(
+                file.file_path
+              )}
             </span>
 
             <span>
@@ -1262,9 +1553,7 @@
       .join("");
   }
 
-
   function fileIcon(path) {
-
     if (/\.html?$/i.test(path)) {
       return "◇";
     }
@@ -1280,33 +1569,46 @@
     return "•";
   }
 
-
   function bindWorkspace() {
-
-    document.getElementById("backButton").onclick =
+    document.getElementById(
+      "backButton"
+    ).onclick =
       function () {
         location.hash =
           "#projects";
       };
 
-
-    document.getElementById("chatButton").onclick =
+    document.getElementById(
+      "chatButton"
+    ).onclick =
       function () {
 
         document
-          .getElementById("workspaceGrid")
+          .getElementById(
+            "workspaceGrid"
+          )
           .classList.toggle(
             "show-ai"
           );
 
       };
 
+    document.getElementById(
+      "refreshButton"
+    ).onclick =
+      async function () {
 
-    document.getElementById("refreshButton").onclick =
-      updatePreview;
+        await loadFiles(
+          state.project.id
+        );
 
+        updatePreview();
 
-    document.getElementById("reloadFiles").onclick =
+      };
+
+    document.getElementById(
+      "reloadFiles"
+    ).onclick =
       async function () {
 
         await loadFiles(
@@ -1316,47 +1618,54 @@
         workspacePage();
       };
 
-
     document
-      .querySelectorAll("[data-file-id]")
-      .forEach(function (button) {
+      .querySelectorAll(
+        "[data-file-id]"
+      )
+      .forEach(
+        function (button) {
 
-        button.onclick =
-          function () {
+          button.onclick =
+            function () {
 
-            const file =
-              state.files.find(
-                function (item) {
-                  return (
-                    item.id ===
-                    button.dataset.fileId
-                  );
-                }
-              );
+              const file =
+                state.files.find(
+                  function (item) {
+                    return (
+                      item.id ===
+                      button.dataset.fileId
+                    );
+                  }
+                );
 
-            state.activeFile =
-              file || null;
+              state.activeFile =
+                file || null;
 
-            openEditor();
-          };
+              openEditor();
+            };
 
-      });
+        }
+      );
 
-
-    document.getElementById("sendButton").onclick =
+    document.getElementById(
+      "sendButton"
+    ).onclick =
       sendAI;
 
-
     document
-      .getElementById("editPrompt")
+      .getElementById(
+        "editPrompt"
+      )
       .addEventListener(
         "keydown",
         function (event) {
 
           if (
             event.key === "Enter" &&
-            (event.ctrlKey ||
-              event.metaKey)
+            (
+              event.ctrlKey ||
+              event.metaKey
+            )
           ) {
             sendAI();
           }
@@ -1365,36 +1674,47 @@
       );
   }
 
-
   function openEditor() {
-
     if (!state.activeFile) {
       return;
     }
 
-
     const file =
       state.activeFile;
-
 
     const content =
       document.getElementById(
         "previewContent"
       );
 
-
     content.innerHTML = `
-      <div class="editor-wrap">
+      <div
+        style="
+          width:100%;
+          height:100%;
+          display:flex;
+          flex-direction:column;
+        "
+      >
 
-        <div class="editor-head">
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:10px;
+            background:#101a29;
+            border-bottom:1px solid #26364b;
+          "
+        >
 
-          <span class="editor-path">
+          <span>
             ${escapeHTML(
               file.file_path
             )}
           </span>
 
-          <div class="editor-actions">
+          <div style="display:flex;gap:8px">
 
             <button
               class="btn"
@@ -1414,31 +1734,37 @@
 
         </div>
 
-
         <textarea
           id="codeEditor"
-          class="code-editor"
+          style="
+            flex:1;
+            width:100%;
+            resize:none;
+            border:0;
+            outline:none;
+            padding:18px;
+            background:#080e16;
+            color:#dcecff;
+            font-family:Consolas,monospace;
+            font-size:13px;
+            line-height:1.6;
+          "
         ></textarea>
 
       </div>
     `;
-
 
     document.getElementById(
       "codeEditor"
     ).value =
       file.file_content || "";
 
-
     document.getElementById(
       "closeEditor"
     ).onclick =
       function () {
-
         workspacePage();
-
       };
-
 
     document.getElementById(
       "saveEditor"
@@ -1450,12 +1776,12 @@
             "codeEditor"
           ).value;
 
-
         const result =
           await client
             .from("project_files")
             .update({
-              file_content: value,
+              file_content:
+                value,
               updated_at:
                 new Date().toISOString()
             })
@@ -1463,7 +1789,6 @@
               "id",
               file.id
             );
-
 
         if (result.error) {
 
@@ -1474,24 +1799,29 @@
           return;
         }
 
-
         file.file_content =
           value;
-
 
         workspacePage();
       };
   }
 
-
+  /*
+   * LIVE PREVIEW
+   *
+   * HTML + ALL CSS + ALL JS
+   * are combined into iframe.srcdoc.
+   */
   function buildPreview() {
 
-    const html =
+    const htmlFile =
       state.files.find(
         function (file) {
 
-          return /(^|\/)index\.html?$/i.test(
+          return /^index\.html?$/i.test(
             file.file_path
+              .split("/")
+              .pop()
           );
 
         }
@@ -1506,11 +1836,13 @@
         }
       );
 
-
-    if (!html) {
+    if (!htmlFile) {
 
       return `
+        <!doctype html>
+
         <html>
+
           <body
             style="
               font-family:Arial;
@@ -1526,46 +1858,111 @@
               index.html abhi available nahi hai.
             </p>
 
+            <p>
+              Refresh Files ya project ko dobara open karein.
+            </p>
+
           </body>
+
         </html>
       `;
     }
 
-
     let documentHTML =
-      html.file_content || "";
+      htmlFile.file_content || "";
 
-
+    /*
+     * Load ALL CSS files.
+     */
     const css =
-      state.files.find(
-        function (file) {
-          return /\.css$/i.test(
-            file.file_path
+      state.files
+        .filter(
+          function (file) {
+            return /\.css$/i.test(
+              file.file_path
+            );
+          }
+        )
+        .map(
+          function (file) {
+            return file.file_content || "";
+          }
+        )
+        .join("\n");
+
+    /*
+     * Load ALL JavaScript files.
+     */
+    const js =
+      state.files
+        .filter(
+          function (file) {
+            return /\.js$/i.test(
+              file.file_path
+            );
+          }
+        )
+        .map(
+          function (file) {
+            return file.file_content || "";
+          }
+        )
+        .join("\n");
+
+    if (css) {
+
+      if (
+        /<\/head>/i.test(
+          documentHTML
+        )
+      ) {
+
+        documentHTML =
+          documentHTML.replace(
+            /<\/head>/i,
+            "<style>\n" +
+              css +
+              "\n</style></head>"
           );
-        }
-      );
 
+      } else {
 
-    if (
-      css &&
-      !/<style[\s\S]*?>/i.test(
-        documentHTML
-      )
-    ) {
+        documentHTML =
+          "<style>\n" +
+          css +
+          "\n</style>" +
+          documentHTML;
 
-      documentHTML =
-        documentHTML.replace(
-          /<\/head>/i,
-          "<style>" +
-            css.file_content +
-            "</style></head>"
-        );
+      }
     }
 
+    if (js) {
+
+      if (
+        /<\/body>/i.test(
+          documentHTML
+        )
+      ) {
+
+        documentHTML =
+          documentHTML.replace(
+            /<\/body>/i,
+            "<script>\n" +
+              js +
+              "\n</script></body>"
+          );
+
+      } else {
+
+        documentHTML +=
+          "<script>\n" +
+          js +
+          "\n</script>";
+      }
+    }
 
     return documentHTML;
   }
-
 
   function updatePreview() {
 
@@ -1574,16 +1971,13 @@
         "previewFrame"
       );
 
-
     if (!frame) {
       return;
     }
 
-
     frame.srcdoc =
       buildPreview();
   }
-
 
   async function sendAI() {
 
@@ -1592,21 +1986,17 @@
         "editPrompt"
       );
 
-
     const prompt =
       input.value.trim();
-
 
     if (!prompt) {
       return;
     }
 
-
     const messages =
       document.getElementById(
         "messages"
       );
-
 
     messages.insertAdjacentHTML(
       "beforeend",
@@ -1624,14 +2014,11 @@
       `
     );
 
-
     input.value = "";
-
 
     try {
 
       await getSession();
-
 
       const result =
         await callFunction(
@@ -1639,45 +2026,43 @@
           prompt
         );
 
-
       const working =
         document.getElementById(
           "aiWorking"
         );
 
-
       if (working) {
         working.remove();
       }
 
-
       if (!result.success) {
+
         throw new Error(
           result.error ||
           "AI update failed"
         );
-      }
 
+      }
 
       await loadFiles(
         state.project.id
       );
 
-
       messages.insertAdjacentHTML(
         "beforeend",
         `
           <div class="ai-bubble">
+
             ✓ ${
               escapeHTML(
                 result.message ||
                 "Project updated."
               )
             }
+
           </div>
         `
       );
-
 
       updateWorkspaceWithoutReload();
 
@@ -1688,28 +2073,27 @@
           "aiWorking"
         );
 
-
       if (working) {
         working.remove();
       }
-
 
       messages.insertAdjacentHTML(
         "beforeend",
         `
           <div class="ai-bubble">
+
             ❌ ${
               escapeHTML(
                 error.message ||
                 "AI error"
               )
             }
+
           </div>
         `
       );
     }
   }
-
 
   function updateWorkspaceWithoutReload() {
 
@@ -1718,41 +2102,44 @@
         "fileList"
       );
 
-
     if (list) {
+
       list.innerHTML =
         fileListHTML();
-    }
 
+    }
 
     document
       .querySelectorAll(
         "[data-file-id]"
       )
-      .forEach(function (button) {
+      .forEach(
+        function (button) {
 
-        button.onclick =
-          function () {
+          button.onclick =
+            function () {
 
-            state.activeFile =
-              state.files.find(
-                function (file) {
-                  return (
-                    file.id ===
-                    button.dataset.fileId
-                  );
-                }
-              ) || null;
+              state.activeFile =
+                state.files.find(
+                  function (file) {
 
-            openEditor();
-          };
+                    return (
+                      file.id ===
+                      button.dataset.fileId
+                    );
 
-      });
+                  }
+                ) || null;
 
+              openEditor();
+
+            };
+
+        }
+      );
 
     updatePreview();
   }
-
 
   function loginPage(signup) {
 
@@ -1766,29 +2153,34 @@
           <div class="auth-card">
 
             <div class="eyebrow">
+
               ${
                 signup
                   ? "CREATE ACCOUNT"
                   : "WELCOME BACK"
               }
+
             </div>
 
             <h2>
+
               ${
                 signup
                   ? "Create your account"
                   : "Login to BuildPilot"
               }
+
             </h2>
 
             <p class="muted">
+
               ${
                 signup
                   ? "Start building with AI."
                   : "Continue your projects."
               }
-            </p>
 
+            </p>
 
             <div class="stack">
 
@@ -1799,7 +2191,6 @@
                 placeholder="Email"
               >
 
-
               <input
                 id="password"
                 class="input"
@@ -1807,24 +2198,23 @@
                 placeholder="Password"
               >
 
-
               <button
                 id="authButton"
                 class="btn primary"
               >
+
                 ${
                   signup
                     ? "Create Account"
                     : "Login"
                 }
-              </button>
 
+              </button>
 
               <div
                 id="authMessage"
                 class="hidden"
               ></div>
-
 
               <button
                 id="backButton"
@@ -1842,9 +2232,7 @@
       </div>
     `;
 
-
     bindHeader();
-
 
     document.getElementById(
       "backButton"
@@ -1852,7 +2240,6 @@
       function () {
         location.hash = "";
       };
-
 
     document.getElementById(
       "authButton"
@@ -1864,22 +2251,20 @@
             "email"
           ).value.trim();
 
-
         const password =
           document.getElementById(
             "password"
           ).value;
 
-
         let result;
-
 
         if (signup) {
 
           result =
             await client.auth.signUp({
               email: email,
-              password: password
+              password:
+                password
             });
 
         } else {
@@ -1887,17 +2272,16 @@
           result =
             await client.auth.signInWithPassword({
               email: email,
-              password: password
+              password:
+                password
             });
 
         }
-
 
         const message =
           document.getElementById(
             "authMessage"
           );
-
 
         if (result.error) {
 
@@ -1909,7 +2293,6 @@
 
           return;
         }
-
 
         if (
           signup &&
@@ -1925,51 +2308,41 @@
           return;
         }
 
-
         await getSession();
 
         location.hash = "";
       };
   }
 
-
   async function router() {
 
     await getSession();
 
-
     const hash =
       location.hash;
-
 
     if (hash === "#login") {
       loginPage(false);
       return;
     }
 
-
     if (hash === "#signup") {
       loginPage(true);
       return;
     }
-
 
     if (hash === "#projects") {
       await projectsPage();
       return;
     }
 
-
     if (hash === "#workspace") {
-
-      workspacePage();
+      await workspacePage();
       return;
     }
 
-
     homePage();
   }
-
 
   client.auth.onAuthStateChange(
     function (_event, session) {
@@ -1978,12 +2351,10 @@
     }
   );
 
-
   window.addEventListener(
     "hashchange",
     router
   );
-
 
   router();
 

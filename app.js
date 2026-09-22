@@ -21,7 +21,31 @@
   }
 
   async function refreshAuth() {
-    const { data: { session } } = await client.auth.getSession();
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
+      state.session = data?.session || null;
+      state.profile = state.session?.user ? await ensureProfile(state.session.user) : null;
+      return state.session;
+    } catch (error) {
+      console.error("Auth session error:", error);
+      state.session = null;
+      state.profile = null;
+      return null;
+    }
+  }
+
+  async function getActiveSession() {
+    let session = await refreshAuth();
+    if (session?.access_token) return session;
+
+    const { data, error } = await client.auth.refreshSession();
+    if (error) {
+      console.error("Session refresh error:", error);
+      return null;
+    }
+
+    session = data?.session || null;
     state.session = session;
     state.profile = session?.user ? await ensureProfile(session.user) : null;
     return session;
@@ -105,13 +129,22 @@
       location.hash = "#admin-login";
       return;
     }
-    if (!state.session) { location.hash = "#login"; return; }
+    const activeSession = await getActiveSession();
+    if (!activeSession?.access_token) {
+      notice.className = "notice error";
+      notice.textContent = "Please login first.";
+      location.hash = "#login";
+      return;
+    }
     if (!prompt) { notice.className = "notice error"; notice.textContent = "Please describe your project."; return; }
 
     msgs.insertAdjacentHTML("beforeend", `<div class="msg user">${esc(prompt)}</div><div class="msg ai">Building your project...</div>`);
     msgs.scrollTop = msgs.scrollHeight;
 
     const { data, error } = await client.functions.invoke("buildpilot-generate", {
+      headers: {
+        Authorization: `Bearer ${activeSession.access_token}`
+      },
       body: {
         prompt,
         projectName: name,
@@ -172,7 +205,13 @@
         msg.className = "notice success-note";
         msg.textContent = result.data.session ? "Account created. You can start building." : "Account created. Confirm your email, then login.";
       } else {
-        await refreshAuth();
+        state.session = result.data?.session || null;
+        state.profile = state.session?.user ? await ensureProfile(state.session.user) : null;
+        if (!state.session) {
+          msg.className = "notice error";
+          msg.textContent = "Login succeeded but no session was created. Please try again.";
+          return;
+        }
         location.hash = "";
       }
     };
@@ -311,5 +350,18 @@
   }
 
   window.addEventListener("hashchange", router);
+
+  client.auth.onAuthStateChange(async (_event, session) => {
+    state.session = session || null;
+    state.profile = session?.user ? await ensureProfile(session.user) : null;
+
+    // Keep the current page in sync with Supabase auth changes.
+    if (!session && ["#projects", "#upgrade", "#admin"].includes(location.hash)) {
+      location.hash = "#login";
+      return;
+    }
+    router();
+  });
+
   refreshAuth().then(router);
 })();

@@ -1,22 +1,7 @@
-BUILD PILOT AI - FULL FIX
+BUILDPILOT UPDATE FIX
 
-FILES:
-1. supabase/functions/buildpilot-generate/index.ts
-   Complete Edge Function with authentication, OpenAI, project plan,
-   project/module/database saving and detailed errors.
-
-2. frontend/generate-fixed.js
-   Complete fixed generate() function.
-   Uses the current Supabase session JWT and apikey.
-
-3. frontend/config.js
-   BuildPilot Supabase configuration.
-
-IMPORTANT:
-- Keep the Edge Function Legacy JWT secret verification setting OFF.
-- OPENAI_API_KEY must be set in Supabase Edge Function Secrets.
-- Do not put OPENAI_API_KEY in frontend files.
-- index.html should load config.js, Supabase JS, then app.js.
-- Replace your existing generate() with frontend/generate-fixed.js contents.
-- Deploy the Edge Function after replacing index.ts.
-- Logout/login again before testing.
+1. Replace your GitHub Pages app.js with app.js from this package.
+2. Replace Supabase Edge Function buildpilot-generate/index.ts with the supplied index.ts and DEPLOY the function.
+3. The important fix is that AI edits now use action=modify_project and update the CURRENT project files instead of creating a new project and leaving the starter preview visible.
+4. After deploying GitHub Pages, press Ctrl+F5 once to clear the old app.js cache.
+5. Public preview remains inside an iframe; it does not need to show the internal BuildPilot editor UI.

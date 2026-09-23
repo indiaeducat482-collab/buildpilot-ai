@@ -1,496 +1,876 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createSupabaseContext } from "npm:@supabase/server@1.7.0";
 
-import { createSupabaseContext } from "npm:@supabase/server@^1";
-import { corsHeaders } from "npm:@supabase/supabase-js@2.95.0/cors";
+const cors = {
+  headers: {
+    "Access-Control-Allow-Origin":
+      "https://indiaeducat482-collab.github.io",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  },
+};
 
-const OPENAI_API_URL = "https://api.openai.com/v1/responses";
-const OPENAI_MODEL = "gpt-5.6-luna";
-
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
-function errorResponse(message: string, status = 500, code = "EDGE_FUNCTION_ERROR", details?: unknown) {
-  return json({
-    success: false,
-    error: message,
-    code,
-    ...(details !== undefined ? { details } : {}),
-  }, status);
-}
-
-function cleanString(value: unknown, fallback = "") {
-  return typeof value === "string" ? value.trim() : fallback;
-}
-
-function validFrontend(value: string) {
-  return ["html", "react", "nextjs"].includes(value);
-}
-
-function validBackend(value: string) {
-  return ["supabase", "firebase", "github"].includes(value);
-}
-
-function normalizeProjectType(value: unknown) {
-  const v = cleanString(value, "website").toLowerCase();
-  if (["complete_system", "complete-system", "complete system"].includes(v)) {
-    return "complete_system";
-  }
-  return "website";
-}
-
-const projectPlanSchema = {
+const planSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    project_name: { type: "string" },
-    project_type: { type: "string", enum: ["website", "complete_system"] },
+    projectName: { type: "string" },
     summary: { type: "string" },
-    frontend: { type: "string" },
-    backend: { type: "string" },
+
+    stack: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        frontend: { type: "string" },
+        backend: { type: "string" },
+      },
+      required: ["frontend", "backend"],
+    },
+
+    features: {
+      type: "array",
+      items: { type: "string" },
+    },
+
     pages: {
       type: "array",
       items: {
         type: "object",
         additionalProperties: false,
         properties: {
-          name: { type: "string" },
           path: { type: "string" },
-          purpose: { type: "string" }
-        },
-        required: ["name", "path", "purpose"]
-      }
-    },
-    modules: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          name: { type: "string" },
-          description: { type: "string" }
-        },
-        required: ["name", "description"]
-      }
-    },
-    database_tables: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          table_name: { type: "string" },
           purpose: { type: "string" },
+        },
+        required: ["path", "purpose"],
+      },
+    },
+
+    database: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          table: { type: "string" },
           columns: {
             type: "array",
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                name: { type: "string" },
-                type: { type: "string" },
-                required: { type: "boolean" },
-                description: { type: "string" }
-              },
-              required: ["name", "type", "required", "description"]
-            }
-          }
+            items: { type: "string" },
+          },
         },
-        required: ["table_name", "purpose", "columns"]
-      }
+        required: ["table", "columns"],
+      },
     },
-    security: { type: "array", items: { type: "string" } },
-    next_steps: { type: "array", items: { type: "string" } }
+
+    auth: {
+      type: "array",
+      items: { type: "string" },
+    },
+
+    files: {
+      type: "array",
+      maxItems: 20,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          path: { type: "string" },
+          purpose: { type: "string" },
+          content: { type: "string" },
+        },
+        required: ["path", "purpose", "content"],
+      },
+    },
+
+    setupSteps: {
+      type: "array",
+      items: { type: "string" },
+    },
+
+    deploymentSteps: {
+      type: "array",
+      items: { type: "string" },
+    },
+
+    securityNotes: {
+      type: "array",
+      items: { type: "string" },
+    },
   },
+
   required: [
-    "project_name", "project_type", "summary", "frontend", "backend",
-    "pages", "modules", "database_tables", "security", "next_steps"
-  ]
+    "projectName",
+    "summary",
+    "stack",
+    "features",
+    "pages",
+    "database",
+    "auth",
+    "files",
+    "setupSteps",
+    "deploymentSteps",
+    "securityNotes",
+  ],
 };
 
-async function callOpenAI(apiKey: string, args: {
-  projectName: string;
-  prompt: string;
-  frontend: string;
-  backend: string;
-  projectType: string;
-}) {
-  const systemPrompt = `
-You are BuildPilot AI, an AI software architect.
-Analyze the user's requirement and return a practical production-ready project plan.
+function response(body: unknown, status = 200) {
+  return Response.json(body, {
+    status,
+    headers: cors.headers,
+  });
+}
 
-Project types:
-- website: website-only project. Prefer HTML/CSS/JavaScript unless React/Next.js is selected.
-- complete_system: full application with authentication, database, roles, CRUD and security only when required.
+function cleanPath(path: string) {
+  return path
+    .replace(/^\/+/, "")
+    .replace(/\\/g, "/")
+    .slice(0, 500);
+}
 
-Follow the user's requirement. Do not invent unnecessary features.
-For Supabase, design PostgreSQL tables and security/RLS needs.
-For Firebase, describe Firebase auth/data needs.
-For GitHub, treat GitHub mainly as repository infrastructure.
-For website projects, database_tables can be empty.
-Return only the JSON required by the schema.
+export default {
+  fetch: async (req: Request) => {
+      // Handle CORS preflight before authentication.
+      if (req.method === "OPTIONS") {
+        return new Response("ok", {
+          headers: cors.headers,
+        });
+      }
+
+      if (req.method !== "POST") {
+        return response(
+          {
+            error: "METHOD_NOT_ALLOWED",
+            message: "POST required.",
+          },
+          405
+        );
+      }
+
+      // Verify the signed-in user's JWT and create the Supabase context.
+      // Using createSupabaseContext here lets us return the real auth error
+      // instead of a generic 401 from the wrapper.
+      const { data: ctx, error: authError } =
+        await createSupabaseContext(req, {
+          auth: "user",
+        });
+
+      if (authError || !ctx) {
+        return response(
+          {
+            error: authError?.code || "UNAUTHORIZED",
+            message:
+              authError?.message ||
+              "Authentication failed. Please login again.",
+          },
+          authError?.status || 401
+        );
+      }
+
+      const userId = ctx.userClaims?.sub;
+
+      if (!userId) {
+        return response(
+          {
+            error: "LOGIN_REQUIRED",
+            message: "Please login first.",
+          },
+          401
+        );
+      }
+
+      const openaiKey = Deno.env.get("OPENAI_API_KEY");
+
+      if (!openaiKey) {
+        return response(
+          {
+            error: "OPENAI_KEY_MISSING",
+            message:
+              "OPENAI_API_KEY is missing in Edge Function Secrets.",
+          },
+          500
+        );
+      }
+
+      let body: Record<string, unknown>;
+
+      try {
+        body = await req.json();
+      } catch {
+        return response(
+          {
+            error: "INVALID_JSON",
+            message: "Invalid JSON request.",
+          },
+          400
+        );
+      }
+
+      const prompt = String(body.prompt ?? "").trim();
+      const projectName = String(body.projectName ?? "").trim();
+      const frontend = String(body.frontend ?? "html");
+      const backend = String(body.backend ?? "supabase");
+      const action = String(body.action ?? "create_project").trim();
+      const projectId = String(body.projectId ?? "").trim();
+      const imageUrl = String(body.imageUrl ?? "").trim();
+
+      if (!prompt) {
+        return response(
+          {
+            error: "PROMPT_REQUIRED",
+            message: "Project description is required.",
+          },
+          400
+        );
+      }
+
+      if (action === "modify_project") {
+        if (!projectId) {
+          return response({ error: "PROJECT_ID_REQUIRED", message: "Project ID is required for project modification." }, 400);
+        }
+
+        const { data: project, error: projectError } = await ctx.supabase
+          .from("projects")
+          .select("id,name,description,frontend,backend")
+          .eq("id", projectId)
+          .eq("user_id", userId)
+          .single();
+
+        if (projectError || !project) {
+          return response({ error: "PROJECT_NOT_FOUND", message: projectError?.message || "Project not found." }, 404);
+        }
+
+        const { data: existingFiles, error: filesError } = await ctx.supabase
+          .from("project_files")
+          .select("id,file_path,file_content,language,generated_by")
+          .eq("project_id", projectId)
+          .order("file_path");
+
+        if (filesError) {
+          return response({ error: "FILES_LOAD_FAILED", message: filesError.message }, 500);
+        }
+
+        const existing = existingFiles ?? [];
+        const existingByPath = new Map(existing.map((f: any) => [String(f.file_path), f]));
+        const { count: generatedCount, error: generatedCountError } = await ctx.supabase
+          .from("project_files")
+          .select("id", { count: "exact", head: true })
+          .eq("generated_by", userId);
+
+        if (generatedCountError) {
+          return response({ error: "FILE_COUNT_FAILED", message: generatedCountError.message }, 500);
+        }
+
+        const remainingNewFiles = Math.max(0, fileLimit - Number(generatedCount ?? 0));
+        const modifySchema = {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            message: { type: "string" },
+            files: {
+              type: "array",
+              maxItems: 20,
+              items: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  path: { type: "string" },
+                  content: { type: "string" },
+                  language: { type: "string" }
+                },
+                required: ["path", "content", "language"]
+              }
+            }
+          },
+          required: ["message", "files"]
+        };
+
+        const filesContext = existing.map((f: any) =>
+          `FILE: ${f.file_path}\nLANGUAGE: ${f.language || ""}\nCONTENT:\n${String(f.file_content || "").slice(0, 80000)}`
+        ).join("\n\n---\n\n");
+
+        const modifyInstructions = `
+You are modifying an existing web project.
+Return ONLY the files that must be changed or newly created.
+Do not replace working files with the starter placeholder.
+Preserve existing functionality unless the user's request requires a change.
+If a file is unchanged, do not return it.
+For a new file, return a relative path.
+Keep HTML/CSS/JS compatible with a static GitHub Pages website when the project frontend is html.
+
+Project: ${project.name}
+Frontend: ${frontend}
+Backend: ${backend}
+User request: ${prompt}
+${imageUrl ? `Reference image URL: ${imageUrl}\nUse the image as visual/design guidance when relevant.` : ""}
+
+Existing project files:
+${filesContext}
 `;
 
-  const response = await fetch(OPENAI_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      input: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: `Project name: ${args.projectName}
-Project type: ${args.projectType}
-Frontend: ${args.frontend}
-Backend: ${args.backend}
+        const model = Deno.env.get("OPENAI_MODEL") || "gpt-5.6-luna";
+        const aiResponse = await fetch("https://api.openai.com/v1/responses", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model, input: modifyInstructions, store: false,
+            text: { format: { type: "json_schema", name: "buildpilot_modify", strict: true, schema: modifySchema } }
+          })
+        });
 
-User requirement:
-${args.prompt}`
+        const ai = await aiResponse.json();
+        if (!aiResponse.ok) {
+          throw new Error(`OpenAI: ${ai?.error?.message || `HTTP ${aiResponse.status}`}`);
         }
-      ],
-      text: {
-        format: {
-          type: "json_schema",
-          name: "buildpilot_project_plan",
-          strict: true,
-          schema: projectPlanSchema
+        const output = String(ai?.output_text || "").trim();
+        if (!output) throw new Error("OpenAI returned an empty modification response.");
+
+        let modification: any;
+        try { modification = JSON.parse(output); }
+        catch { throw new Error("OpenAI returned invalid modification JSON."); }
+
+        const changes = Array.isArray(modification.files) ? modification.files : [];
+        const newFiles = changes.filter((f: any) => !existingByPath.has(cleanPath(String(f.path || ""))));
+        if (newFiles.length > remainingNewFiles) {
+          return response({
+            upgradeRequired: true,
+            code: "GITHUB_FILE_LIMIT",
+            message: `This update needs ${newFiles.length} new file(s), but only ${remainingNewFiles} file allowance remains. Please request an upgrade from Admin.`
+          }, 402);
         }
+
+        for (const file of changes) {
+          const path = cleanPath(String(file.path || ""));
+          if (!path || path.includes("..")) continue;
+          const content = String(file.content || "").slice(0, 100000);
+          const language = String(file.language || path.split(".").pop() || "text");
+          const currentFile = existingByPath.get(path);
+
+          if (currentFile?.id) {
+            const { error: updateError } = await ctx.supabase
+              .from("project_files")
+              .update({ file_content: content, language })
+              .eq("id", currentFile.id)
+              .eq("project_id", projectId);
+            if (updateError) throw new Error(`File update failed: ${updateError.message}`);
+          } else {
+            const { error: insertError } = await ctx.supabase
+              .from("project_files")
+              .insert({ project_id: projectId, file_path: path, file_content: content, language, generated_by: userId });
+            if (insertError) throw new Error(`New file save failed: ${insertError.message}`);
+          }
+        }
+
+        return response({
+          success: true,
+          action: "modify_project",
+          project,
+          message: modification.message || "Project updated successfully.",
+          changedFiles: changes.map((f: any) => cleanPath(String(f.path || ""))).filter(Boolean)
+        });
       }
-    })
-  });
 
-  const raw = await response.text();
-  let data: any;
 
-  try {
-    data = JSON.parse(raw);
-  } catch {
-    throw new Error(`OpenAI returned invalid JSON. HTTP ${response.status}: ${raw.slice(0, 1000)}`);
-  }
-
-  if (!response.ok) {
-    throw new Error(data?.error?.message || `OpenAI API request failed with HTTP ${response.status}`);
-  }
-
-  return data;
-}
-
-function extractOutputText(data: any) {
-  if (typeof data?.output_text === "string") return data.output_text;
-  if (!Array.isArray(data?.output)) return "";
-
-  let result = "";
-  for (const item of data.output) {
-    if (!Array.isArray(item?.content)) continue;
-    for (const content of item.content) {
-      if (typeof content?.text === "string") result += content.text;
-    }
-  }
-  return result;
-}
-
-function parsePlan(data: any) {
-  const outputText = extractOutputText(data);
-  if (!outputText) throw new Error("OpenAI returned an empty project plan.");
-
-  try {
-    return JSON.parse(outputText);
-  } catch {
-    throw new Error(`AI project plan was not valid JSON: ${outputText.slice(0, 1500)}`);
-  }
-}
-
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { status: 204, headers: corsHeaders });
-  }
-
-  if (req.method !== "POST") {
-    return errorResponse("Only POST requests are allowed.", 405, "METHOD_NOT_ALLOWED");
-  }
-
-  let generationId: string | null = null;
-
-  try {
-    const { data: ctx, error: authError } = await createSupabaseContext(req, {
-      auth: "user"
-    });
-
-    if (authError || !ctx?.userClaims?.sub) {
-      return errorResponse(
-        "Authentication required. Please login again.",
-        401,
-        "AUTHENTICATION_REQUIRED",
-        authError ? { message: authError.message } : undefined
-      );
-    }
-
-    const userId = ctx.userClaims.sub;
-    const supabase = ctx.supabase;
-    const openAIKey = Deno.env.get("OPENAI_API_KEY");
-
-    if (!openAIKey) {
-      return errorResponse(
-        "OPENAI_API_KEY is not configured in Supabase Edge Function secrets.",
-        500,
-        "OPENAI_KEY_MISSING"
-      );
-    }
-
-    let body: any;
-    try {
-      body = await req.json();
-    } catch {
-      return errorResponse("Request body must contain valid JSON.", 400, "INVALID_JSON");
-    }
-
-    const prompt = cleanString(body?.prompt);
-    const projectName = cleanString(body?.projectName, "BuildPilot Project");
-    const frontend = cleanString(body?.frontend, "html").toLowerCase();
-    const backend = cleanString(body?.backend, "supabase").toLowerCase();
-    const projectType = normalizeProjectType(body?.projectType ?? body?.type);
-
-    if (!prompt || prompt.length < 5) {
-      return errorResponse("Please enter a project requirement.", 400, "INVALID_PROMPT");
-    }
-
-    if (prompt.length > 12000) {
-      return errorResponse("Project requirement is too long.", 400, "PROMPT_TOO_LONG");
-    }
-
-    if (!validFrontend(frontend)) {
-      return errorResponse("Invalid frontend selection.", 400, "INVALID_FRONTEND");
-    }
-
-    if (!validBackend(backend)) {
-      return errorResponse("Invalid backend selection.", 400, "INVALID_BACKEND");
-    }
-
-    const { data: profileData, error: profileReadError } = await supabase
-      .from("profiles")
-      .select("id, full_name, role, status, plan, project_limit")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (profileReadError) {
-      return errorResponse(
-        "Could not load your profile.",
-        500,
-        "PROFILE_READ_FAILED",
-        profileReadError.message
-      );
-    }
-
-    let profile: any = profileData;
-
-    if (!profile) {
-      const created = await supabase
-        .from("profiles")
-        .insert({
-          id: userId,
-          status: "active",
-          plan: "free",
-          project_limit: 5,
-          github_file_limit: 2
-        })
-        .select("id, full_name, role, status, plan, project_limit")
-        .single();
-
-      if (created.error) {
-        return errorResponse(
-          "Could not create your profile.",
-          500,
-          "PROFILE_CREATE_FAILED",
-          created.error.message
+      if (prompt.length > 12000) {
+        return response(
+          {
+            error: "PROMPT_TOO_LONG",
+            message: "Project description is too long.",
+          },
+          400
         );
       }
 
-      profile = created.data;
-    }
+      if (!["html", "react", "nextjs"].includes(frontend)) {
+        return response(
+          {
+            error: "INVALID_FRONTEND",
+            message: "Invalid frontend.",
+          },
+          400
+        );
+      }
 
-    if (profile.status === "blocked") {
-      return errorResponse("Your account is blocked. Please contact support.", 403, "ACCOUNT_BLOCKED");
-    }
+      if (!["supabase", "firebase", "github"].includes(backend)) {
+        return response(
+          {
+            error: "INVALID_BACKEND",
+            message: "Invalid backend.",
+          },
+          400
+        );
+      }
 
-    const { count: projectCount, error: countError } = await supabase
-      .from("projects")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId);
+      // -----------------------------------------
+      // PROFILE
+      // -----------------------------------------
 
-    if (countError) {
-      return errorResponse(
-        "Could not check your project limit.",
-        500,
-        "PROJECT_LIMIT_CHECK_FAILED",
-        countError.message
+      const { data: profile, error: profileError } =
+        await ctx.supabase
+          .from("profiles")
+          .select(
+            "id, role, status, plan, project_limit, github_file_limit"
+          )
+          .eq("id", userId)
+          .maybeSingle();
+
+      if (profileError) {
+        return response(
+          {
+            error: "PROFILE_SCHEMA_NOT_READY",
+            message:
+              "Please run the supplied SQL in Supabase SQL Editor.",
+            details: profileError.message,
+          },
+          500
+        );
+      }
+
+      if (!profile) {
+        const { error: createError } =
+          await ctx.supabase.from("profiles").insert({
+            id: userId,
+            full_name: String(
+              ctx.userClaims?.email ?? "User"
+            ).split("@")[0],
+          });
+
+        if (createError) {
+          return response(
+            {
+              error: "PROFILE_CREATE_FAILED",
+              message: "Could not create your profile.",
+              details: createError.message,
+            },
+            500
+          );
+        }
+      }
+
+      const { data: current, error: currentError } =
+        await ctx.supabase
+          .from("profiles")
+          .select(
+            "id, role, status, plan, project_limit, github_file_limit"
+          )
+          .eq("id", userId)
+          .single();
+
+      if (currentError || !current) {
+        return response(
+          {
+            error: "PROFILE_NOT_READY",
+            message: "User profile is not ready.",
+            details: currentError?.message,
+          },
+          500
+        );
+      }
+
+      // -----------------------------------------
+      // BLOCKED ACCOUNT CHECK
+      // -----------------------------------------
+
+      if (current.status !== "active") {
+        return response(
+          {
+            error: "ACCOUNT_BLOCKED",
+            message:
+              "Your account is blocked. Please contact Admin.",
+          },
+          403
+        );
+      }
+
+      const projectLimit = Math.max(
+        1,
+        Number(current.project_limit ?? 5)
       );
-    }
 
-    const limit = Number(profile.project_limit ?? 5);
-
-    if (profile.role !== "admin" && Number(projectCount ?? 0) >= limit) {
-      return errorResponse(
-        `Project limit reached. Your current limit is ${limit} projects.`,
-        402,
-        "PROJECT_LIMIT_REACHED",
-        { current: Number(projectCount ?? 0), limit, plan: profile.plan ?? "free" }
+      const fileLimit = Math.max(
+        1,
+        Number(current.github_file_limit ?? 2)
       );
-    }
 
-    const { data: projectTypeRow, error: projectTypeError } = await supabase
-      .from("project_types")
-      .select("id, name, code, description")
-      .eq("code", projectType)
-      .maybeSingle();
+      // -----------------------------------------
+      // PROJECT LIMIT
+      // -----------------------------------------
 
-    if (projectTypeError) {
-      return errorResponse(
-        "Could not load project type.",
-        500,
-        "PROJECT_TYPE_READ_FAILED",
-        projectTypeError.message
-      );
-    }
-
-    const projectTypeId = projectTypeRow?.id ?? null;
-
-    const generation = await supabase
-      .from("generations")
-      .insert({
-        user_id: userId,
-        prompt,
-        model: OPENAI_MODEL,
-        provider: "openai",
-        status: "processing"
-      })
-      .select("id")
-      .single();
-
-    if (generation.error) {
-      return errorResponse(
-        "Could not create generation record.",
-        500,
-        "GENERATION_CREATE_FAILED",
-        generation.error.message
-      );
-    }
-
-    generationId = generation.data.id;
-
-    try {
-      const aiResponse = await callOpenAI(openAIKey, {
-        projectName,
-        prompt,
-        frontend,
-        backend,
-        projectType
-      });
-
-      const plan = parsePlan(aiResponse);
-
-      const projectInsert = await supabase
+      const {
+        count: projectCount,
+        error: projectCountError,
+      } = await ctx.supabase
         .from("projects")
+        .select("id", {
+          count: "exact",
+          head: true,
+        })
+        .eq("user_id", userId);
+
+      if (projectCountError) {
+        return response(
+          {
+            error: "PROJECT_COUNT_FAILED",
+            message: projectCountError.message,
+          },
+          500
+        );
+      }
+
+      if ((projectCount ?? 0) >= projectLimit) {
+        return response(
+          {
+            upgradeRequired: true,
+            code: "PROJECT_LIMIT",
+            message:
+              `Project limit (${projectLimit}) reached. ` +
+              "Please request an upgrade from Admin.",
+          },
+          402
+        );
+      }
+
+      // -----------------------------------------
+      // GENERATED FILE LIMIT
+      // -----------------------------------------
+
+      const {
+        count: fileCount,
+        error: fileCountError,
+      } = await ctx.supabase
+        .from("project_files")
+        .select("id", {
+          count: "exact",
+          head: true,
+        })
+        .eq("generated_by", userId);
+
+      if (fileCountError) {
+        return response(
+          {
+            error: "FILE_COUNT_FAILED",
+            message: fileCountError.message,
+          },
+          500
+        );
+      }
+
+      if ((fileCount ?? 0) >= fileLimit) {
+        return response(
+          {
+            upgradeRequired: true,
+            code: "GITHUB_FILE_LIMIT",
+            message:
+              `Generated-file limit (${fileLimit}) reached. ` +
+              "Please request an upgrade from Admin.",
+          },
+          402
+        );
+      }
+
+      // -----------------------------------------
+      // GENERATION RECORD
+      // -----------------------------------------
+
+      const model =
+        Deno.env.get("OPENAI_MODEL") ||
+        "gpt-5.6-luna";
+
+      const {
+        data: generation,
+        error: generationError,
+      } = await ctx.supabase
+        .from("generations")
         .insert({
           user_id: userId,
-          name: projectName,
-          description: prompt,
-          frontend,
-          backend,
-          status: "completed",
-          project_type_id: projectTypeId,
-          project_plan: plan
+          prompt,
+          model,
+          provider: "openai",
+          status: "processing",
         })
-        .select("id, name, description, frontend, backend, status, project_type_id, project_plan, created_at")
+        .select("id")
         .single();
 
-      if (projectInsert.error) {
-        throw new Error(`Project creation failed: ${projectInsert.error.message}`);
-      }
-
-      const project = projectInsert.data;
-
-      const modules = Array.isArray(plan.modules) ? plan.modules : [];
-      if (modules.length) {
-        const result = await supabase.from("project_modules").insert(
-          modules.map((m: any) => ({
-            project_id: project.id,
-            name: cleanString(m?.name, "Module"),
-            description: cleanString(m?.description)
-          }))
-        );
-
-        if (result.error) {
-          throw new Error(`Module creation failed: ${result.error.message}`);
-        }
-      }
-
-      const tables = Array.isArray(plan.database_tables) ? plan.database_tables : [];
-      if (tables.length) {
-        const result = await supabase.from("project_database_schema").insert(
-          tables.map((t: any) => ({
-            project_id: project.id,
-            table_name: cleanString(t?.table_name, "table"),
-            purpose: cleanString(t?.purpose),
-            columns: Array.isArray(t?.columns) ? t.columns : []
-          }))
-        );
-
-        if (result.error) {
-          throw new Error(`Database schema creation failed: ${result.error.message}`);
-        }
-      }
-
-      const generationUpdate = await supabase
-        .from("generations")
-        .update({
-          status: "completed",
-          result: {
-            project_id: project.id,
-            project_plan: plan,
-            model: OPENAI_MODEL
+      if (generationError || !generation) {
+        return response(
+          {
+            error: "GENERATION_CREATE_FAILED",
+            message:
+              generationError?.message ||
+              "Could not create generation record.",
           },
-          completed_at: new Date().toISOString()
-        })
-        .eq("id", generationId)
-        .eq("user_id", userId);
-
-      if (generationUpdate.error) {
-        throw new Error(`Generation update failed: ${generationUpdate.error.message}`);
+          500
+        );
       }
 
-      return json({
-        success: true,
-        message: "Project generated successfully.",
-        project,
-        projectPlan: plan,
-        generationId
-      });
-    } catch (generationError) {
-      const message = generationError instanceof Error
-        ? generationError.message
-        : String(generationError);
+      try {
+        // -----------------------------------------
+        // AI PROMPT
+        // -----------------------------------------
 
-      await supabase
-        .from("generations")
-        .update({
-          status: "failed",
-          error_message: message,
-          completed_at: new Date().toISOString()
-        })
-        .eq("id", generationId)
-        .eq("user_id", userId);
+        const instructions = `
+You are BuildPilot AI, an expert software architect
+and code generator.
 
-      return errorResponse(message, 500, "PROJECT_GENERATION_FAILED");
+Create a practical project blueprint and starter files
+for the user's request.
+
+Selected frontend: ${frontend}
+Selected backend: ${backend}
+
+Keep the project practical and beginner-friendly.
+
+Do not generate unnecessary files.
+
+The user has a limited generated-file allowance.
+
+User request:
+${prompt}
+`;
+
+        // -----------------------------------------
+        // OPENAI RESPONSES API
+        // -----------------------------------------
+
+        const aiResponse = await fetch(
+          "https://api.openai.com/v1/responses",
+          {
+            method: "POST",
+
+            headers: {
+              Authorization: `Bearer ${openaiKey}`,
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+              model,
+              input: instructions,
+              store: false,
+
+              text: {
+                format: {
+                  type: "json_schema",
+                  name: "buildpilot_plan",
+                  strict: true,
+                  schema: planSchema,
+                },
+              },
+            }),
+          }
+        );
+
+        const ai = await aiResponse.json();
+
+        if (!aiResponse.ok) {
+          const detail =
+            ai?.error?.message ||
+            `OpenAI returned HTTP ${aiResponse.status}.`;
+
+          throw new Error(`OpenAI: ${detail}`);
+        }
+
+        const output =
+          String(ai?.output_text || "").trim();
+
+        if (!output) {
+          throw new Error(
+            "OpenAI returned an empty response."
+          );
+        }
+
+        // -----------------------------------------
+        // PARSE AI JSON
+        // -----------------------------------------
+
+        let plan: any;
+
+        try {
+          plan = JSON.parse(output);
+        } catch {
+          throw new Error(
+            "OpenAI returned invalid structured JSON."
+          );
+        }
+
+        const requestedFiles =
+          Array.isArray(plan.files)
+            ? plan.files
+            : [];
+
+        const remaining = Math.max(
+          0,
+          fileLimit - Number(fileCount ?? 0)
+        );
+
+        // -----------------------------------------
+        // FILE LIMIT CHECK
+        // -----------------------------------------
+
+        if (requestedFiles.length > remaining) {
+          await ctx.supabase
+            .from("generations")
+            .update({
+              status: "failed",
+              error_message:
+                "Generated-file limit reached.",
+            })
+            .eq("id", generation.id);
+
+          return response(
+            {
+              upgradeRequired: true,
+              code: "GITHUB_FILE_LIMIT",
+              message:
+                `This project needs ${requestedFiles.length} ` +
+                `generated files, but only ${remaining} ` +
+                `file allowance remains. ` +
+                "Please request an upgrade from Admin.",
+            },
+            402
+          );
+        }
+
+        // -----------------------------------------
+        // SAVE PROJECT
+        // -----------------------------------------
+
+        const {
+          data: project,
+          error: projectError,
+        } = await ctx.supabase
+          .from("projects")
+          .insert({
+            user_id: userId,
+            name:
+              projectName ||
+              plan.projectName ||
+              "BuildPilot Project",
+
+            description:
+              plan.summary || null,
+
+            frontend,
+            backend,
+
+            status: "completed",
+
+            project_plan: plan,
+          })
+          .select()
+          .single();
+
+        if (projectError || !project) {
+          throw new Error(
+            projectError?.message ||
+              "Could not save project."
+          );
+        }
+
+        // -----------------------------------------
+        // SAVE FILES
+        // -----------------------------------------
+
+        const files = requestedFiles.map(
+          (file: any) => ({
+            project_id: project.id,
+
+            file_path: cleanPath(
+              String(
+                file.path ||
+                  "generated.txt"
+              )
+            ),
+
+            file_content: String(
+              file.content || ""
+            ).slice(0, 100000),
+
+            language:
+              String(file.path || "")
+                .split(".")
+                .pop() || null,
+
+            generated_by: userId,
+          })
+        );
+
+        if (files.length > 0) {
+          const { error: filesError } =
+            await ctx.supabase
+              .from("project_files")
+              .insert(files);
+
+          if (filesError) {
+            throw new Error(
+              `File save failed: ${filesError.message}`
+            );
+          }
+        }
+
+        // -----------------------------------------
+        // GENERATION COMPLETE
+        // -----------------------------------------
+
+        await ctx.supabase
+          .from("generations")
+          .update({
+            project_id: project.id,
+            status: "completed",
+            result: plan,
+            completed_at:
+              new Date().toISOString(),
+          })
+          .eq("id", generation.id);
+
+        return response({
+          success: true,
+
+          project,
+
+          generationId:
+            generation.id,
+
+          plan,
+
+          savedFileCount:
+            files.length,
+
+          limits: {
+            projectLimit,
+
+            projectsUsed:
+              Number(projectCount ?? 0) + 1,
+
+            githubFileLimit:
+              fileLimit,
+
+            githubFilesUsed:
+              Number(fileCount ?? 0) +
+              files.length,
+          },
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Generation failed.";
+
+        await ctx.supabase
+          .from("generations")
+          .update({
+            status: "failed",
+            error_message: message,
+          })
+          .eq("id", generation.id);
+
+        return response(
+          {
+            error: "GENERATION_FAILED",
+            message,
+            generationId:
+              generation.id,
+          },
+          500
+        );
+      }
     }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return errorResponse(message, 500, "UNHANDLED_EDGE_FUNCTION_ERROR");
-  }
-});
+};

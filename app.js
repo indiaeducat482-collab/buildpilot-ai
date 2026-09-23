@@ -15,8 +15,8 @@
     CONFIG.SUPABASE_PUBLISHABLE_KEY || "";
 
   const GENERATE_FUNCTION =
-    CONFIG.FUNCTION_NAME ||
-    "super-function";
+  CONFIG.FUNCTION_NAME ||
+  "buildpilot-generate";
 
   const PUBLIC_FUNCTION =
     CONFIG.PUBLIC_FUNCTION_NAME ||

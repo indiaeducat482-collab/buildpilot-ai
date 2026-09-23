@@ -26,6 +26,9 @@
 
   let activeUser = null;
   let activeSession = null;
+  let activeProfile = null;
+  let pendingAIImage = null;
+  let generatedImages = [];
 
   let activeProject = null;
   let activeFiles = [];
@@ -1295,6 +1298,89 @@
             25px 14px 50px;
         }
       }
+
+      /* ======================================================
+         IDE / AI BUILDER / PUBLIC CLEAN SITE
+         ====================================================== */
+      .bp-ide-app { background:#0b1020; color:#e5e7eb; min-height:100vh; }
+      .bp-ide-topbar { position:sticky; top:0; z-index:200; height:62px; padding:0 14px; background:#0b1020; border-bottom:1px solid #1f2937; }
+      .bp-brand-stack { display:flex; flex-direction:column; min-width:0; }
+      .bp-brand-stack strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:280px; }
+      .bp-brand-stack span { font-size:10px; color:#94a3b8; margin-top:2px; text-transform:uppercase; }
+      .bp-icon-btn,.bp-mini-btn { border:1px solid #334155; background:#111827; color:#cbd5e1; border-radius:8px; cursor:pointer; }
+      .bp-icon-btn { width:34px; height:34px; margin-right:4px; }
+      .bp-mini-btn { padding:6px 9px; font-size:12px; }
+      .bp-btn-soft { background:#111827; color:#dbeafe; border-color:#334155; }
+      .bp-ide-toolbar { display:flex; gap:7px; align-items:center; flex-wrap:wrap; }
+      .bp-ide { display:grid; grid-template-columns:235px minmax(0,1fr) 380px; min-height:calc(100vh - 62px); background:#0b1020; }
+      .bp-ide-sidebar { border-right:1px solid #1f2937; background:#0f172a; display:flex; flex-direction:column; min-width:0; }
+      .bp-ide-side-head { height:48px; padding:0 12px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #1f2937; color:#cbd5e1; }
+      .bp-ide-side-head div { display:flex; align-items:center; gap:7px; font-size:11px; letter-spacing:.08em; }
+      .bp-ide-side-head span { background:#1e293b; padding:2px 6px; border-radius:999px; font-size:10px; }
+      .bp-files { padding:8px; overflow:auto; flex:1; }
+      .bp-file-row { display:flex; align-items:center; gap:2px; }
+      .bp-file { flex:1; display:flex; align-items:center; gap:8px; border:0; background:transparent; color:#94a3b8; padding:8px 7px; border-radius:7px; cursor:pointer; text-align:left; min-width:0; }
+      .bp-file:hover,.bp-file-active { background:#1e293b; color:#f8fafc; }
+      .bp-file-icon { width:22px; text-align:center; font-size:11px; font-weight:800; color:#818cf8; }
+      .bp-file-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+      .bp-file-more { border:0; background:transparent; color:#64748b; cursor:pointer; opacity:.5; }
+      .bp-file-row:hover .bp-file-more { opacity:1; }
+      .bp-sidebar-bottom { padding:9px; border-top:1px solid #1f2937; }
+      .bp-side-action { width:100%; text-align:left; border:0; background:transparent; color:#94a3b8; padding:9px; border-radius:7px; cursor:pointer; }
+      .bp-side-action:hover { background:#1e293b; color:#fff; }
+      .bp-ide-center { min-width:0; background:#111827; }
+      .bp-editor-tabs { height:40px; display:flex; align-items:end; border-bottom:1px solid #1f2937; background:#0f172a; }
+      .bp-editor-tab { padding:11px 15px 9px; color:#94a3b8; font-size:12px; border-right:1px solid #1f2937; }
+      .bp-editor-tab.active { color:#fff; background:#111827; border-top:2px solid #6366f1; padding-top:9px; }
+      .bp-preview-shell { height:calc(100vh - 102px); min-height:600px; display:flex; flex-direction:column; }
+      .bp-preview-head { height:45px; padding:0 12px; display:flex; align-items:center; justify-content:space-between; color:#cbd5e1; font-size:12px; border-bottom:1px solid #1f2937; }
+      .bp-preview-content { flex:1; background:#fff; overflow:hidden; }
+      .bp-preview-content .bp-preview-frame { height:100%; min-height:0; border:0; }
+      .bp-ai-panel { background:#0f172a; border-left:1px solid #1f2937; display:flex; flex-direction:column; min-width:0; }
+      .bp-ai-head { min-height:62px; padding:12px 13px; border-bottom:1px solid #1f2937; display:flex; justify-content:space-between; gap:10px; }
+      .bp-ai-head strong { display:block; color:#fff; font-size:14px; }
+      .bp-ai-head span { display:block; margin-top:3px; color:#64748b; font-size:11px; }
+      .bp-chat-messages { flex:1; overflow:auto; padding:13px; }
+      .bp-chat-message { display:flex; gap:9px; padding:11px; border:1px solid #1e293b; border-radius:11px; margin-bottom:10px; line-height:1.5; font-size:13px; color:#cbd5e1; background:#111827; white-space:pre-wrap; }
+      .bp-chat-user { background:#172554; border-color:#1e3a8a; }
+      .bp-chat-ai { background:#111827; }
+      .bp-chat-error { background:#3f1118; border-color:#7f1d1d; color:#fecaca; }
+      .bp-ai-avatar { width:24px; height:24px; border-radius:7px; display:grid; place-items:center; background:#312e81; color:#fff; flex:0 0 auto; }
+      .bp-chat-input { padding:12px; border-top:1px solid #1f2937; background:#0f172a; }
+      .bp-prompt-box { border:1px solid #334155; border-radius:12px; background:#111827; overflow:hidden; }
+      .bp-prompt-box:focus-within { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,.15); }
+      .bp-prompt-box .bp-textarea { border:0; background:transparent; color:#f8fafc; resize:none; box-shadow:none; }
+      .bp-prompt-tools { display:flex; align-items:center; gap:7px; padding:7px; border-top:1px solid #1f2937; }
+      .bp-tool-btn { border:1px solid #334155; background:#0f172a; color:#cbd5e1; border-radius:7px; padding:6px 9px; cursor:pointer; font-size:12px; }
+      .bp-tool-hint { flex:1; color:#64748b; font-size:10px; }
+      .bp-send-btn { width:34px !important; height:32px; padding:0 !important; border-radius:8px; }
+      .bp-attach-preview { padding:0 12px; }
+      .bp-attachment { display:flex; gap:8px; align-items:center; padding:8px; border:1px solid #334155; background:#111827; border-radius:8px; font-size:11px; color:#cbd5e1; margin:8px 0 0; }
+      .bp-attachment img { width:38px; height:38px; object-fit:cover; border-radius:6px; }
+      .bp-code-page { min-height:100vh; background:#0b1020; color:#e5e7eb; padding:0; }
+      .bp-code-top { height:62px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; border-bottom:1px solid #1f2937; }
+      .bp-code-path { font-weight:700; font-size:14px; }
+      .bp-code-sub { color:#64748b; font-size:11px; margin-top:3px; }
+      .bp-code-layout { display:grid; grid-template-columns:55px minmax(0,1fr); width:min(1500px,100%); margin:auto; height:calc(100vh - 95px); min-height:600px; background:#020617; }
+      .bp-code-gutter { padding:16px 10px; text-align:right; color:#475569; background:#020617; border-right:1px solid #1e293b; font:14px/1.55 "Courier New",monospace; white-space:pre; overflow:hidden; user-select:none; }
+      .bp-editor { width:100%; height:100%; min-height:0; resize:none; border:0; border-radius:0; padding:16px; outline:0; background:#020617; color:#e2e8f0; font:14px/1.55 "Courier New",monospace; tab-size:2; white-space:pre; overflow:auto; }
+      .bp-code-status { height:33px; display:flex; justify-content:flex-end; gap:16px; align-items:center; padding:0 15px; color:#64748b; font-size:10px; border-top:1px solid #1f2937; }
+      .bp-public-shell { min-height:100vh; background:#fff; }
+      .bp-public-mount { width:100%; min-height:100vh; }
+      .bp-public-frame { width:100%; height:100vh; min-height:100vh; border:0; display:block; background:#fff; }
+      @media (max-width:1100px) {
+        .bp-ide { grid-template-columns:210px minmax(0,1fr); }
+        .bp-ai-panel { position:fixed; right:0; top:62px; bottom:0; width:min(380px,92vw); z-index:300; box-shadow:-20px 0 60px rgba(0,0,0,.35); transform:translateX(100%); transition:.2s ease; }
+        .bp-ai-panel.bp-ai-open { transform:translateX(0); }
+      }
+      @media (max-width:700px) {
+        .bp-ide { grid-template-columns:1fr; }
+        .bp-ide-sidebar { display:none; }
+        .bp-ide-toolbar .bp-btn { padding:7px 9px; font-size:11px; }
+        .bp-brand-stack strong { max-width:150px; }
+        .bp-preview-shell { height:calc(100vh - 102px); }
+      }
+
     `;
 
     document.head.appendChild(
@@ -1396,58 +1482,53 @@
     return activeSession;
   }
 
-  async function ensureProfile() {
+async function ensureProfile() {
     if (!activeUser) {
-      return;
+      activeProfile = null;
+      return null;
     }
 
-    const {
-      data,
-      error,
-    } = await client
+    const { data, error } = await client
       .from("profiles")
-      .select("id")
-      .eq(
-        "id",
-        activeUser.id
-      )
+      .select("id,full_name,role,status,plan,project_limit,github_file_limit")
+      .eq("id", activeUser.id)
       .maybeSingle();
 
     if (error) {
-      console.error(
-        "Profile check:",
-        error
-      );
-
-      return;
+      console.error("Profile check:", error);
+      activeProfile = { id: activeUser.id, role: "user", status: "active", plan: "free" };
+      return activeProfile;
     }
 
     if (data) {
-      return;
+      activeProfile = data;
+      return data;
     }
 
-    const {
-      error: insertError,
-    } = await client
-      .from("profiles")
-      .insert({
-        id: activeUser.id,
+    const profile = {
+      id: activeUser.id,
+      full_name: activeUser.user_metadata?.full_name || activeUser.email || "User",
+      role: "user",
+      status: "active",
+      plan: "free"
+    };
 
-        full_name:
-          activeUser
-            .user_metadata
-            ?.full_name ||
-          activeUser.email ||
-          "User",
-      });
+    const { data: created, error: insertError } = await client
+      .from("profiles")
+      .insert(profile)
+      .select("id,full_name,role,status,plan,project_limit,github_file_limit")
+      .maybeSingle();
 
     if (insertError) {
-      console.error(
-        "Profile create:",
-        insertError
-      );
+      console.error("Profile create:", insertError);
+      activeProfile = profile;
+    } else {
+      activeProfile = created || profile;
     }
+
+    return activeProfile;
   }
+
 
   /* =========================================================
      AUTH SCREEN
@@ -1841,6 +1922,8 @@
 
     activeUser =
       null;
+    activeProfile = null;
+    pendingAIImage = null;
 
     activeProject =
       null;
@@ -1870,6 +1953,17 @@
 
     await ensureProfile();
 
+    if (activeProfile && activeProfile.status === "blocked") {
+      root.innerHTML = `
+        <div class="bp-auth-page"><div class="bp-auth-card" style="text-align:center">
+          <div class="bp-auth-logo">!</div>
+          <h2 class="bp-auth-title">Account blocked</h2>
+          <p class="bp-auth-subtitle">Please contact the administrator to reactivate your account.</p>
+          <button class="bp-btn" onclick="window.BuildPilot.logout()">Logout</button>
+        </div></div>`;
+      return;
+    }
+
     root.innerHTML = `
       <div class="bp-app">
 
@@ -1896,6 +1990,13 @@
               )}
             </span>
 
+            ${activeProfile?.role === "admin" ? `
+              <button
+                class="bp-btn"
+                style="background:transparent;color:white;border-color:#475569"
+                onclick="window.BuildPilot.admin()"
+              >Admin</button>
+            ` : ""}
             <button
               class="bp-btn"
               style="
@@ -2272,7 +2373,7 @@ a professional header.
       </h1>
 
       <p>
-        Your BuildPilot AI project is ready.
+        Your website is ready.
       </p>
 
       <button id="helloButton">
@@ -2382,7 +2483,7 @@ body {
         function () {
 
           alert(
-            "BuildPilot AI project is working!"
+            "Your website is working!"
           );
 
         }
@@ -2593,6 +2694,20 @@ body {
       return;
     }
 
+    /* Free-plan project limit: default 5. */
+    if (activeProfile && activeProfile.role !== "admin") {
+      const limit = Number(activeProfile.project_limit ?? 5);
+      const { count, error: countError } = await client
+        .from("projects")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", activeUser.id);
+
+      if (!countError && Number.isFinite(limit) && (count || 0) >= limit) {
+        showToast(`Project limit reached (${limit}). Please request an upgrade from admin.`, "error");
+        return;
+      }
+    }
+
     setButtonLoading(
       button,
       true,
@@ -2727,82 +2842,35 @@ body {
      AI FUNCTION
      ========================================================= */
 
-  async function callGenerateFunction(
-    projectId,
-    instruction,
-    projectName,
-    frontend,
-    backend
-  ) {
+async function callGenerateFunction(projectId, instruction, projectName, frontend, backend, extra = {}) {
     await getSession();
+    if (!activeSession) throw new Error("Your login session expired. Please login again.");
 
-    if (!activeSession) {
-      throw new Error(
-        "Your login session expired. Please login again."
-      );
-    }
+    const payload = {
+      projectId,
+      instruction,
+      prompt: instruction,
+      projectName,
+      frontend,
+      backend,
+      ...extra
+    };
 
-    const {
-      data,
-      error,
-    } =
-      await client.functions.invoke(
-        GENERATE_FUNCTION,
-        {
-          headers: {
-            Authorization:
-              "Bearer " +
-              activeSession.access_token,
-          },
-
-          body: {
-            projectId,
-
-            instruction,
-
-            /*
-             * Compatibility fields.
-             */
-            prompt:
-              instruction,
-
-            projectName,
-
-            frontend,
-
-            backend,
-          },
-        }
-      );
+    const { data, error } = await client.functions.invoke(GENERATE_FUNCTION, {
+      headers: { Authorization: "Bearer " + activeSession.access_token },
+      body: payload
+    });
 
     if (error) {
-      console.error(
-        "Edge Function error:",
-        error
-      );
-
-      throw new Error(
-        error.message ||
-          "AI function failed"
-      );
+      console.error("Edge Function error:", error);
+      throw new Error(error.message || "AI function failed");
     }
-
-    if (
-      data &&
-      data.success === false
-    ) {
-      throw new Error(
-        data.error ||
-          "AI generation failed"
-      );
+    if (data && data.success === false) {
+      throw new Error(data.error || "AI generation failed");
     }
-
-    return (
-      data || {
-        success: true,
-      }
-    );
+    return data || { success:true };
   }
+
 
   /* =========================================================
      LOAD PROJECT FILES
@@ -3142,306 +3210,156 @@ body {
      WORKSPACE
      ========================================================= */
 
-  function openWorkspace(
-    projectId
-  ) {
+function openWorkspace(projectId) {
+    if (!activeProject || activeProject.id !== projectId) {
+      return;
+    }
+
+    const isAdmin = Boolean(activeProfile?.role === "admin");
+
     root.innerHTML = `
-      <div class="bp-app">
-
-        <header class="bp-topbar">
-
+      <div class="bp-app bp-ide-app">
+        <header class="bp-topbar bp-ide-topbar">
           <div class="bp-brand">
-
-            <button
-              class="bp-btn"
-              style="
-                background:transparent;
-                color:white;
-                border-color:#475569;
-                margin-right:5px;
-              "
-              onclick="
-                window.BuildPilot.home()
-              "
-            >
-              ←
-            </button>
-
-            <div class="bp-logo">
-              ⚡
+            <button class="bp-icon-btn" title="Back to projects"
+              onclick="window.BuildPilot.home()">←</button>
+            <div class="bp-logo">⚡</div>
+            <div class="bp-brand-stack">
+              <strong>${escapeHtml(activeProject.name || "Project")}</strong>
+              <span>${escapeHtml(activeProject.frontend || "html")} · ${escapeHtml(activeProject.backend || "supabase")}</span>
             </div>
-
-            <span>
-              ${escapeHtml(
-                activeProject?.name ||
-                  "Project"
-              )}
-            </span>
-
           </div>
 
-          <div class="bp-actions">
-
-            <button
-              class="bp-btn"
-              style="
-                background:transparent;
-                color:white;
-                border-color:#475569;
-              "
-              onclick="
-                window.BuildPilot.refreshFiles()
-              "
-            >
-              ↻ Refresh
+          <div class="bp-ide-toolbar">
+            <button class="bp-btn bp-btn-soft" onclick="window.BuildPilot.openFileCreator()">＋ File</button>
+            <button class="bp-btn bp-btn-soft" onclick="window.BuildPilot.refreshFiles()">↻</button>
+            <button class="bp-btn bp-btn-soft" onclick="window.BuildPilot.updatePreview()">▶ Preview</button>
+            <button id="publishButton" class="bp-btn bp-btn-success"
+              onclick="window.BuildPilot.togglePublish()">
+              ${activeProject.public_enabled ? "🔗 Share" : "🚀 Publish"}
             </button>
-
-            <button
-              id="publishButton"
-              class="bp-btn bp-btn-success"
-              onclick="
-                window.BuildPilot.togglePublish()
-              "
-            >
-              ${
-                activeProject?.public_enabled
-                  ? "🔗 Public Link"
-                  : "🚀 Publish"
-              }
-            </button>
-
+            ${isAdmin ? `<button class="bp-btn bp-btn-soft" onclick="window.BuildPilot.admin()">Admin</button>` : ""}
           </div>
-
         </header>
 
-        <main class="bp-workspace">
-
-          <div class="bp-workspace-grid">
-
-            <aside class="bp-sidebar">
-
-              <div class="bp-sidebar-header">
-
-                <span>
-                  Project Files
-                </span>
-
-                <span style="
-                  color:#64748b;
-                  font-size:12px;
-                ">
-                  ${
-                    activeFiles.length
-                  }
-                }
-                </span>
-
+        <main class="bp-ide">
+          <aside class="bp-ide-sidebar">
+            <div class="bp-ide-side-head">
+              <div>
+                <strong>FILES</strong>
+                <span>${activeFiles.length}</span>
               </div>
+              <button class="bp-mini-btn" title="New file" onclick="window.BuildPilot.openFileCreator()">＋</button>
+            </div>
+            <div id="filesList" class="bp-files"></div>
+            <div class="bp-sidebar-bottom">
+              <button class="bp-side-action" onclick="window.BuildPilot.showProjectInfo()">ⓘ Project info</button>
+              <button class="bp-side-action" onclick="window.BuildPilot.home()">⌂ All projects</button>
+            </div>
+          </aside>
 
-              <div
-                id="filesList"
-                class="bp-files"
-              ></div>
-
-            </aside>
-
-            <section class="bp-workspace-main">
-
-              <div class="bp-panel">
-
-                <div class="bp-panel-header">
-
-                  <span>
-                    Live Preview
-                  </span>
-
-                  <button
-                    class="bp-btn"
-                    onclick="
-                      window.BuildPilot.updatePreview()
-                    "
-                  >
-                    Refresh
-                  </button>
-
+          <section class="bp-ide-center">
+            <div class="bp-editor-tabs" id="editorTabs">
+              <div class="bp-editor-tab active">Preview</div>
+            </div>
+            <div class="bp-preview-shell">
+              <div class="bp-preview-head">
+                <span>Live Preview</span>
+                <div class="bp-actions">
+                  <button class="bp-mini-btn" onclick="window.BuildPilot.updatePreview()">Refresh</button>
+                  ${activeProject.public_enabled ? `<button class="bp-mini-btn" onclick="window.BuildPilot.copyPublicLink('${escapeAttribute(activeProject.public_id || "")}')">Copy link</button>` : ""}
                 </div>
-
-                <div id="previewContent">
-                  Loading...
-                </div>
-
               </div>
+              <div id="previewContent" class="bp-preview-content"></div>
+            </div>
+          </section>
 
-              <div class="bp-panel bp-chat">
+          <aside class="bp-ai-panel">
+            <div class="bp-ai-head">
+              <div>
+                <strong>AI Builder</strong>
+                <span>Describe a change or create a feature</span>
+              </div>
+              <button class="bp-mini-btn" onclick="window.BuildPilot.clearChat()">Clear</button>
+            </div>
 
-                <div class="bp-panel-header">
-                  <span>
-                    ✨ AI Builder
-                  </span>
-                </div>
-
-                <div
-                  id="chatMessages"
-                  class="bp-chat-messages"
-                >
-
-                  <div class="
-                    bp-chat-message
-                    bp-chat-ai
-                  ">
-                    <strong>
-                      BuildPilot AI
-                    </strong>
-
-                    <div style="
-                      margin-top:5px;
-                    ">
-                      Tell me what you want
-                      to change in your project.
-                    </div>
+            <div id="chatMessages" class="bp-chat-messages">
+              <div class="bp-chat-message bp-chat-ai">
+                <div class="bp-ai-avatar">✦</div>
+                <div>
+                  <strong>AI Builder</strong>
+                  <div style="margin-top:5px">
+                    Tell me what to build or change. I can edit your project files and update the live preview.
                   </div>
-
                 </div>
-
-                <div class="bp-chat-input">
-
-                  <form id="aiChatForm">
-
-                    <textarea
-                      id="aiInstruction"
-                      class="bp-textarea"
-                      rows="4"
-                      placeholder="
-Example:
-Header ka color blue kar do
-
-Contact section add karo
-
-WhatsApp button laga do
-
-Logo header me add karo
-                      "
-                    ></textarea>
-
-                    <button
-                      id="aiSendButton"
-                      class="bp-btn bp-btn-primary"
-                      style="
-                        width:100%;
-                        margin-top:8px;
-                        padding:12px;
-                      "
-                      type="submit"
-                    >
-                      ✨ Build / Modify
-                    </button>
-
-                  </form>
-
-                </div>
-
               </div>
+            </div>
 
-            </section>
+            <div class="bp-attach-preview" id="aiAttachmentPreview"></div>
 
-          </div>
-
+            <div class="bp-chat-input">
+              <form id="aiChatForm">
+                <div class="bp-prompt-box">
+                  <textarea id="aiInstruction" class="bp-textarea"
+                    rows="4"
+                    placeholder="Try: Hero section ko modern banao&#10;Contact form add karo&#10;WhatsApp button lagao&#10;Uploaded image ko homepage me use karo"></textarea>
+                  <div class="bp-prompt-tools">
+                    <label class="bp-tool-btn" title="Upload image">
+                      🖼️
+                      <input id="aiImageInput" type="file" accept="image/*" hidden>
+                    </label>
+                    <button type="button" class="bp-tool-btn" onclick="window.BuildPilot.generateImage()">✦ Image</button>
+                    <span class="bp-tool-hint">AI can modify the project</span>
+                    <button id="aiSendButton" class="bp-btn bp-btn-primary bp-send-btn" type="submit">↑</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </aside>
         </main>
-
       </div>
     `;
 
-    document
-      .getElementById(
-        "aiChatForm"
-      )
-      .addEventListener(
-        "submit",
-        submitAIInstruction
-      );
+    document.getElementById("aiChatForm")?.addEventListener("submit", submitAIInstruction);
+    document.getElementById("aiImageInput")?.addEventListener("change", handleAIImageUpload);
 
     renderFilesList();
-
     updatePreview();
   }
+
 
   /* =========================================================
      FILE LIST
      ========================================================= */
 
-  function renderFilesList() {
-    const list =
-      document.getElementById(
-        "filesList"
-      );
-
-    if (!list) {
-      return;
-    }
+function renderFilesList() {
+    const list = document.getElementById("filesList");
+    if (!list) return;
 
     if (!activeFiles.length) {
-      list.innerHTML = `
-        <div style="
-          padding:15px;
-          color:#64748b;
-          font-size:13px;
-        ">
-          No files found.
-        </div>
-      `;
-
+      list.innerHTML = `<div style="padding:15px;color:#64748b;font-size:13px">No files yet.</div>`;
       return;
     }
 
-    list.innerHTML =
-      activeFiles
-        .map(
-          (file) => `
-            <button
-              class="
-                bp-file
-                ${
-                  selectedFileId ===
-                  file.id
-                    ? "bp-file-active"
-                    : ""
-                }
-              "
-              onclick="
-                window.BuildPilot.editFile(
-                  '${escapeAttribute(
-                    file.id
-                  )}'
-                )
-              "
-            >
-              ${
-                file.file_path
-                  .endsWith(
-                    ".html"
-                  )
-                  ? "🌐"
-                  : file.file_path.endsWith(
-                      ".css"
-                    )
-                  ? "🎨"
-                  : file.file_path.endsWith(
-                      ".js"
-                    )
-                  ? "⚡"
-                  : "📄"
-              }
+    const icons = {
+      html:"🌐", htm:"🌐", css:"🎨", js:"JS", jsx:"⚛", ts:"TS", tsx:"⚛",
+      json:"{}", md:"M", svg:"◇", png:"▧", jpg:"▧", jpeg:"▧", webp:"▧"
+    };
 
-              &nbsp;
-
-              ${escapeHtml(
-                file.file_path
-              )}
-            </button>
-          `
-        )
-        .join("");
+    list.innerHTML = activeFiles.map(file => {
+      const ext = String(file.file_path || "").split(".").pop().toLowerCase();
+      const active = file.id === selectedFileId ? "bp-file-active" : "";
+      return `
+        <div class="bp-file-row">
+          <button class="bp-file ${active}" onclick="window.BuildPilot.editFile('${escapeAttribute(file.id)}')" title="${escapeAttribute(file.file_path)}">
+            <span class="bp-file-icon">${icons[ext] || "•"}</span>
+            <span class="bp-file-name">${escapeHtml(file.file_path)}</span>
+          </button>
+          <button class="bp-file-more" title="Delete file" onclick="window.BuildPilot.deleteFile('${escapeAttribute(file.id)}')">⋮</button>
+        </div>`;
+    }).join("");
   }
+
 
   /* =========================================================
      PREVIEW
@@ -3681,121 +3599,68 @@ ${js}
      AI CHAT
      ========================================================= */
 
-  async function submitAIInstruction(
-    event
-  ) {
-    if (
-  !activeProject ||
-  !activeProject.id ||
-  !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(activeProject.id)
-) {
-  alert("Invalid project ID. Please create/select a valid project.");
-  return;
-}
+async function submitAIInstruction(event) {
     event.preventDefault();
 
-    if (!activeProject) {
-      showToast(
-        "Open a project first",
-        "error"
-      );
-
+    if (!activeProject?.id) {
+      showToast("Open a project first", "error");
       return;
     }
 
-    const input =
-      document.getElementById(
-        "aiInstruction"
-      );
+    const input = document.getElementById("aiInstruction");
+    const button = document.getElementById("aiSendButton");
+    const instruction = input?.value.trim() || "";
 
-    const button =
-      document.getElementById(
-        "aiSendButton"
-      );
-
-    const instruction =
-      input.value.trim();
-
-    if (!instruction) {
+    if (!instruction && !pendingAIImage) {
+      showToast("Please enter an instruction or upload an image", "error");
       return;
     }
 
-    appendChat(
-      "You",
-      instruction,
-      "user"
-    );
+    const imageContext = pendingAIImage
+      ? `\nReference image URL: ${pendingAIImage.url}\nUse this image in the project when appropriate.`
+      : "";
 
-    input.value = "";
-
-    setButtonLoading(
-      button,
-      true,
-      "AI is working..."
-    );
+    appendChat("You", (instruction || "Use this image in the project") + imageContext, "user");
+    if (input) input.value = "";
+    setButtonLoading(button, true, "AI...");
 
     try {
-      /*
-       * Make sure index.html exists
-       * before AI editing.
-       */
-      await ensureStarterFiles(
+      await ensureStarterFiles(activeProject.id, activeProject.name);
+      await loadProjectFiles();
+
+      const result = await callGenerateFunction(
         activeProject.id,
-        activeProject.name
+        instruction || "Use the uploaded reference image and improve the project.",
+        activeProject.name,
+        activeProject.frontend,
+        activeProject.backend,
+        {
+          action: "modify_project",
+          files: activeFiles.map(f => ({
+            id: f.id, path: f.file_path, language: f.language,
+            content: f.file_content || ""
+          })),
+          imageUrl: pendingAIImage?.url || null
+        }
       );
 
+      pendingAIImage = null;
+      renderAttachmentPreview();
       await loadProjectFiles();
-
-      const result =
-        await callGenerateFunction(
-          activeProject.id,
-          instruction,
-          activeProject.name,
-          activeProject.frontend,
-          activeProject.backend
-        );
-
-      await loadProjectFiles();
-
       renderFilesList();
-
       updatePreview();
 
-      appendChat(
-        "BuildPilot AI",
-        result?.message ||
-          "Project updated successfully.",
-        "ai"
-      );
-
-      showToast(
-        "Project updated",
-        "success"
-      );
-
+      appendChat("AI Builder", result?.message || "Project updated successfully.", "ai");
+      showToast("Project updated", "success");
     } catch (error) {
       console.error(error);
-
-      appendChat(
-        "BuildPilot AI",
-        error.message ||
-          "AI update failed",
-        "error"
-      );
-
-      showToast(
-        error.message ||
-          "AI update failed",
-        "error"
-      );
-
+      appendChat("AI Builder", error.message || "AI update failed", "error");
+      showToast(error.message || "AI update failed", "error");
     } finally {
-      setButtonLoading(
-        button,
-        false
-      );
+      setButtonLoading(button, false);
     }
   }
+
 
   function appendChat(
     sender,
@@ -3854,195 +3719,96 @@ ${js}
      FILE EDITOR
      ========================================================= */
 
-  function editFile(
-    fileId
-  ) {
-    const file =
-      activeFiles.find(
-        (item) =>
-          item.id === fileId
-      );
+function editFile(fileId) {
+    const file = activeFiles.find(item => item.id === fileId);
+    if (!file) return;
 
-    if (!file) {
-      return;
-    }
-
-    selectedFileId =
-      fileId;
+    selectedFileId = fileId;
 
     root.innerHTML = `
-      <div class="bp-editor-page">
-
-        <div style="
-          max-width:1250px;
-          margin:auto;
-        ">
-
-          <div style="
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:15px;
-            margin-bottom:15px;
-          ">
-
+      <div class="bp-editor-page bp-code-page">
+        <div class="bp-code-top">
+          <div class="bp-brand">
+            <button class="bp-icon-btn" onclick="window.BuildPilot.backWorkspace()">←</button>
             <div>
-
-              <div style="
-                color:#64748b;
-                font-size:13px;
-              ">
-                Project File
-              </div>
-
-              <h2 style="
-                margin:4px 0 0;
-              ">
-                ${escapeHtml(
-                  file.file_path
-                )}
-              </h2>
-
+              <div class="bp-code-path">${escapeHtml(file.file_path)}</div>
+              <div class="bp-code-sub">${escapeHtml(file.language || "text")}</div>
             </div>
-
-            <button
-              class="bp-btn"
-              onclick="
-                window.BuildPilot.backWorkspace()
-              "
-            >
-              ← Back
-            </button>
-
           </div>
-
-          <div class="bp-card">
-
-            <textarea
-              id="fileEditor"
-              class="bp-editor"
-              spellcheck="false"
-            >${escapeHtml(
-              file.file_content ||
-                ""
-            )}</textarea>
-
-            <div style="
-              display:flex;
-              gap:8px;
-              margin-top:12px;
-            ">
-
-              <button
-                id="saveFileButton"
-                class="bp-btn bp-btn-primary"
-                onclick="
-                  window.BuildPilot.saveFile(
-                    '${escapeAttribute(
-                      file.id
-                    )}'
-                  )
-                "
-              >
-                💾 Save File
-              </button>
-
-              <button
-                class="bp-btn"
-                onclick="
-                  window.BuildPilot.backWorkspace()
-                "
-              >
-                Cancel
-              </button>
-
-            </div>
-
+          <div class="bp-actions">
+            <button class="bp-btn bp-btn-soft" onclick="window.BuildPilot.backWorkspace()">Cancel</button>
+            <button id="saveFileButton" class="bp-btn bp-btn-primary"
+              onclick="window.BuildPilot.saveFile('${escapeAttribute(file.id)}')">💾 Save</button>
           </div>
-
         </div>
 
+        <div class="bp-code-layout">
+          <div class="bp-code-gutter" id="codeGutter"></div>
+          <textarea id="fileEditor" class="bp-editor" spellcheck="false"
+            autocapitalize="off" autocomplete="off" autocorrect="off">${escapeHtml(file.file_content || "")}</textarea>
+        </div>
+        <div class="bp-code-status">
+          <span>UTF-8</span><span>${escapeHtml(file.language || "Plain Text")}</span>
+          <span id="editorLineCount"></span>
+        </div>
       </div>
     `;
+
+    const editor = document.getElementById("fileEditor");
+    const gutter = document.getElementById("codeGutter");
+    const count = document.getElementById("editorLineCount");
+
+    const sync = () => {
+      const lines = editor.value.split("\n").length;
+      gutter.textContent = Array.from({length:lines}, (_,i)=>String(i+1)).join("\n");
+      count.textContent = `${editor.value.length} chars · ${lines} lines`;
+      gutter.scrollTop = editor.scrollTop;
+    };
+    editor.addEventListener("input", sync);
+    editor.addEventListener("scroll", () => { gutter.scrollTop = editor.scrollTop; });
+    editor.addEventListener("keydown", e => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const a = editor.selectionStart, b = editor.selectionEnd;
+        editor.value = editor.value.slice(0,a) + "  " + editor.value.slice(b);
+        editor.selectionStart = editor.selectionEnd = a + 2;
+        sync();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        saveFile(file.id);
+      }
+    });
+    sync();
+    editor.focus();
   }
 
-  async function saveFile(
-    fileId
-  ) {
-    const editor =
-      document.getElementById(
-        "fileEditor"
-      );
+async function saveFile(fileId) {
+    const editor = document.getElementById("fileEditor");
+    const button = document.getElementById("saveFileButton");
+    if (!editor || !activeProject || !fileId) return;
 
-    const button =
-      document.getElementById(
-        "saveFileButton"
-      );
-
-    if (!editor) {
-      return;
-    }
-
-    setButtonLoading(
-      button,
-      true,
-      "Saving..."
-    );
-
+    setButtonLoading(button, true, "Saving...");
     try {
-      /*
-       * IMPORTANT:
-       * generated_by is NOT sent because
-       * your column is UUID.
-       */
-      const {
-        error,
-      } =
-        await client
-          .from("project_files")
-          .update({
-            file_content:
-              editor.value,
-          })
-          .eq(
-            "id",
-            fileId
-          )
-          .eq(
-            "project_id",
-            activeProject.id
-          );
+      const { error } = await client.from("project_files")
+        .update({ file_content: editor.value })
+        .eq("id", fileId)
+        .eq("project_id", activeProject.id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       await loadProjectFiles();
-
-      showToast(
-        "File saved successfully",
-        "success"
-      );
-
-      openWorkspace(
-        activeProject.id
-      );
-
+      selectedFileId = fileId;
+      showToast("File saved", "success");
+      openWorkspace(activeProject.id);
     } catch (error) {
       console.error(error);
-
-      showToast(
-        error.message ||
-          "Could not save file",
-        "error"
-      );
+      showToast(error.message || "Could not save file", "error");
     } finally {
-      setButtonLoading(
-        button,
-        false
-      );
+      setButtonLoading(button, false);
     }
   }
+
 
   function backWorkspace() {
     if (
@@ -4323,6 +4089,377 @@ ${js}
     );
   }
 
+
+  /* =========================================================
+     FILES / IMAGES / PROJECT TOOLS
+     ========================================================= */
+
+  function clearChat() {
+    const box = document.getElementById("chatMessages");
+    if (box) box.innerHTML = "";
+  }
+
+  function renderAttachmentPreview() {
+    const box = document.getElementById("aiAttachmentPreview");
+    if (!box) return;
+    if (!pendingAIImage) {
+      box.innerHTML = "";
+      return;
+    }
+    box.innerHTML = `
+      <div class="bp-attachment">
+        ${pendingAIImage.preview ? `<img src="${escapeAttribute(pendingAIImage.preview)}" alt="">` : ""}
+        <span style="flex:1">${escapeHtml(pendingAIImage.name || "Reference image")}</span>
+        <button class="bp-mini-btn" onclick="window.BuildPilot.removeAIImage()">Remove</button>
+      </div>`;
+  }
+
+  function removeAIImage() {
+    pendingAIImage = null;
+    renderAttachmentPreview();
+  }
+
+  async function handleAIImageUpload(event) {
+    const file = event.target?.files?.[0];
+    if (!file || !activeUser) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("Please select an image", "error");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      showToast("Image must be under 8 MB", "error");
+      return;
+    }
+
+    try {
+      showToast("Uploading image...");
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `${activeUser.id}/references/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+      const { error } = await client.storage.from("uploads").upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type
+      });
+      if (error) throw error;
+
+      let imageUrl = "";
+      const publicResult = client.storage.from("uploads").getPublicUrl(path);
+      imageUrl = publicResult?.data?.publicUrl || "";
+
+      /* If the bucket is private, try a short-lived signed URL. */
+      if (!imageUrl) {
+        const signed = await client.storage.from("uploads").createSignedUrl(path, 3600);
+        imageUrl = signed?.data?.signedUrl || "";
+      }
+
+      const preview = URL.createObjectURL(file);
+
+      pendingAIImage = {
+        name: file.name,
+        path,
+        url: imageUrl,
+        preview
+      };
+      renderAttachmentPreview();
+      showToast("Image uploaded", "success");
+    } catch (error) {
+      console.error(error);
+      showToast(
+        "Image upload failed. Check the Supabase Storage 'uploads' bucket and policy.",
+        "error"
+      );
+    } finally {
+      if (event.target) event.target.value = "";
+    }
+  }
+
+  async function generateImage() {
+    if (!activeProject?.id) {
+      showToast("Open a project first", "error");
+      return;
+    }
+
+    const prompt = document.getElementById("aiInstruction")?.value.trim() || "Create a professional website hero image matching this project.";
+    appendChat("You", `Generate image: ${prompt}`, "user");
+
+    try {
+      setButtonLoading(document.getElementById("aiSendButton"), true, "...");
+      const result = await callGenerateFunction(
+        activeProject.id,
+        prompt,
+        activeProject.name,
+        activeProject.frontend,
+        activeProject.backend,
+        {
+          action: "generate_image",
+          imagePrompt: prompt
+        }
+      );
+
+      const imageUrl =
+        result?.imageUrl ||
+        result?.url ||
+        result?.image?.url ||
+        result?.data?.imageUrl ||
+        result?.data?.url;
+
+      if (!imageUrl) {
+        throw new Error(
+          result?.message ||
+          "Image generation endpoint did not return imageUrl."
+        );
+      }
+
+      generatedImages.push(imageUrl);
+      pendingAIImage = {
+        name: "AI generated image",
+        url: imageUrl,
+        preview: imageUrl
+      };
+      renderAttachmentPreview();
+      appendChat("AI Builder", "Image generated. Send your next instruction to place it in the website.", "ai");
+      showToast("Image generated", "success");
+    } catch (error) {
+      console.error(error);
+      appendChat("AI Builder", error.message || "Image generation failed", "error");
+      showToast(error.message || "Image generation failed", "error");
+    } finally {
+      setButtonLoading(document.getElementById("aiSendButton"), false);
+    }
+  }
+
+  async function openFileCreator() {
+    const old = document.getElementById("bpFileModal");
+    if (old) old.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "bpFileModal";
+    modal.className = "bp-modal";
+    modal.innerHTML = `
+      <div class="bp-modal-card" style="max-width:520px">
+        <h2 style="margin-top:0">Create file</h2>
+        <p style="color:#64748b">Add a new file to this project.</p>
+        <div class="bp-field">
+          <label class="bp-label">File path</label>
+          <input id="newFilePath" class="bp-input" placeholder="components/header.html">
+        </div>
+        <div class="bp-field">
+          <label class="bp-label">Language</label>
+          <select id="newFileLanguage" class="bp-select">
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="javascript">JavaScript</option>
+            <option value="json">JSON</option>
+            <option value="text">Text</option>
+          </select>
+        </div>
+        <div class="bp-actions">
+          <button class="bp-btn" onclick="document.getElementById('bpFileModal').remove()">Cancel</button>
+          <button class="bp-btn bp-btn-primary" onclick="window.BuildPilot.createFile()">Create</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  async function createFile() {
+    const path = document.getElementById("newFilePath")?.value.trim();
+    const language = document.getElementById("newFileLanguage")?.value || "text";
+    if (!activeProject?.id || !path) {
+      showToast("File path required", "error");
+      return;
+    }
+    if (!/^[A-Za-z0-9_./-]+$/.test(path) || path.startsWith("/") || path.includes("..")) {
+      showToast("Use a safe relative file path", "error");
+      return;
+    }
+
+    try {
+      const exists = activeFiles.some(f => f.file_path.toLowerCase() === path.toLowerCase());
+      if (exists) throw new Error("A file with this name already exists.");
+
+      const starter = language === "html"
+        ? `<!doctype html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>${escapeHtml(activeProject.name)}</title>\n</head>\n<body>\n</body>\n</html>`
+        : language === "css" ? `/* ${path} */\n` : language === "javascript" ? `// ${path}\n` : "";
+
+      const { error } = await client.from("project_files").insert({
+        project_id: activeProject.id,
+        file_path: path,
+        file_content: starter,
+        language
+      });
+      if (error) throw error;
+
+      document.getElementById("bpFileModal")?.remove();
+      await loadProjectFiles();
+      renderFilesList();
+      showToast("File created", "success");
+    } catch (error) {
+      showToast(error.message || "Could not create file", "error");
+    }
+  }
+
+  async function deleteFile(fileId) {
+    const file = activeFiles.find(f => f.id === fileId);
+    if (!file) return;
+    if (file.file_path.toLowerCase() === "index.html") {
+      showToast("index.html cannot be deleted", "error");
+      return;
+    }
+    if (!confirm(`Delete ${file.file_path}?`)) return;
+
+    try {
+      const { error } = await client.from("project_files")
+        .delete().eq("id", fileId).eq("project_id", activeProject.id);
+      if (error) throw error;
+      await loadProjectFiles();
+      selectedFileId = null;
+      renderFilesList();
+      updatePreview();
+      showToast("File deleted", "success");
+    } catch (error) {
+      showToast(error.message || "Could not delete file", "error");
+    }
+  }
+
+  function showProjectInfo() {
+    if (!activeProject) return;
+    const old = document.getElementById("bpInfoModal");
+    if (old) old.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "bpInfoModal";
+    modal.className = "bp-modal";
+    modal.innerHTML = `
+      <div class="bp-modal-card">
+        <h2 style="margin-top:0">${escapeHtml(activeProject.name)}</h2>
+        <p style="color:#64748b;line-height:1.6">${escapeHtml(activeProject.description || "No description")}</p>
+        <div class="bp-two-col">
+          <div><strong>Frontend</strong><div>${escapeHtml(activeProject.frontend || "-")}</div></div>
+          <div><strong>Backend</strong><div>${escapeHtml(activeProject.backend || "-")}</div></div>
+        </div>
+        <div class="bp-actions" style="margin-top:20px">
+          <button class="bp-btn" onclick="document.getElementById('bpInfoModal').remove()">Close</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  /* =========================================================
+     ADMIN PANEL
+     ========================================================= */
+
+  async function requireAdmin() {
+    await getSession();
+    await ensureProfile();
+    if (!activeUser || activeProfile?.role !== "admin") {
+      showToast("Admin access required", "error");
+      return false;
+    }
+    return true;
+  }
+
+  async function admin() {
+    if (!(await requireAdmin())) return;
+
+    root.innerHTML = `
+      <div class="bp-app">
+        <header class="bp-topbar">
+          <div class="bp-brand"><div class="bp-logo">⚡</div><span>Admin</span></div>
+          <div class="bp-actions">
+            <button class="bp-btn" onclick="window.BuildPilot.home()">← App</button>
+            <button class="bp-btn" onclick="window.BuildPilot.loadAdmin()">↻ Refresh</button>
+          </div>
+        </header>
+        <main class="bp-main">
+          <section class="bp-hero" style="padding-top:10px">
+            <h1 style="font-size:38px">Admin Panel</h1>
+            <p>Users, limits, projects and account status.</p>
+          </section>
+          <div id="adminContent"><div class="bp-card">Loading...</div></div>
+        </main>
+      </div>`;
+    await loadAdmin();
+  }
+
+  async function loadAdmin() {
+    if (!(await requireAdmin())) return;
+    const box = document.getElementById("adminContent");
+    if (!box) return;
+
+    try {
+      const [profilesRes, projectsRes] = await Promise.all([
+        client.from("profiles").select("id,full_name,role,status,plan,project_limit,github_file_limit").order("full_name"),
+        client.from("projects").select("id,user_id,name,status,created_at,public_enabled").order("created_at",{ascending:false}).limit(100)
+      ]);
+
+      if (profilesRes.error) throw profilesRes.error;
+      if (projectsRes.error) throw projectsRes.error;
+
+      const users = profilesRes.data || [];
+      const projects = projectsRes.data || [];
+
+      box.innerHTML = `
+        <div class="bp-builder-grid">
+          <div class="bp-card"><div class="bp-card-icon">👥</div><h3>${users.length}</h3><p>Total users</p></div>
+          <div class="bp-card"><div class="bp-card-icon">🧩</div><h3>${projects.length}</h3><p>Recent projects</p></div>
+          <div class="bp-card"><div class="bp-card-icon">🚫</div><h3>${users.filter(u=>u.status==="blocked").length}</h3><p>Blocked users</p></div>
+          <div class="bp-card"><div class="bp-card-icon">⭐</div><h3>${users.filter(u=>u.plan && u.plan!=="free").length}</h3><p>Paid/custom plans</p></div>
+        </div>
+
+        <section class="bp-section">
+          <div class="bp-card">
+            <h2 style="margin-top:0">Users</h2>
+            <div style="overflow:auto">
+              <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <thead><tr>
+                  <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0">Name</th>
+                  <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0">Role</th>
+                  <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0">Status</th>
+                  <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0">Plan</th>
+                  <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0">Limits</th>
+                  <th style="padding:10px;border-bottom:1px solid #e2e8f0">Action</th>
+                </tr></thead>
+                <tbody>
+                  ${users.map(u=>`
+                    <tr>
+                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">${escapeHtml(u.full_name || u.id)}</td>
+                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">${escapeHtml(u.role || "user")}</td>
+                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">${escapeHtml(u.status || "active")}</td>
+                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">${escapeHtml(u.plan || "free")}</td>
+                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">${escapeHtml(String(u.project_limit ?? 5))} projects / ${escapeHtml(String(u.github_file_limit ?? 2))} files</td>
+                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">
+                        <button class="bp-btn ${u.status==="blocked"?"bp-btn-success":"bp-btn-danger"}"
+                          onclick="window.BuildPilot.toggleUser('${escapeAttribute(u.id)}','${u.status==="blocked"?"active":"blocked"}')">
+                          ${u.status==="blocked"?"Reactivate":"Block"}
+                        </button>
+                      </td>
+                    </tr>`).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      `;
+    } catch (error) {
+      console.error(error);
+      box.innerHTML = `<div class="bp-card"><h3>Admin data unavailable</h3><p style="color:#b91c1c">${escapeHtml(error.message || "Could not load admin data")}</p><p style="color:#64748b;font-size:13px">Your Supabase RLS policies must allow admin users to read/update the required rows.</p></div>`;
+    }
+  }
+
+  async function toggleUser(userId, status) {
+    if (!(await requireAdmin())) return;
+    try {
+      const { error } = await client.from("profiles").update({ status }).eq("id", userId);
+      if (error) throw error;
+      showToast(status === "blocked" ? "User blocked" : "User reactivated", "success");
+      await loadAdmin();
+    } catch (error) {
+      showToast(error.message || "Could not update user", "error");
+    }
+  }
+
   /* =========================================================
      PUBLIC PROJECT
      ========================================================= */
@@ -4344,7 +4481,7 @@ ${js}
           </div>
 
           <h2 class="bp-auth-title">
-            BuildPilot Preview
+            Loading website
           </h2>
 
           <p class="bp-auth-subtitle">
@@ -4432,12 +4569,11 @@ ${js}
             </div>
 
             <h2 class="bp-auth-title">
-              Project unavailable
+              Website unavailable
             </h2>
 
             <p class="bp-auth-subtitle">
-              यह project publish नहीं किया गया है
-              या public link invalid है।
+              This website is not published or the link is invalid.
             </p>
 
             <div style="
@@ -4459,92 +4595,34 @@ ${js}
     }
   }
 
-  function renderPublicPreview(
-    data
-  ) {
-    const project =
-      data.project || {};
-
-    const html =
-      data.html || "";
+function renderPublicPreview(data) {
+    const project = data?.project || {};
+    const html = String(data?.html || "");
 
     root.innerHTML = `
-      <div class="bp-app">
-
-        <header class="bp-topbar">
-
-          <div class="bp-brand">
-
-            <div class="bp-logo">
-              ⚡
-            </div>
-
-            <span>
-              ${escapeHtml(
-                project.name ||
-                  "BuildPilot Project"
-              )}
-            </span>
-
-          </div>
-
-          <div style="
-            color:#cbd5e1;
-            font-size:13px;
-          ">
-            Published with BuildPilot AI
-          </div>
-
-        </header>
-
-        <main style="
-          padding:15px;
-          background:#f1f5f9;
-          min-height:
-            calc(100vh - 70px);
-        ">
-
-          <div style="
-            background:white;
-            border:1px solid #e2e8f0;
-            border-radius:16px;
-            overflow:hidden;
-            max-width:1500px;
-            margin:auto;
-          ">
-
-            <iframe
-              id="publicPreviewFrame"
-              class="bp-preview-frame"
-              style="
-                height:calc(100vh - 110px);
-                min-height:700px;
-              "
-              sandbox="
-                allow-scripts
-                allow-forms
-                allow-modals
-                allow-popups
-              "
-            ></iframe>
-
-          </div>
-
-        </main>
-
+      <div class="bp-public-shell">
+        <div id="publicProjectMount" class="bp-public-mount"></div>
       </div>
     `;
 
-    const iframe =
-      document.getElementById(
-        "publicPreviewFrame"
-      );
+    const mount = document.getElementById("publicProjectMount");
+    if (!mount) return;
 
-    if (iframe) {
-      iframe.srcdoc =
-        html;
-    }
+    const iframe = document.createElement("iframe");
+    iframe.id = "publicPreviewFrame";
+    iframe.className = "bp-public-frame";
+    iframe.setAttribute(
+      "sandbox",
+      "allow-scripts allow-forms allow-modals allow-popups allow-downloads"
+    );
+    iframe.title = project.name || "Published website";
+    iframe.srcdoc = html || `
+      <!doctype html><html><body style="font-family:system-ui;padding:40px">
+      <h1>Website unavailable</h1><p>No published HTML was returned.</p>
+      </body></html>`;
+    mount.appendChild(iframe);
   }
+
 
   /* =========================================================
      AUTH STATE
@@ -4624,6 +4702,18 @@ ${js}
 
     copyCurrentPublicLink:
       copyCurrentPublicLink,
+
+    clearChat,
+    openFileCreator,
+    createFile,
+    deleteFile,
+    handleAIImageUpload,
+    removeAIImage,
+    generateImage,
+    showProjectInfo,
+    admin,
+    loadAdmin,
+    toggleUser,
   };
 
   /* =========================================================

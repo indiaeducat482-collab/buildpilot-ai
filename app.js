@@ -3654,7 +3654,7 @@ body {
 
               <div class="bp-airo-left-head">
                 <div class="bp-airo-brand">
-                  Airo <span>BETA</span>
+                  AI Builder
                 </div>
 
                 <button
@@ -5028,7 +5028,7 @@ ${js}
       .replaceAll("Build with BuildPilot AI", "")
       .replaceAll("BuildPilot AI", "")
       .replaceAll("BuildPilot", "")
-      .replaceAll("Airo BETA", "")
+      .replaceAll("AI Builder", "")
       .replaceAll("Airo", "");
   }
 

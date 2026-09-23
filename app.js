@@ -15,8 +15,8 @@
     CONFIG.SUPABASE_PUBLISHABLE_KEY || "";
 
   const GENERATE_FUNCTION =
-  CONFIG.FUNCTION_NAME ||
-  "buildpilot-generate";
+    CONFIG.FUNCTION_NAME ||
+    "buildpilot-generate";
 
   const PUBLIC_FUNCTION =
     CONFIG.PUBLIC_FUNCTION_NAME ||
@@ -26,9 +26,6 @@
 
   let activeUser = null;
   let activeSession = null;
-  let activeProfile = null;
-  let pendingAIImage = null;
-  let generatedImages = [];
 
   let activeProject = null;
   let activeFiles = [];
@@ -1249,6 +1246,394 @@
           #b91c1c;
       }
 
+
+      /* =====================================================
+         AIRO-STYLE BUILDER WORKSPACE
+         ===================================================== */
+
+      .bp-airo-workspace {
+        min-height: calc(100vh - 70px);
+        background: #f3f4f6;
+        padding: 0;
+      }
+
+      .bp-airo-topbar {
+        height: 48px;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 14px;
+        gap: 12px;
+      }
+
+      .bp-airo-tabs {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .bp-airo-tab {
+        border: 0;
+        background: transparent;
+        color: #475569;
+        padding: 8px 13px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .bp-airo-tab.active {
+        background: #111827;
+        color: #ffffff;
+      }
+
+      .bp-airo-top-actions {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .bp-icon-btn {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        border-radius: 9px;
+        cursor: pointer;
+      }
+
+      .bp-airo-banner {
+        height: 34px;
+        background: #6841ad;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .bp-airo-banner a {
+        color: #ffffff;
+        text-decoration: underline;
+      }
+
+      .bp-airo-body {
+        height: calc(100vh - 152px);
+        min-height: 600px;
+        display: grid;
+        grid-template-columns: 350px minmax(0, 1fr);
+        gap: 0;
+      }
+
+      .bp-airo-left {
+        background: #f8fafc;
+        border-right: 1px solid #dfe3e8;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .bp-airo-left-head {
+        min-height: 58px;
+        padding: 11px 14px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        background: #ffffff;
+      }
+
+      .bp-airo-brand {
+        font-weight: 900;
+        font-size: 20px;
+        letter-spacing: -1px;
+      }
+
+      .bp-airo-brand span {
+        background: #6d49c7;
+        color: #ffffff;
+        border-radius: 4px;
+        padding: 2px 5px;
+        font-size: 9px;
+        vertical-align: middle;
+        letter-spacing: 0;
+      }
+
+      .bp-builder-tabs {
+        display: flex;
+        border-bottom: 1px solid #e5e7eb;
+        background: #ffffff;
+      }
+
+      .bp-builder-tab {
+        flex: 1;
+        border: 0;
+        background: transparent;
+        padding: 11px 8px;
+        color: #64748b;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .bp-builder-tab.active {
+        color: #111827;
+        box-shadow: inset 0 -2px #111827;
+      }
+
+      .bp-builder-content {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .bp-builder-view {
+        display: none;
+        height: 100%;
+        min-height: 0;
+        flex-direction: column;
+      }
+
+      .bp-builder-view.active {
+        display: flex;
+      }
+
+      .bp-airo-chat-title {
+        padding: 16px 16px 7px;
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .bp-airo-chat-subtitle {
+        padding: 0 16px 12px;
+        color: #64748b;
+        font-size: 12px;
+      }
+
+      .bp-chat-messages {
+        background: #f8fafc;
+      }
+
+      .bp-airo-input-wrap {
+        margin: 10px;
+        background: #ffffff;
+        border: 1px solid #d8dee8;
+        border-radius: 15px;
+        padding: 10px;
+        box-shadow: 0 3px 15px rgba(15,23,42,.06);
+      }
+
+      .bp-airo-input-wrap .bp-textarea {
+        border: 0;
+        box-shadow: none;
+        resize: none;
+        min-height: 92px;
+      }
+
+      .bp-airo-input-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .bp-airo-input-tools {
+        display: flex;
+        gap: 5px;
+      }
+
+      .bp-mini-btn {
+        width: 31px;
+        height: 31px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      .bp-send-btn {
+        width: 34px;
+        height: 34px;
+        border: 0;
+        border-radius: 9px;
+        background: #c9b8e9;
+        color: #ffffff;
+        cursor: pointer;
+        font-size: 17px;
+      }
+
+      .bp-airo-files {
+        flex: 1;
+        overflow: auto;
+        padding: 10px;
+      }
+
+      .bp-airo-preview {
+        min-width: 0;
+        background: #e9eaec;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .bp-airo-preview-head {
+        min-height: 44px;
+        background: #ffffff;
+        border-bottom: 1px solid #dfe3e8;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px;
+        gap: 8px;
+      }
+
+      .bp-device-tools {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+
+      .bp-preview-canvas {
+        flex: 1;
+        min-height: 0;
+        padding: 10px;
+        overflow: auto;
+        display: flex;
+        justify-content: center;
+      }
+
+      .bp-preview-browser {
+        width: 100%;
+        max-width: 1500px;
+        height: 100%;
+        min-height: 560px;
+        background: #ffffff;
+        border: 1px solid #d9dde3;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 10px 35px rgba(15,23,42,.08);
+      }
+
+      .bp-preview-browser iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 560px;
+        border: 0;
+        display: block;
+        background: #ffffff;
+      }
+
+      .bp-preview-floating {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 2px;
+        padding: 4px;
+        background: rgba(255,255,255,.96);
+        border: 1px solid #d9dde3;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(15,23,42,.14);
+        z-index: 10;
+      }
+
+      .bp-preview-relative {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+      }
+
+      .bp-file-row-actions {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .bp-file-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 3px;
+      }
+
+      .bp-file-row .bp-file {
+        flex: 1;
+      }
+
+      .bp-file-delete {
+        width: 28px;
+        height: 28px;
+        border: 0;
+        background: transparent;
+        color: #94a3b8;
+        border-radius: 7px;
+        cursor: pointer;
+      }
+
+      .bp-file-delete:hover {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      /* Public site must be ONLY the generated website. */
+      .bp-public-site-shell {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #ffffff;
+        overflow: hidden;
+      }
+
+      .bp-public-site-frame {
+        width: 100%;
+        height: 100%;
+        min-height: 100vh;
+        border: 0;
+        display: block;
+        background: #ffffff;
+      }
+
+
+      @media (max-width: 950px) {
+        .bp-airo-body {
+          grid-template-columns: 300px minmax(0,1fr);
+        }
+      }
+
+      @media (max-width: 760px) {
+        .bp-airo-body {
+          grid-template-columns: 1fr;
+          grid-template-rows: 48% 52%;
+        }
+
+        .bp-airo-left {
+          border-right: 0;
+          border-bottom: 1px solid #dfe3e8;
+        }
+
+        .bp-airo-banner {
+          font-size: 11px;
+          padding: 0 8px;
+          text-align: center;
+        }
+      }
+
       @media (max-width: 950px) {
         .bp-workspace-grid {
           grid-template-columns:
@@ -1298,89 +1683,6 @@
             25px 14px 50px;
         }
       }
-
-      /* ======================================================
-         IDE / AI BUILDER / PUBLIC CLEAN SITE
-         ====================================================== */
-      .bp-ide-app { background:#0b1020; color:#e5e7eb; min-height:100vh; }
-      .bp-ide-topbar { position:sticky; top:0; z-index:200; height:62px; padding:0 14px; background:#0b1020; border-bottom:1px solid #1f2937; }
-      .bp-brand-stack { display:flex; flex-direction:column; min-width:0; }
-      .bp-brand-stack strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:280px; }
-      .bp-brand-stack span { font-size:10px; color:#94a3b8; margin-top:2px; text-transform:uppercase; }
-      .bp-icon-btn,.bp-mini-btn { border:1px solid #334155; background:#111827; color:#cbd5e1; border-radius:8px; cursor:pointer; }
-      .bp-icon-btn { width:34px; height:34px; margin-right:4px; }
-      .bp-mini-btn { padding:6px 9px; font-size:12px; }
-      .bp-btn-soft { background:#111827; color:#dbeafe; border-color:#334155; }
-      .bp-ide-toolbar { display:flex; gap:7px; align-items:center; flex-wrap:wrap; }
-      .bp-ide { display:grid; grid-template-columns:235px minmax(0,1fr) 380px; min-height:calc(100vh - 62px); background:#0b1020; }
-      .bp-ide-sidebar { border-right:1px solid #1f2937; background:#0f172a; display:flex; flex-direction:column; min-width:0; }
-      .bp-ide-side-head { height:48px; padding:0 12px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #1f2937; color:#cbd5e1; }
-      .bp-ide-side-head div { display:flex; align-items:center; gap:7px; font-size:11px; letter-spacing:.08em; }
-      .bp-ide-side-head span { background:#1e293b; padding:2px 6px; border-radius:999px; font-size:10px; }
-      .bp-files { padding:8px; overflow:auto; flex:1; }
-      .bp-file-row { display:flex; align-items:center; gap:2px; }
-      .bp-file { flex:1; display:flex; align-items:center; gap:8px; border:0; background:transparent; color:#94a3b8; padding:8px 7px; border-radius:7px; cursor:pointer; text-align:left; min-width:0; }
-      .bp-file:hover,.bp-file-active { background:#1e293b; color:#f8fafc; }
-      .bp-file-icon { width:22px; text-align:center; font-size:11px; font-weight:800; color:#818cf8; }
-      .bp-file-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
-      .bp-file-more { border:0; background:transparent; color:#64748b; cursor:pointer; opacity:.5; }
-      .bp-file-row:hover .bp-file-more { opacity:1; }
-      .bp-sidebar-bottom { padding:9px; border-top:1px solid #1f2937; }
-      .bp-side-action { width:100%; text-align:left; border:0; background:transparent; color:#94a3b8; padding:9px; border-radius:7px; cursor:pointer; }
-      .bp-side-action:hover { background:#1e293b; color:#fff; }
-      .bp-ide-center { min-width:0; background:#111827; }
-      .bp-editor-tabs { height:40px; display:flex; align-items:end; border-bottom:1px solid #1f2937; background:#0f172a; }
-      .bp-editor-tab { padding:11px 15px 9px; color:#94a3b8; font-size:12px; border-right:1px solid #1f2937; }
-      .bp-editor-tab.active { color:#fff; background:#111827; border-top:2px solid #6366f1; padding-top:9px; }
-      .bp-preview-shell { height:calc(100vh - 102px); min-height:600px; display:flex; flex-direction:column; }
-      .bp-preview-head { height:45px; padding:0 12px; display:flex; align-items:center; justify-content:space-between; color:#cbd5e1; font-size:12px; border-bottom:1px solid #1f2937; }
-      .bp-preview-content { flex:1; background:#fff; overflow:hidden; }
-      .bp-preview-content .bp-preview-frame { height:100%; min-height:0; border:0; }
-      .bp-ai-panel { background:#0f172a; border-left:1px solid #1f2937; display:flex; flex-direction:column; min-width:0; }
-      .bp-ai-head { min-height:62px; padding:12px 13px; border-bottom:1px solid #1f2937; display:flex; justify-content:space-between; gap:10px; }
-      .bp-ai-head strong { display:block; color:#fff; font-size:14px; }
-      .bp-ai-head span { display:block; margin-top:3px; color:#64748b; font-size:11px; }
-      .bp-chat-messages { flex:1; overflow:auto; padding:13px; }
-      .bp-chat-message { display:flex; gap:9px; padding:11px; border:1px solid #1e293b; border-radius:11px; margin-bottom:10px; line-height:1.5; font-size:13px; color:#cbd5e1; background:#111827; white-space:pre-wrap; }
-      .bp-chat-user { background:#172554; border-color:#1e3a8a; }
-      .bp-chat-ai { background:#111827; }
-      .bp-chat-error { background:#3f1118; border-color:#7f1d1d; color:#fecaca; }
-      .bp-ai-avatar { width:24px; height:24px; border-radius:7px; display:grid; place-items:center; background:#312e81; color:#fff; flex:0 0 auto; }
-      .bp-chat-input { padding:12px; border-top:1px solid #1f2937; background:#0f172a; }
-      .bp-prompt-box { border:1px solid #334155; border-radius:12px; background:#111827; overflow:hidden; }
-      .bp-prompt-box:focus-within { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,.15); }
-      .bp-prompt-box .bp-textarea { border:0; background:transparent; color:#f8fafc; resize:none; box-shadow:none; }
-      .bp-prompt-tools { display:flex; align-items:center; gap:7px; padding:7px; border-top:1px solid #1f2937; }
-      .bp-tool-btn { border:1px solid #334155; background:#0f172a; color:#cbd5e1; border-radius:7px; padding:6px 9px; cursor:pointer; font-size:12px; }
-      .bp-tool-hint { flex:1; color:#64748b; font-size:10px; }
-      .bp-send-btn { width:34px !important; height:32px; padding:0 !important; border-radius:8px; }
-      .bp-attach-preview { padding:0 12px; }
-      .bp-attachment { display:flex; gap:8px; align-items:center; padding:8px; border:1px solid #334155; background:#111827; border-radius:8px; font-size:11px; color:#cbd5e1; margin:8px 0 0; }
-      .bp-attachment img { width:38px; height:38px; object-fit:cover; border-radius:6px; }
-      .bp-code-page { min-height:100vh; background:#0b1020; color:#e5e7eb; padding:0; }
-      .bp-code-top { height:62px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; border-bottom:1px solid #1f2937; }
-      .bp-code-path { font-weight:700; font-size:14px; }
-      .bp-code-sub { color:#64748b; font-size:11px; margin-top:3px; }
-      .bp-code-layout { display:grid; grid-template-columns:55px minmax(0,1fr); width:min(1500px,100%); margin:auto; height:calc(100vh - 95px); min-height:600px; background:#020617; }
-      .bp-code-gutter { padding:16px 10px; text-align:right; color:#475569; background:#020617; border-right:1px solid #1e293b; font:14px/1.55 "Courier New",monospace; white-space:pre; overflow:hidden; user-select:none; }
-      .bp-editor { width:100%; height:100%; min-height:0; resize:none; border:0; border-radius:0; padding:16px; outline:0; background:#020617; color:#e2e8f0; font:14px/1.55 "Courier New",monospace; tab-size:2; white-space:pre; overflow:auto; }
-      .bp-code-status { height:33px; display:flex; justify-content:flex-end; gap:16px; align-items:center; padding:0 15px; color:#64748b; font-size:10px; border-top:1px solid #1f2937; }
-      .bp-public-shell { min-height:100vh; background:#fff; }
-      .bp-public-mount { width:100%; min-height:100vh; }
-      .bp-public-frame { width:100%; height:100vh; min-height:100vh; border:0; display:block; background:#fff; }
-      @media (max-width:1100px) {
-        .bp-ide { grid-template-columns:210px minmax(0,1fr); }
-        .bp-ai-panel { position:fixed; right:0; top:62px; bottom:0; width:min(380px,92vw); z-index:300; box-shadow:-20px 0 60px rgba(0,0,0,.35); transform:translateX(100%); transition:.2s ease; }
-        .bp-ai-panel.bp-ai-open { transform:translateX(0); }
-      }
-      @media (max-width:700px) {
-        .bp-ide { grid-template-columns:1fr; }
-        .bp-ide-sidebar { display:none; }
-        .bp-ide-toolbar .bp-btn { padding:7px 9px; font-size:11px; }
-        .bp-brand-stack strong { max-width:150px; }
-        .bp-preview-shell { height:calc(100vh - 102px); }
-      }
-
     `;
 
     document.head.appendChild(
@@ -1482,53 +1784,58 @@
     return activeSession;
   }
 
-async function ensureProfile() {
+  async function ensureProfile() {
     if (!activeUser) {
-      activeProfile = null;
-      return null;
+      return;
     }
 
-    const { data, error } = await client
+    const {
+      data,
+      error,
+    } = await client
       .from("profiles")
-      .select("id,full_name,role,status,plan,project_limit,github_file_limit")
-      .eq("id", activeUser.id)
+      .select("id")
+      .eq(
+        "id",
+        activeUser.id
+      )
       .maybeSingle();
 
     if (error) {
-      console.error("Profile check:", error);
-      activeProfile = { id: activeUser.id, role: "user", status: "active", plan: "free" };
-      return activeProfile;
+      console.error(
+        "Profile check:",
+        error
+      );
+
+      return;
     }
 
     if (data) {
-      activeProfile = data;
-      return data;
+      return;
     }
 
-    const profile = {
-      id: activeUser.id,
-      full_name: activeUser.user_metadata?.full_name || activeUser.email || "User",
-      role: "user",
-      status: "active",
-      plan: "free"
-    };
-
-    const { data: created, error: insertError } = await client
+    const {
+      error: insertError,
+    } = await client
       .from("profiles")
-      .insert(profile)
-      .select("id,full_name,role,status,plan,project_limit,github_file_limit")
-      .maybeSingle();
+      .insert({
+        id: activeUser.id,
+
+        full_name:
+          activeUser
+            .user_metadata
+            ?.full_name ||
+          activeUser.email ||
+          "User",
+      });
 
     if (insertError) {
-      console.error("Profile create:", insertError);
-      activeProfile = profile;
-    } else {
-      activeProfile = created || profile;
+      console.error(
+        "Profile create:",
+        insertError
+      );
     }
-
-    return activeProfile;
   }
-
 
   /* =========================================================
      AUTH SCREEN
@@ -1922,8 +2229,6 @@ async function ensureProfile() {
 
     activeUser =
       null;
-    activeProfile = null;
-    pendingAIImage = null;
 
     activeProject =
       null;
@@ -1953,17 +2258,6 @@ async function ensureProfile() {
 
     await ensureProfile();
 
-    if (activeProfile && activeProfile.status === "blocked") {
-      root.innerHTML = `
-        <div class="bp-auth-page"><div class="bp-auth-card" style="text-align:center">
-          <div class="bp-auth-logo">!</div>
-          <h2 class="bp-auth-title">Account blocked</h2>
-          <p class="bp-auth-subtitle">Please contact the administrator to reactivate your account.</p>
-          <button class="bp-btn" onclick="window.BuildPilot.logout()">Logout</button>
-        </div></div>`;
-      return;
-    }
-
     root.innerHTML = `
       <div class="bp-app">
 
@@ -1990,13 +2284,6 @@ async function ensureProfile() {
               )}
             </span>
 
-            ${activeProfile?.role === "admin" ? `
-              <button
-                class="bp-btn"
-                style="background:transparent;color:white;border-color:#475569"
-                onclick="window.BuildPilot.admin()"
-              >Admin</button>
-            ` : ""}
             <button
               class="bp-btn"
               style="
@@ -2694,20 +2981,6 @@ body {
       return;
     }
 
-    /* Free-plan project limit: default 5. */
-    if (activeProfile && activeProfile.role !== "admin") {
-      const limit = Number(activeProfile.project_limit ?? 5);
-      const { count, error: countError } = await client
-        .from("projects")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", activeUser.id);
-
-      if (!countError && Number.isFinite(limit) && (count || 0) >= limit) {
-        showToast(`Project limit reached (${limit}). Please request an upgrade from admin.`, "error");
-        return;
-      }
-    }
-
     setButtonLoading(
       button,
       true,
@@ -2842,35 +3115,82 @@ body {
      AI FUNCTION
      ========================================================= */
 
-async function callGenerateFunction(projectId, instruction, projectName, frontend, backend, extra = {}) {
+  async function callGenerateFunction(
+    projectId,
+    instruction,
+    projectName,
+    frontend,
+    backend
+  ) {
     await getSession();
-    if (!activeSession) throw new Error("Your login session expired. Please login again.");
 
-    const payload = {
-      projectId,
-      instruction,
-      prompt: instruction,
-      projectName,
-      frontend,
-      backend,
-      ...extra
-    };
+    if (!activeSession) {
+      throw new Error(
+        "Your login session expired. Please login again."
+      );
+    }
 
-    const { data, error } = await client.functions.invoke(GENERATE_FUNCTION, {
-      headers: { Authorization: "Bearer " + activeSession.access_token },
-      body: payload
-    });
+    const {
+      data,
+      error,
+    } =
+      await client.functions.invoke(
+        GENERATE_FUNCTION,
+        {
+          headers: {
+            Authorization:
+              "Bearer " +
+              activeSession.access_token,
+          },
+
+          body: {
+            projectId,
+
+            instruction,
+
+            /*
+             * Compatibility fields.
+             */
+            prompt:
+              instruction,
+
+            projectName,
+
+            frontend,
+
+            backend,
+          },
+        }
+      );
 
     if (error) {
-      console.error("Edge Function error:", error);
-      throw new Error(error.message || "AI function failed");
-    }
-    if (data && data.success === false) {
-      throw new Error(data.error || "AI generation failed");
-    }
-    return data || { success:true };
-  }
+      console.error(
+        "Edge Function error:",
+        error
+      );
 
+      throw new Error(
+        error.message ||
+          "AI function failed"
+      );
+    }
+
+    if (
+      data &&
+      data.success === false
+    ) {
+      throw new Error(
+        data.error ||
+          "AI generation failed"
+      );
+    }
+
+    return (
+      data || {
+        success: true,
+      }
+    );
+  }
 
   /* =========================================================
      LOAD PROJECT FILES
@@ -3210,156 +3530,469 @@ async function callGenerateFunction(projectId, instruction, projectName, fronten
      WORKSPACE
      ========================================================= */
 
-function openWorkspace(projectId) {
-    if (!activeProject || activeProject.id !== projectId) {
-      return;
-    }
-
-    const isAdmin = Boolean(activeProfile?.role === "admin");
-
+  function openWorkspace(
+    projectId
+  ) {
     root.innerHTML = `
-      <div class="bp-app bp-ide-app">
-        <header class="bp-topbar bp-ide-topbar">
+      <div class="bp-app">
+
+        <header class="bp-topbar">
+
           <div class="bp-brand">
-            <button class="bp-icon-btn" title="Back to projects"
-              onclick="window.BuildPilot.home()">←</button>
-            <div class="bp-logo">⚡</div>
-            <div class="bp-brand-stack">
-              <strong>${escapeHtml(activeProject.name || "Project")}</strong>
-              <span>${escapeHtml(activeProject.frontend || "html")} · ${escapeHtml(activeProject.backend || "supabase")}</span>
+
+            <button
+              class="bp-btn"
+              style="
+                background:transparent;
+                color:white;
+                border-color:#475569;
+                margin-right:5px;
+              "
+              onclick="window.BuildPilot.home()"
+              title="Projects"
+            >
+              ←
+            </button>
+
+            <div class="bp-logo">
+              ⚡
             </div>
+
+            <span>
+              ${escapeHtml(
+                activeProject?.name ||
+                  "Project"
+              )}
+            </span>
+
           </div>
 
-          <div class="bp-ide-toolbar">
-            <button class="bp-btn bp-btn-soft" onclick="window.BuildPilot.openFileCreator()">＋ File</button>
-            <button class="bp-btn bp-btn-soft" onclick="window.BuildPilot.refreshFiles()">↻</button>
-            <button class="bp-btn bp-btn-soft" onclick="window.BuildPilot.updatePreview()">▶ Preview</button>
-            <button id="publishButton" class="bp-btn bp-btn-success"
-              onclick="window.BuildPilot.togglePublish()">
-              ${activeProject.public_enabled ? "🔗 Share" : "🚀 Publish"}
+          <div class="bp-actions">
+            <button
+              class="bp-btn"
+              style="
+                background:transparent;
+                color:white;
+                border-color:#475569;
+              "
+              onclick="window.BuildPilot.refreshFiles()"
+            >
+              ↻ Refresh
             </button>
-            ${isAdmin ? `<button class="bp-btn bp-btn-soft" onclick="window.BuildPilot.admin()">Admin</button>` : ""}
+
+            <button
+              id="publishButton"
+              class="bp-btn bp-btn-success"
+              onclick="window.BuildPilot.togglePublish()"
+            >
+              ${
+                activeProject?.public_enabled
+                  ? "🔗 Public Link"
+                  : "🚀 Publish"
+              }
+            </button>
           </div>
+
         </header>
 
-        <main class="bp-ide">
-          <aside class="bp-ide-sidebar">
-            <div class="bp-ide-side-head">
-              <div>
-                <strong>FILES</strong>
-                <span>${activeFiles.length}</span>
-              </div>
-              <button class="bp-mini-btn" title="New file" onclick="window.BuildPilot.openFileCreator()">＋</button>
-            </div>
-            <div id="filesList" class="bp-files"></div>
-            <div class="bp-sidebar-bottom">
-              <button class="bp-side-action" onclick="window.BuildPilot.showProjectInfo()">ⓘ Project info</button>
-              <button class="bp-side-action" onclick="window.BuildPilot.home()">⌂ All projects</button>
-            </div>
-          </aside>
+        <main class="bp-airo-workspace">
 
-          <section class="bp-ide-center">
-            <div class="bp-editor-tabs" id="editorTabs">
-              <div class="bp-editor-tab active">Preview</div>
+          <div class="bp-airo-topbar">
+
+            <div class="bp-airo-tabs">
+              <button class="bp-airo-tab active" type="button">
+                ▣&nbsp; Website
+              </button>
+
+              <button
+                class="bp-airo-tab"
+                type="button"
+                onclick="window.BuildPilot.showToast('Domain settings are ready for the published site.')"
+              >
+                ◉&nbsp; Domain
+              </button>
             </div>
-            <div class="bp-preview-shell">
-              <div class="bp-preview-head">
-                <span>Live Preview</span>
-                <div class="bp-actions">
-                  <button class="bp-mini-btn" onclick="window.BuildPilot.updatePreview()">Refresh</button>
-                  ${activeProject.public_enabled ? `<button class="bp-mini-btn" onclick="window.BuildPilot.copyPublicLink('${escapeAttribute(activeProject.public_id || "")}')">Copy link</button>` : ""}
+
+            <div class="bp-airo-top-actions">
+              <button
+                class="bp-icon-btn"
+                type="button"
+                title="Share"
+                onclick="window.BuildPilot.shareProject()"
+              >
+                ⤴
+              </button>
+
+              <button
+                class="bp-btn bp-btn-success"
+                type="button"
+                onclick="window.BuildPilot.togglePublish()"
+              >
+                ${
+                  activeProject?.public_enabled
+                    ? "Published"
+                    : "Publish"
+                }
+              </button>
+            </div>
+
+          </div>
+
+          <div class="bp-airo-banner">
+            <span>●</span>
+            <span>
+              You currently have a free site. Pick a plan to use premium features.
+            </span>
+            <a href="#" onclick="event.preventDefault();window.BuildPilot.showToast('Plans will be available here.')">
+              View Plans →
+            </a>
+          </div>
+
+          <div class="bp-airo-body">
+
+            <aside class="bp-airo-left">
+
+              <div class="bp-airo-left-head">
+                <div class="bp-airo-brand">
+                  Airo <span>BETA</span>
                 </div>
-              </div>
-              <div id="previewContent" class="bp-preview-content"></div>
-            </div>
-          </section>
 
-          <aside class="bp-ai-panel">
-            <div class="bp-ai-head">
-              <div>
-                <strong>AI Builder</strong>
-                <span>Describe a change or create a feature</span>
+                <button
+                  class="bp-icon-btn"
+                  type="button"
+                  title="Project files"
+                  onclick="window.BuildPilot.switchBuilderTab('files')"
+                >
+                  ☷
+                </button>
               </div>
-              <button class="bp-mini-btn" onclick="window.BuildPilot.clearChat()">Clear</button>
-            </div>
 
-            <div id="chatMessages" class="bp-chat-messages">
-              <div class="bp-chat-message bp-chat-ai">
-                <div class="bp-ai-avatar">✦</div>
-                <div>
-                  <strong>AI Builder</strong>
-                  <div style="margin-top:5px">
-                    Tell me what to build or change. I can edit your project files and update the live preview.
+              <div class="bp-builder-tabs">
+                <button
+                  id="builderAiTab"
+                  class="bp-builder-tab active"
+                  type="button"
+                  onclick="window.BuildPilot.switchBuilderTab('ai')"
+                >
+                  ✨ AI Builder
+                </button>
+
+                <button
+                  id="builderFilesTab"
+                  class="bp-builder-tab"
+                  type="button"
+                  onclick="window.BuildPilot.switchBuilderTab('files')"
+                >
+                  Files (${activeFiles.length})
+                </button>
+              </div>
+
+              <div class="bp-builder-content">
+
+                <section
+                  id="builderAiView"
+                  class="bp-builder-view active"
+                >
+
+                  <div class="bp-airo-chat-title">
+                    Continue building
                   </div>
+
+                  <div class="bp-airo-chat-subtitle">
+                    Ask AI to change anything in your website.
+                  </div>
+
+                  <div
+                    id="chatMessages"
+                    class="bp-chat-messages"
+                    style="flex:1;overflow:auto;padding:10px 14px;"
+                  >
+                    <div class="bp-chat-message bp-chat-ai">
+                      <strong>AI Builder</strong>
+                      <div style="margin-top:5px;">
+                        Tell me what you want to change in your website.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="bp-airo-input-wrap">
+                    <form id="aiChatForm">
+
+                      <textarea
+                        id="aiInstruction"
+                        class="bp-textarea"
+                        rows="4"
+                        placeholder="Ask AI to edit your website..."
+                      ></textarea>
+
+                      <div class="bp-airo-input-bottom">
+                        <div class="bp-airo-input-tools">
+                          <button
+                            class="bp-mini-btn"
+                            type="button"
+                            title="Add file"
+                            onclick="window.BuildPilot.switchBuilderTab('files')"
+                          >
+                            ＋
+                          </button>
+
+                          <button
+                            class="bp-mini-btn"
+                            type="button"
+                            title="Voice"
+                            onclick="window.BuildPilot.showToast('Voice input can be connected here.')"
+                          >
+                            ♫
+                          </button>
+                        </div>
+
+                        <button
+                          id="aiSendButton"
+                          class="bp-send-btn"
+                          type="submit"
+                          title="Send"
+                        >
+                          ↑
+                        </button>
+                      </div>
+
+                    </form>
+                  </div>
+
+                </section>
+
+                <section
+                  id="builderFilesView"
+                  class="bp-builder-view"
+                >
+
+                  <div style="padding:12px 14px;border-bottom:1px solid #e5e7eb;background:#fff;display:flex;justify-content:space-between;align-items:center;">
+                    <strong>Project Files</strong>
+                    <button class="bp-mini-btn" type="button" onclick="window.BuildPilot.newFile()">＋</button>
+                  </div>
+
+                  <div
+                    id="filesList"
+                    class="bp-airo-files"
+                  ></div>
+
+                </section>
+
+              </div>
+
+            </aside>
+
+            <section class="bp-airo-preview">
+
+              <div class="bp-airo-preview-head">
+
+                <div style="font-size:13px;color:#64748b;font-weight:700;">
+                  Live Preview
+                </div>
+
+                <div class="bp-device-tools">
+                  <button class="bp-icon-btn" type="button" title="Refresh preview" onclick="window.BuildPilot.updatePreview()">
+                    ↻
+                  </button>
+
+                  <button class="bp-icon-btn" type="button" title="Desktop" onclick="window.BuildPilot.setPreviewWidth('desktop')">
+                    ▣
+                  </button>
+
+                  <button class="bp-icon-btn" type="button" title="Mobile" onclick="window.BuildPilot.setPreviewWidth('mobile')">
+                    ▯
+                  </button>
+
+                  <button class="bp-icon-btn" type="button" title="Open preview" onclick="window.BuildPilot.openPreviewNewTab()">
+                    ↗
+                  </button>
+                </div>
+
+              </div>
+
+              <div class="bp-preview-relative">
+                <div
+                  id="previewContent"
+                  class="bp-preview-canvas"
+                >
+                  Loading...
+                </div>
+
+                <div class="bp-preview-floating">
+                  <button class="bp-icon-btn" type="button" title="Edit with AI" onclick="window.BuildPilot.switchBuilderTab('ai')">✦</button>
+                  <button class="bp-icon-btn" type="button" title="Refresh" onclick="window.BuildPilot.updatePreview()">↻</button>
+                  <button class="bp-icon-btn" type="button" title="Open" onclick="window.BuildPilot.openPreviewNewTab()">↗</button>
+                  <button class="bp-icon-btn" type="button" title="Fullscreen" onclick="window.BuildPilot.fullscreenPreview()">⛶</button>
                 </div>
               </div>
-            </div>
 
-            <div class="bp-attach-preview" id="aiAttachmentPreview"></div>
+            </section>
 
-            <div class="bp-chat-input">
-              <form id="aiChatForm">
-                <div class="bp-prompt-box">
-                  <textarea id="aiInstruction" class="bp-textarea"
-                    rows="4"
-                    placeholder="Try: Hero section ko modern banao&#10;Contact form add karo&#10;WhatsApp button lagao&#10;Uploaded image ko homepage me use karo"></textarea>
-                  <div class="bp-prompt-tools">
-                    <label class="bp-tool-btn" title="Upload image">
-                      🖼️
-                      <input id="aiImageInput" type="file" accept="image/*" hidden>
-                    </label>
-                    <button type="button" class="bp-tool-btn" onclick="window.BuildPilot.generateImage()">✦ Image</button>
-                    <span class="bp-tool-hint">AI can modify the project</span>
-                    <button id="aiSendButton" class="bp-btn bp-btn-primary bp-send-btn" type="submit">↑</button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </aside>
+          </div>
+
         </main>
+
       </div>
     `;
 
-    document.getElementById("aiChatForm")?.addEventListener("submit", submitAIInstruction);
-    document.getElementById("aiImageInput")?.addEventListener("change", handleAIImageUpload);
+    document
+      .getElementById("aiChatForm")
+      .addEventListener(
+        "submit",
+        submitAIInstruction
+      );
 
     renderFilesList();
     updatePreview();
   }
 
+  /* =========================================================
+     BUILDER TABS / PREVIEW CONTROLS
+     ========================================================= */
+
+  function switchBuilderTab(tab) {
+    const aiView = document.getElementById("builderAiView");
+    const filesView = document.getElementById("builderFilesView");
+    const aiTab = document.getElementById("builderAiTab");
+    const filesTab = document.getElementById("builderFilesTab");
+
+    if (!aiView || !filesView) return;
+
+    const ai = tab !== "files";
+
+    aiView.classList.toggle("active", ai);
+    filesView.classList.toggle("active", !ai);
+
+    aiTab?.classList.toggle("active", ai);
+    filesTab?.classList.toggle("active", !ai);
+  }
+
+  function shareProject() {
+    if (activeProject?.public_enabled && activeProject?.public_id) {
+      copyPublicLink(activeProject.public_id);
+      return;
+    }
+
+    showToast(
+      "Publish the site first to create a shareable public link.",
+      "info"
+    );
+  }
+
+  function setPreviewWidth(mode) {
+    const browser = document.querySelector(".bp-preview-browser");
+    if (!browser) return;
+
+    browser.style.maxWidth =
+      mode === "mobile" ? "430px" : "1500px";
+  }
+
+  function openPreviewNewTab() {
+    const html = buildPreviewHTML();
+    if (!html) {
+      showToast("Nothing to preview yet.", "error");
+      return;
+    }
+
+    const blob = new Blob([html], {
+      type: "text/html",
+    });
+
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  function fullscreenPreview() {
+    const browser = document.querySelector(".bp-preview-browser");
+    if (!browser) return;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+      return;
+    }
+
+    browser.requestFullscreen?.();
+  }
 
   /* =========================================================
      FILE LIST
      ========================================================= */
 
-function renderFilesList() {
-    const list = document.getElementById("filesList");
-    if (!list) return;
+  function renderFilesList() {
+    const list =
+      document.getElementById(
+        "filesList"
+      );
 
-    if (!activeFiles.length) {
-      list.innerHTML = `<div style="padding:15px;color:#64748b;font-size:13px">No files yet.</div>`;
+    if (!list) {
       return;
     }
 
-    const icons = {
-      html:"🌐", htm:"🌐", css:"🎨", js:"JS", jsx:"⚛", ts:"TS", tsx:"⚛",
-      json:"{}", md:"M", svg:"◇", png:"▧", jpg:"▧", jpeg:"▧", webp:"▧"
-    };
+    if (!activeFiles.length) {
+      list.innerHTML = `
+        <div style="
+          padding:15px;
+          color:#64748b;
+          font-size:13px;
+        ">
+          No files found.
+        </div>
+      `;
 
-    list.innerHTML = activeFiles.map(file => {
-      const ext = String(file.file_path || "").split(".").pop().toLowerCase();
-      const active = file.id === selectedFileId ? "bp-file-active" : "";
-      return `
-        <div class="bp-file-row">
-          <button class="bp-file ${active}" onclick="window.BuildPilot.editFile('${escapeAttribute(file.id)}')" title="${escapeAttribute(file.file_path)}">
-            <span class="bp-file-icon">${icons[ext] || "•"}</span>
-            <span class="bp-file-name">${escapeHtml(file.file_path)}</span>
-          </button>
-          <button class="bp-file-more" title="Delete file" onclick="window.BuildPilot.deleteFile('${escapeAttribute(file.id)}')">⋮</button>
-        </div>`;
-    }).join("");
+      return;
+    }
+
+    list.innerHTML =
+      activeFiles
+        .map(
+          (file) => `
+            <button
+              class="
+                bp-file
+                ${
+                  selectedFileId ===
+                  file.id
+                    ? "bp-file-active"
+                    : ""
+                }
+              "
+              onclick="
+                window.BuildPilot.editFile(
+                  '${escapeAttribute(
+                    file.id
+                  )}'
+                )
+              "
+            >
+              ${
+                file.file_path
+                  .endsWith(
+                    ".html"
+                  )
+                  ? "🌐"
+                  : file.file_path.endsWith(
+                      ".css"
+                    )
+                  ? "🎨"
+                  : file.file_path.endsWith(
+                      ".js"
+                    )
+                  ? "⚡"
+                  : "📄"
+              }
+
+              &nbsp;
+
+              ${escapeHtml(
+                file.file_path
+              )}
+            </button>
+          `
+        )
+        .join("");
   }
-
 
   /* =========================================================
      PREVIEW
@@ -3599,68 +4232,121 @@ ${js}
      AI CHAT
      ========================================================= */
 
-async function submitAIInstruction(event) {
+  async function submitAIInstruction(
+    event
+  ) {
+    if (
+  !activeProject ||
+  !activeProject.id ||
+  !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(activeProject.id)
+) {
+  alert("Invalid project ID. Please create/select a valid project.");
+  return;
+}
     event.preventDefault();
 
-    if (!activeProject?.id) {
-      showToast("Open a project first", "error");
-      return;
-    }
-
-    const input = document.getElementById("aiInstruction");
-    const button = document.getElementById("aiSendButton");
-    const instruction = input?.value.trim() || "";
-
-    if (!instruction && !pendingAIImage) {
-      showToast("Please enter an instruction or upload an image", "error");
-      return;
-    }
-
-    const imageContext = pendingAIImage
-      ? `\nReference image URL: ${pendingAIImage.url}\nUse this image in the project when appropriate.`
-      : "";
-
-    appendChat("You", (instruction || "Use this image in the project") + imageContext, "user");
-    if (input) input.value = "";
-    setButtonLoading(button, true, "AI...");
-
-    try {
-      await ensureStarterFiles(activeProject.id, activeProject.name);
-      await loadProjectFiles();
-
-      const result = await callGenerateFunction(
-        activeProject.id,
-        instruction || "Use the uploaded reference image and improve the project.",
-        activeProject.name,
-        activeProject.frontend,
-        activeProject.backend,
-        {
-          action: "modify_project",
-          files: activeFiles.map(f => ({
-            id: f.id, path: f.file_path, language: f.language,
-            content: f.file_content || ""
-          })),
-          imageUrl: pendingAIImage?.url || null
-        }
+    if (!activeProject) {
+      showToast(
+        "Open a project first",
+        "error"
       );
 
-      pendingAIImage = null;
-      renderAttachmentPreview();
+      return;
+    }
+
+    const input =
+      document.getElementById(
+        "aiInstruction"
+      );
+
+    const button =
+      document.getElementById(
+        "aiSendButton"
+      );
+
+    const instruction =
+      input.value.trim();
+
+    if (!instruction) {
+      return;
+    }
+
+    appendChat(
+      "You",
+      instruction,
+      "user"
+    );
+
+    input.value = "";
+
+    setButtonLoading(
+      button,
+      true,
+      "AI is working..."
+    );
+
+    try {
+      /*
+       * Make sure index.html exists
+       * before AI editing.
+       */
+      await ensureStarterFiles(
+        activeProject.id,
+        activeProject.name
+      );
+
       await loadProjectFiles();
+
+      const result =
+        await callGenerateFunction(
+          activeProject.id,
+          instruction,
+          activeProject.name,
+          activeProject.frontend,
+          activeProject.backend
+        );
+
+      await loadProjectFiles();
+
       renderFilesList();
+
       updatePreview();
 
-      appendChat("AI Builder", result?.message || "Project updated successfully.", "ai");
-      showToast("Project updated", "success");
+      appendChat(
+        "BuildPilot AI",
+        result?.message ||
+          "Project updated successfully.",
+        "ai"
+      );
+
+      showToast(
+        "Project updated",
+        "success"
+      );
+
     } catch (error) {
       console.error(error);
-      appendChat("AI Builder", error.message || "AI update failed", "error");
-      showToast(error.message || "AI update failed", "error");
+
+      appendChat(
+        "BuildPilot AI",
+        error.message ||
+          "AI update failed",
+        "error"
+      );
+
+      showToast(
+        error.message ||
+          "AI update failed",
+        "error"
+      );
+
     } finally {
-      setButtonLoading(button, false);
+      setButtonLoading(
+        button,
+        false
+      );
     }
   }
-
 
   function appendChat(
     sender,
@@ -3719,96 +4405,195 @@ async function submitAIInstruction(event) {
      FILE EDITOR
      ========================================================= */
 
-function editFile(fileId) {
-    const file = activeFiles.find(item => item.id === fileId);
-    if (!file) return;
+  function editFile(
+    fileId
+  ) {
+    const file =
+      activeFiles.find(
+        (item) =>
+          item.id === fileId
+      );
 
-    selectedFileId = fileId;
+    if (!file) {
+      return;
+    }
+
+    selectedFileId =
+      fileId;
 
     root.innerHTML = `
-      <div class="bp-editor-page bp-code-page">
-        <div class="bp-code-top">
-          <div class="bp-brand">
-            <button class="bp-icon-btn" onclick="window.BuildPilot.backWorkspace()">←</button>
+      <div class="bp-editor-page">
+
+        <div style="
+          max-width:1250px;
+          margin:auto;
+        ">
+
+          <div style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:15px;
+            margin-bottom:15px;
+          ">
+
             <div>
-              <div class="bp-code-path">${escapeHtml(file.file_path)}</div>
-              <div class="bp-code-sub">${escapeHtml(file.language || "text")}</div>
+
+              <div style="
+                color:#64748b;
+                font-size:13px;
+              ">
+                Project File
+              </div>
+
+              <h2 style="
+                margin:4px 0 0;
+              ">
+                ${escapeHtml(
+                  file.file_path
+                )}
+              </h2>
+
             </div>
+
+            <button
+              class="bp-btn"
+              onclick="
+                window.BuildPilot.backWorkspace()
+              "
+            >
+              ← Back
+            </button>
+
           </div>
-          <div class="bp-actions">
-            <button class="bp-btn bp-btn-soft" onclick="window.BuildPilot.backWorkspace()">Cancel</button>
-            <button id="saveFileButton" class="bp-btn bp-btn-primary"
-              onclick="window.BuildPilot.saveFile('${escapeAttribute(file.id)}')">💾 Save</button>
+
+          <div class="bp-card">
+
+            <textarea
+              id="fileEditor"
+              class="bp-editor"
+              spellcheck="false"
+            >${escapeHtml(
+              file.file_content ||
+                ""
+            )}</textarea>
+
+            <div style="
+              display:flex;
+              gap:8px;
+              margin-top:12px;
+            ">
+
+              <button
+                id="saveFileButton"
+                class="bp-btn bp-btn-primary"
+                onclick="
+                  window.BuildPilot.saveFile(
+                    '${escapeAttribute(
+                      file.id
+                    )}'
+                  )
+                "
+              >
+                💾 Save File
+              </button>
+
+              <button
+                class="bp-btn"
+                onclick="
+                  window.BuildPilot.backWorkspace()
+                "
+              >
+                Cancel
+              </button>
+
+            </div>
+
           </div>
+
         </div>
 
-        <div class="bp-code-layout">
-          <div class="bp-code-gutter" id="codeGutter"></div>
-          <textarea id="fileEditor" class="bp-editor" spellcheck="false"
-            autocapitalize="off" autocomplete="off" autocorrect="off">${escapeHtml(file.file_content || "")}</textarea>
-        </div>
-        <div class="bp-code-status">
-          <span>UTF-8</span><span>${escapeHtml(file.language || "Plain Text")}</span>
-          <span id="editorLineCount"></span>
-        </div>
       </div>
     `;
-
-    const editor = document.getElementById("fileEditor");
-    const gutter = document.getElementById("codeGutter");
-    const count = document.getElementById("editorLineCount");
-
-    const sync = () => {
-      const lines = editor.value.split("\n").length;
-      gutter.textContent = Array.from({length:lines}, (_,i)=>String(i+1)).join("\n");
-      count.textContent = `${editor.value.length} chars · ${lines} lines`;
-      gutter.scrollTop = editor.scrollTop;
-    };
-    editor.addEventListener("input", sync);
-    editor.addEventListener("scroll", () => { gutter.scrollTop = editor.scrollTop; });
-    editor.addEventListener("keydown", e => {
-      if (e.key === "Tab") {
-        e.preventDefault();
-        const a = editor.selectionStart, b = editor.selectionEnd;
-        editor.value = editor.value.slice(0,a) + "  " + editor.value.slice(b);
-        editor.selectionStart = editor.selectionEnd = a + 2;
-        sync();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
-        e.preventDefault();
-        saveFile(file.id);
-      }
-    });
-    sync();
-    editor.focus();
   }
 
-async function saveFile(fileId) {
-    const editor = document.getElementById("fileEditor");
-    const button = document.getElementById("saveFileButton");
-    if (!editor || !activeProject || !fileId) return;
+  async function saveFile(
+    fileId
+  ) {
+    const editor =
+      document.getElementById(
+        "fileEditor"
+      );
 
-    setButtonLoading(button, true, "Saving...");
+    const button =
+      document.getElementById(
+        "saveFileButton"
+      );
+
+    if (!editor) {
+      return;
+    }
+
+    setButtonLoading(
+      button,
+      true,
+      "Saving..."
+    );
+
     try {
-      const { error } = await client.from("project_files")
-        .update({ file_content: editor.value })
-        .eq("id", fileId)
-        .eq("project_id", activeProject.id);
+      /*
+       * IMPORTANT:
+       * generated_by is NOT sent because
+       * your column is UUID.
+       */
+      const {
+        error,
+      } =
+        await client
+          .from("project_files")
+          .update({
+            file_content:
+              editor.value,
+          })
+          .eq(
+            "id",
+            fileId
+          )
+          .eq(
+            "project_id",
+            activeProject.id
+          );
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       await loadProjectFiles();
-      selectedFileId = fileId;
-      showToast("File saved", "success");
-      openWorkspace(activeProject.id);
+
+      showToast(
+        "File saved successfully",
+        "success"
+      );
+
+      openWorkspace(
+        activeProject.id
+      );
+
     } catch (error) {
       console.error(error);
-      showToast(error.message || "Could not save file", "error");
+
+      showToast(
+        error.message ||
+          "Could not save file",
+        "error"
+      );
     } finally {
-      setButtonLoading(button, false);
+      setButtonLoading(
+        button,
+        false
+      );
     }
   }
-
 
   function backWorkspace() {
     if (
@@ -4089,377 +4874,6 @@ async function saveFile(fileId) {
     );
   }
 
-
-  /* =========================================================
-     FILES / IMAGES / PROJECT TOOLS
-     ========================================================= */
-
-  function clearChat() {
-    const box = document.getElementById("chatMessages");
-    if (box) box.innerHTML = "";
-  }
-
-  function renderAttachmentPreview() {
-    const box = document.getElementById("aiAttachmentPreview");
-    if (!box) return;
-    if (!pendingAIImage) {
-      box.innerHTML = "";
-      return;
-    }
-    box.innerHTML = `
-      <div class="bp-attachment">
-        ${pendingAIImage.preview ? `<img src="${escapeAttribute(pendingAIImage.preview)}" alt="">` : ""}
-        <span style="flex:1">${escapeHtml(pendingAIImage.name || "Reference image")}</span>
-        <button class="bp-mini-btn" onclick="window.BuildPilot.removeAIImage()">Remove</button>
-      </div>`;
-  }
-
-  function removeAIImage() {
-    pendingAIImage = null;
-    renderAttachmentPreview();
-  }
-
-  async function handleAIImageUpload(event) {
-    const file = event.target?.files?.[0];
-    if (!file || !activeUser) return;
-
-    if (!file.type.startsWith("image/")) {
-      showToast("Please select an image", "error");
-      return;
-    }
-    if (file.size > 8 * 1024 * 1024) {
-      showToast("Image must be under 8 MB", "error");
-      return;
-    }
-
-    try {
-      showToast("Uploading image...");
-      const ext = (file.name.split(".").pop() || "png").toLowerCase();
-      const path = `${activeUser.id}/references/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-
-      const { error } = await client.storage.from("uploads").upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type
-      });
-      if (error) throw error;
-
-      let imageUrl = "";
-      const publicResult = client.storage.from("uploads").getPublicUrl(path);
-      imageUrl = publicResult?.data?.publicUrl || "";
-
-      /* If the bucket is private, try a short-lived signed URL. */
-      if (!imageUrl) {
-        const signed = await client.storage.from("uploads").createSignedUrl(path, 3600);
-        imageUrl = signed?.data?.signedUrl || "";
-      }
-
-      const preview = URL.createObjectURL(file);
-
-      pendingAIImage = {
-        name: file.name,
-        path,
-        url: imageUrl,
-        preview
-      };
-      renderAttachmentPreview();
-      showToast("Image uploaded", "success");
-    } catch (error) {
-      console.error(error);
-      showToast(
-        "Image upload failed. Check the Supabase Storage 'uploads' bucket and policy.",
-        "error"
-      );
-    } finally {
-      if (event.target) event.target.value = "";
-    }
-  }
-
-  async function generateImage() {
-    if (!activeProject?.id) {
-      showToast("Open a project first", "error");
-      return;
-    }
-
-    const prompt = document.getElementById("aiInstruction")?.value.trim() || "Create a professional website hero image matching this project.";
-    appendChat("You", `Generate image: ${prompt}`, "user");
-
-    try {
-      setButtonLoading(document.getElementById("aiSendButton"), true, "...");
-      const result = await callGenerateFunction(
-        activeProject.id,
-        prompt,
-        activeProject.name,
-        activeProject.frontend,
-        activeProject.backend,
-        {
-          action: "generate_image",
-          imagePrompt: prompt
-        }
-      );
-
-      const imageUrl =
-        result?.imageUrl ||
-        result?.url ||
-        result?.image?.url ||
-        result?.data?.imageUrl ||
-        result?.data?.url;
-
-      if (!imageUrl) {
-        throw new Error(
-          result?.message ||
-          "Image generation endpoint did not return imageUrl."
-        );
-      }
-
-      generatedImages.push(imageUrl);
-      pendingAIImage = {
-        name: "AI generated image",
-        url: imageUrl,
-        preview: imageUrl
-      };
-      renderAttachmentPreview();
-      appendChat("AI Builder", "Image generated. Send your next instruction to place it in the website.", "ai");
-      showToast("Image generated", "success");
-    } catch (error) {
-      console.error(error);
-      appendChat("AI Builder", error.message || "Image generation failed", "error");
-      showToast(error.message || "Image generation failed", "error");
-    } finally {
-      setButtonLoading(document.getElementById("aiSendButton"), false);
-    }
-  }
-
-  async function openFileCreator() {
-    const old = document.getElementById("bpFileModal");
-    if (old) old.remove();
-
-    const modal = document.createElement("div");
-    modal.id = "bpFileModal";
-    modal.className = "bp-modal";
-    modal.innerHTML = `
-      <div class="bp-modal-card" style="max-width:520px">
-        <h2 style="margin-top:0">Create file</h2>
-        <p style="color:#64748b">Add a new file to this project.</p>
-        <div class="bp-field">
-          <label class="bp-label">File path</label>
-          <input id="newFilePath" class="bp-input" placeholder="components/header.html">
-        </div>
-        <div class="bp-field">
-          <label class="bp-label">Language</label>
-          <select id="newFileLanguage" class="bp-select">
-            <option value="html">HTML</option>
-            <option value="css">CSS</option>
-            <option value="javascript">JavaScript</option>
-            <option value="json">JSON</option>
-            <option value="text">Text</option>
-          </select>
-        </div>
-        <div class="bp-actions">
-          <button class="bp-btn" onclick="document.getElementById('bpFileModal').remove()">Cancel</button>
-          <button class="bp-btn bp-btn-primary" onclick="window.BuildPilot.createFile()">Create</button>
-        </div>
-      </div>`;
-    document.body.appendChild(modal);
-  }
-
-  async function createFile() {
-    const path = document.getElementById("newFilePath")?.value.trim();
-    const language = document.getElementById("newFileLanguage")?.value || "text";
-    if (!activeProject?.id || !path) {
-      showToast("File path required", "error");
-      return;
-    }
-    if (!/^[A-Za-z0-9_./-]+$/.test(path) || path.startsWith("/") || path.includes("..")) {
-      showToast("Use a safe relative file path", "error");
-      return;
-    }
-
-    try {
-      const exists = activeFiles.some(f => f.file_path.toLowerCase() === path.toLowerCase());
-      if (exists) throw new Error("A file with this name already exists.");
-
-      const starter = language === "html"
-        ? `<!doctype html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>${escapeHtml(activeProject.name)}</title>\n</head>\n<body>\n</body>\n</html>`
-        : language === "css" ? `/* ${path} */\n` : language === "javascript" ? `// ${path}\n` : "";
-
-      const { error } = await client.from("project_files").insert({
-        project_id: activeProject.id,
-        file_path: path,
-        file_content: starter,
-        language
-      });
-      if (error) throw error;
-
-      document.getElementById("bpFileModal")?.remove();
-      await loadProjectFiles();
-      renderFilesList();
-      showToast("File created", "success");
-    } catch (error) {
-      showToast(error.message || "Could not create file", "error");
-    }
-  }
-
-  async function deleteFile(fileId) {
-    const file = activeFiles.find(f => f.id === fileId);
-    if (!file) return;
-    if (file.file_path.toLowerCase() === "index.html") {
-      showToast("index.html cannot be deleted", "error");
-      return;
-    }
-    if (!confirm(`Delete ${file.file_path}?`)) return;
-
-    try {
-      const { error } = await client.from("project_files")
-        .delete().eq("id", fileId).eq("project_id", activeProject.id);
-      if (error) throw error;
-      await loadProjectFiles();
-      selectedFileId = null;
-      renderFilesList();
-      updatePreview();
-      showToast("File deleted", "success");
-    } catch (error) {
-      showToast(error.message || "Could not delete file", "error");
-    }
-  }
-
-  function showProjectInfo() {
-    if (!activeProject) return;
-    const old = document.getElementById("bpInfoModal");
-    if (old) old.remove();
-
-    const modal = document.createElement("div");
-    modal.id = "bpInfoModal";
-    modal.className = "bp-modal";
-    modal.innerHTML = `
-      <div class="bp-modal-card">
-        <h2 style="margin-top:0">${escapeHtml(activeProject.name)}</h2>
-        <p style="color:#64748b;line-height:1.6">${escapeHtml(activeProject.description || "No description")}</p>
-        <div class="bp-two-col">
-          <div><strong>Frontend</strong><div>${escapeHtml(activeProject.frontend || "-")}</div></div>
-          <div><strong>Backend</strong><div>${escapeHtml(activeProject.backend || "-")}</div></div>
-        </div>
-        <div class="bp-actions" style="margin-top:20px">
-          <button class="bp-btn" onclick="document.getElementById('bpInfoModal').remove()">Close</button>
-        </div>
-      </div>`;
-    document.body.appendChild(modal);
-  }
-
-  /* =========================================================
-     ADMIN PANEL
-     ========================================================= */
-
-  async function requireAdmin() {
-    await getSession();
-    await ensureProfile();
-    if (!activeUser || activeProfile?.role !== "admin") {
-      showToast("Admin access required", "error");
-      return false;
-    }
-    return true;
-  }
-
-  async function admin() {
-    if (!(await requireAdmin())) return;
-
-    root.innerHTML = `
-      <div class="bp-app">
-        <header class="bp-topbar">
-          <div class="bp-brand"><div class="bp-logo">⚡</div><span>Admin</span></div>
-          <div class="bp-actions">
-            <button class="bp-btn" onclick="window.BuildPilot.home()">← App</button>
-            <button class="bp-btn" onclick="window.BuildPilot.loadAdmin()">↻ Refresh</button>
-          </div>
-        </header>
-        <main class="bp-main">
-          <section class="bp-hero" style="padding-top:10px">
-            <h1 style="font-size:38px">Admin Panel</h1>
-            <p>Users, limits, projects and account status.</p>
-          </section>
-          <div id="adminContent"><div class="bp-card">Loading...</div></div>
-        </main>
-      </div>`;
-    await loadAdmin();
-  }
-
-  async function loadAdmin() {
-    if (!(await requireAdmin())) return;
-    const box = document.getElementById("adminContent");
-    if (!box) return;
-
-    try {
-      const [profilesRes, projectsRes] = await Promise.all([
-        client.from("profiles").select("id,full_name,role,status,plan,project_limit,github_file_limit").order("full_name"),
-        client.from("projects").select("id,user_id,name,status,created_at,public_enabled").order("created_at",{ascending:false}).limit(100)
-      ]);
-
-      if (profilesRes.error) throw profilesRes.error;
-      if (projectsRes.error) throw projectsRes.error;
-
-      const users = profilesRes.data || [];
-      const projects = projectsRes.data || [];
-
-      box.innerHTML = `
-        <div class="bp-builder-grid">
-          <div class="bp-card"><div class="bp-card-icon">👥</div><h3>${users.length}</h3><p>Total users</p></div>
-          <div class="bp-card"><div class="bp-card-icon">🧩</div><h3>${projects.length}</h3><p>Recent projects</p></div>
-          <div class="bp-card"><div class="bp-card-icon">🚫</div><h3>${users.filter(u=>u.status==="blocked").length}</h3><p>Blocked users</p></div>
-          <div class="bp-card"><div class="bp-card-icon">⭐</div><h3>${users.filter(u=>u.plan && u.plan!=="free").length}</h3><p>Paid/custom plans</p></div>
-        </div>
-
-        <section class="bp-section">
-          <div class="bp-card">
-            <h2 style="margin-top:0">Users</h2>
-            <div style="overflow:auto">
-              <table style="width:100%;border-collapse:collapse;font-size:13px">
-                <thead><tr>
-                  <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0">Name</th>
-                  <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0">Role</th>
-                  <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0">Status</th>
-                  <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0">Plan</th>
-                  <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0">Limits</th>
-                  <th style="padding:10px;border-bottom:1px solid #e2e8f0">Action</th>
-                </tr></thead>
-                <tbody>
-                  ${users.map(u=>`
-                    <tr>
-                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">${escapeHtml(u.full_name || u.id)}</td>
-                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">${escapeHtml(u.role || "user")}</td>
-                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">${escapeHtml(u.status || "active")}</td>
-                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">${escapeHtml(u.plan || "free")}</td>
-                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">${escapeHtml(String(u.project_limit ?? 5))} projects / ${escapeHtml(String(u.github_file_limit ?? 2))} files</td>
-                      <td style="padding:10px;border-bottom:1px solid #f1f5f9">
-                        <button class="bp-btn ${u.status==="blocked"?"bp-btn-success":"bp-btn-danger"}"
-                          onclick="window.BuildPilot.toggleUser('${escapeAttribute(u.id)}','${u.status==="blocked"?"active":"blocked"}')">
-                          ${u.status==="blocked"?"Reactivate":"Block"}
-                        </button>
-                      </td>
-                    </tr>`).join("")}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      `;
-    } catch (error) {
-      console.error(error);
-      box.innerHTML = `<div class="bp-card"><h3>Admin data unavailable</h3><p style="color:#b91c1c">${escapeHtml(error.message || "Could not load admin data")}</p><p style="color:#64748b;font-size:13px">Your Supabase RLS policies must allow admin users to read/update the required rows.</p></div>`;
-    }
-  }
-
-  async function toggleUser(userId, status) {
-    if (!(await requireAdmin())) return;
-    try {
-      const { error } = await client.from("profiles").update({ status }).eq("id", userId);
-      if (error) throw error;
-      showToast(status === "blocked" ? "User blocked" : "User reactivated", "success");
-      await loadAdmin();
-    } catch (error) {
-      showToast(error.message || "Could not update user", "error");
-    }
-  }
-
   /* =========================================================
      PUBLIC PROJECT
      ========================================================= */
@@ -4468,28 +4882,37 @@ async function saveFile(fileId) {
     publicId
   ) {
     root.innerHTML = `
-      <div class="bp-auth-page">
-
-        <div class="bp-auth-card"
+      <div
+        style="
+          position:fixed;
+          inset:0;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          background:#ffffff;
+          font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        "
+      >
+        <div
           style="
             text-align:center;
+            color:#475569;
           "
         >
-
-          <div class="bp-auth-logo">
-            ⚡
-          </div>
-
-          <h2 class="bp-auth-title">
-            Loading website
-          </h2>
-
-          <p class="bp-auth-subtitle">
-            Loading public project...
-          </p>
-
+          <div
+            style="
+              width:28px;
+              height:28px;
+              border:3px solid #e2e8f0;
+              border-top-color:#64748b;
+              border-radius:50%;
+              animation:bpPublicSpin .8s linear infinite;
+              margin:0 auto 14px;
+            "
+          ></div>
+          <div style="font-size:14px;font-weight:600;">Loading website…</div>
         </div>
-
+        <style>@keyframes bpPublicSpin{to{transform:rotate(360deg)}}</style>
       </div>
     `;
 
@@ -4537,10 +4960,9 @@ async function saveFile(fileId) {
       }
 
       /*
-       * IMPORTANT:
-       * Do NOT replace the complete document here.
-       * Keep BuildPilot wrapper and put the project
-       * into an iframe.
+       * PUBLIC MODE:
+       * Render only the client's generated website.
+       * The editor UI is never placed around it.
        */
       renderPublicPreview(
         data
@@ -4569,11 +4991,12 @@ async function saveFile(fileId) {
             </div>
 
             <h2 class="bp-auth-title">
-              Website unavailable
+              Project unavailable
             </h2>
 
             <p class="bp-auth-subtitle">
-              This website is not published or the link is invalid.
+              यह project publish नहीं किया गया है
+              या public link invalid है।
             </p>
 
             <div style="
@@ -4595,34 +5018,68 @@ async function saveFile(fileId) {
     }
   }
 
-function renderPublicPreview(data) {
-    const project = data?.project || {};
-    const html = String(data?.html || "");
+  function cleanPublicHTML(html) {
+    return String(html || "")
+      .replaceAll("Your BuildPilot AI project is ready.", "Your website is ready.")
+      .replaceAll("BuildPilot AI project is working!", "Your website is working!")
+      .replaceAll("Published with BuildPilot AI", "")
+      .replaceAll("Powered by BuildPilot AI", "")
+      .replaceAll("Powered by BuildPilot", "")
+      .replaceAll("Build with BuildPilot AI", "")
+      .replaceAll("BuildPilot AI", "")
+      .replaceAll("BuildPilot", "")
+      .replaceAll("Airo BETA", "")
+      .replaceAll("Airo", "");
+  }
+
+  function renderPublicPreview(
+    data
+  ) {
+    const html =
+      cleanPublicHTML(
+        data?.html || ""
+      );
+
+    /*
+     * PUBLIC MODE:
+     * The visitor must see ONLY the generated website.
+     * No BuildPilot/Airo header, no AI panel,
+     * no login UI, no editor controls and no ads.
+     */
+    document.title =
+      data?.project?.name ||
+      "Website";
 
     root.innerHTML = `
-      <div class="bp-public-shell">
-        <div id="publicProjectMount" class="bp-public-mount"></div>
+      <div class="bp-public-site-shell">
+        <iframe
+          id="publicPreviewFrame"
+          class="bp-public-site-frame"
+          title="Website Preview"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads allow-presentation"
+        ></iframe>
       </div>
     `;
 
-    const mount = document.getElementById("publicProjectMount");
-    if (!mount) return;
+    const iframe =
+      document.getElementById(
+        "publicPreviewFrame"
+      );
 
-    const iframe = document.createElement("iframe");
-    iframe.id = "publicPreviewFrame";
-    iframe.className = "bp-public-frame";
-    iframe.setAttribute(
-      "sandbox",
-      "allow-scripts allow-forms allow-modals allow-popups allow-downloads"
-    );
-    iframe.title = project.name || "Published website";
-    iframe.srcdoc = html || `
-      <!doctype html><html><body style="font-family:system-ui;padding:40px">
-      <h1>Website unavailable</h1><p>No published HTML was returned.</p>
-      </body></html>`;
-    mount.appendChild(iframe);
+    if (iframe) {
+      iframe.srcdoc =
+        html ||
+        `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Website</title>
+</head>
+<body></body>
+</html>`;
+    }
   }
-
 
   /* =========================================================
      AUTH STATE
@@ -4703,17 +5160,23 @@ function renderPublicPreview(data) {
     copyCurrentPublicLink:
       copyCurrentPublicLink,
 
-    clearChat,
-    openFileCreator,
-    createFile,
-    deleteFile,
-    handleAIImageUpload,
-    removeAIImage,
-    generateImage,
-    showProjectInfo,
-    admin,
-    loadAdmin,
-    toggleUser,
+    switchBuilderTab:
+      switchBuilderTab,
+
+    shareProject:
+      shareProject,
+
+    setPreviewWidth:
+      setPreviewWidth,
+
+    openPreviewNewTab:
+      openPreviewNewTab,
+
+    fullscreenPreview:
+      fullscreenPreview,
+
+    showToast:
+      showToast,
   };
 
   /* =========================================================

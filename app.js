@@ -26,6 +26,7 @@
 
   let activeUser = null;
   let activeSession = null;
+  let activeProfile = null;
 
   let activeProject = null;
   let activeFiles = [];
@@ -1246,394 +1247,6 @@
           #b91c1c;
       }
 
-
-      /* =====================================================
-         AIRO-STYLE BUILDER WORKSPACE
-         ===================================================== */
-
-      .bp-airo-workspace {
-        min-height: calc(100vh - 70px);
-        background: #f3f4f6;
-        padding: 0;
-      }
-
-      .bp-airo-topbar {
-        height: 48px;
-        background: #ffffff;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 14px;
-        gap: 12px;
-      }
-
-      .bp-airo-tabs {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .bp-airo-tab {
-        border: 0;
-        background: transparent;
-        color: #475569;
-        padding: 8px 13px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 13px;
-      }
-
-      .bp-airo-tab.active {
-        background: #111827;
-        color: #ffffff;
-      }
-
-      .bp-airo-top-actions {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-      }
-
-      .bp-icon-btn {
-        width: 34px;
-        height: 34px;
-        display: grid;
-        place-items: center;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        color: #334155;
-        border-radius: 9px;
-        cursor: pointer;
-      }
-
-      .bp-airo-banner {
-        height: 34px;
-        background: #6841ad;
-        color: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        font-size: 13px;
-        font-weight: 600;
-      }
-
-      .bp-airo-banner a {
-        color: #ffffff;
-        text-decoration: underline;
-      }
-
-      .bp-airo-body {
-        height: calc(100vh - 152px);
-        min-height: 600px;
-        display: grid;
-        grid-template-columns: 350px minmax(0, 1fr);
-        gap: 0;
-      }
-
-      .bp-airo-left {
-        background: #f8fafc;
-        border-right: 1px solid #dfe3e8;
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-        overflow: hidden;
-      }
-
-      .bp-airo-left-head {
-        min-height: 58px;
-        padding: 11px 14px;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        background: #ffffff;
-      }
-
-      .bp-airo-brand {
-        font-weight: 900;
-        font-size: 20px;
-        letter-spacing: -1px;
-      }
-
-      .bp-airo-brand span {
-        background: #6d49c7;
-        color: #ffffff;
-        border-radius: 4px;
-        padding: 2px 5px;
-        font-size: 9px;
-        vertical-align: middle;
-        letter-spacing: 0;
-      }
-
-      .bp-builder-tabs {
-        display: flex;
-        border-bottom: 1px solid #e5e7eb;
-        background: #ffffff;
-      }
-
-      .bp-builder-tab {
-        flex: 1;
-        border: 0;
-        background: transparent;
-        padding: 11px 8px;
-        color: #64748b;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 13px;
-      }
-
-      .bp-builder-tab.active {
-        color: #111827;
-        box-shadow: inset 0 -2px #111827;
-      }
-
-      .bp-builder-content {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .bp-builder-view {
-        display: none;
-        height: 100%;
-        min-height: 0;
-        flex-direction: column;
-      }
-
-      .bp-builder-view.active {
-        display: flex;
-      }
-
-      .bp-airo-chat-title {
-        padding: 16px 16px 7px;
-        font-size: 15px;
-        font-weight: 800;
-      }
-
-      .bp-airo-chat-subtitle {
-        padding: 0 16px 12px;
-        color: #64748b;
-        font-size: 12px;
-      }
-
-      .bp-chat-messages {
-        background: #f8fafc;
-      }
-
-      .bp-airo-input-wrap {
-        margin: 10px;
-        background: #ffffff;
-        border: 1px solid #d8dee8;
-        border-radius: 15px;
-        padding: 10px;
-        box-shadow: 0 3px 15px rgba(15,23,42,.06);
-      }
-
-      .bp-airo-input-wrap .bp-textarea {
-        border: 0;
-        box-shadow: none;
-        resize: none;
-        min-height: 92px;
-      }
-
-      .bp-airo-input-bottom {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        margin-top: 4px;
-      }
-
-      .bp-airo-input-tools {
-        display: flex;
-        gap: 5px;
-      }
-
-      .bp-mini-btn {
-        width: 31px;
-        height: 31px;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        border-radius: 8px;
-        cursor: pointer;
-      }
-
-      .bp-send-btn {
-        width: 34px;
-        height: 34px;
-        border: 0;
-        border-radius: 9px;
-        background: #c9b8e9;
-        color: #ffffff;
-        cursor: pointer;
-        font-size: 17px;
-      }
-
-      .bp-airo-files {
-        flex: 1;
-        overflow: auto;
-        padding: 10px;
-      }
-
-      .bp-airo-preview {
-        min-width: 0;
-        background: #e9eaec;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      .bp-airo-preview-head {
-        min-height: 44px;
-        background: #ffffff;
-        border-bottom: 1px solid #dfe3e8;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 10px;
-        gap: 8px;
-      }
-
-      .bp-device-tools {
-        display: flex;
-        gap: 5px;
-        align-items: center;
-      }
-
-      .bp-preview-canvas {
-        flex: 1;
-        min-height: 0;
-        padding: 10px;
-        overflow: auto;
-        display: flex;
-        justify-content: center;
-      }
-
-      .bp-preview-browser {
-        width: 100%;
-        max-width: 1500px;
-        height: 100%;
-        min-height: 560px;
-        background: #ffffff;
-        border: 1px solid #d9dde3;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 10px 35px rgba(15,23,42,.08);
-      }
-
-      .bp-preview-browser iframe {
-        width: 100%;
-        height: 100%;
-        min-height: 560px;
-        border: 0;
-        display: block;
-        background: #ffffff;
-      }
-
-      .bp-preview-floating {
-        position: absolute;
-        left: 50%;
-        bottom: 18px;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 2px;
-        padding: 4px;
-        background: rgba(255,255,255,.96);
-        border: 1px solid #d9dde3;
-        border-radius: 12px;
-        box-shadow: 0 8px 30px rgba(15,23,42,.14);
-        z-index: 10;
-      }
-
-      .bp-preview-relative {
-        position: relative;
-        flex: 1;
-        min-height: 0;
-        display: flex;
-      }
-
-      .bp-file-row-actions {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-      }
-
-      .bp-file-row {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-bottom: 3px;
-      }
-
-      .bp-file-row .bp-file {
-        flex: 1;
-      }
-
-      .bp-file-delete {
-        width: 28px;
-        height: 28px;
-        border: 0;
-        background: transparent;
-        color: #94a3b8;
-        border-radius: 7px;
-        cursor: pointer;
-      }
-
-      .bp-file-delete:hover {
-        background: #fee2e2;
-        color: #b91c1c;
-      }
-
-      /* Public site must be ONLY the generated website. */
-      .bp-public-site-shell {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        background: #ffffff;
-        overflow: hidden;
-      }
-
-      .bp-public-site-frame {
-        width: 100%;
-        height: 100%;
-        min-height: 100vh;
-        border: 0;
-        display: block;
-        background: #ffffff;
-      }
-
-
-      @media (max-width: 950px) {
-        .bp-airo-body {
-          grid-template-columns: 300px minmax(0,1fr);
-        }
-      }
-
-      @media (max-width: 760px) {
-        .bp-airo-body {
-          grid-template-columns: 1fr;
-          grid-template-rows: 48% 52%;
-        }
-
-        .bp-airo-left {
-          border-right: 0;
-          border-bottom: 1px solid #dfe3e8;
-        }
-
-        .bp-airo-banner {
-          font-size: 11px;
-          padding: 0 8px;
-          text-align: center;
-        }
-      }
-
       @media (max-width: 950px) {
         .bp-workspace-grid {
           grid-template-columns:
@@ -1785,56 +1398,228 @@
   }
 
   async function ensureProfile() {
-    if (!activeUser) {
-      return;
-    }
+    if (!activeUser) return null;
 
-    const {
-      data,
-      error,
-    } = await client
+    let { data, error } = await client
       .from("profiles")
-      .select("id")
-      .eq(
-        "id",
-        activeUser.id
+      .select(
+        "id,full_name,role,status,plan,project_limit,github_file_limit"
       )
+      .eq("id", activeUser.id)
       .maybeSingle();
 
     if (error) {
-      console.error(
-        "Profile check:",
-        error
-      );
+      console.error("Profile check:", error);
+      return null;
+    }
 
+    if (!data) {
+      const { error: insertError } = await client
+        .from("profiles")
+        .insert({
+          id: activeUser.id,
+          full_name:
+            activeUser.user_metadata?.full_name ||
+            activeUser.email ||
+            "User",
+          project_limit: 2,
+          github_file_limit: 2,
+          plan: "free",
+          status: "active",
+          role: "user"
+        });
+
+      if (insertError) {
+        console.error("Profile create:", insertError);
+        return null;
+      }
+
+      const refreshed = await client
+        .from("profiles")
+        .select(
+          "id,full_name,role,status,plan,project_limit,github_file_limit"
+        )
+        .eq("id", activeUser.id)
+        .single();
+
+      data = refreshed.data || null;
+    }
+
+    activeProfile = data;
+    return data;
+  }
+
+  async function getProjectLimitInfo() {
+    await ensureProfile();
+
+    const limit = Math.max(
+      1,
+      Number(activeProfile?.project_limit ?? 2)
+    );
+
+    const { count, error } = await client
+      .from("projects")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", activeUser.id);
+
+    if (error) throw error;
+
+    return {
+      used: Number(count || 0),
+      limit,
+      remaining: Math.max(0, limit - Number(count || 0))
+    };
+  }
+
+  function closeUpgradeRequest() {
+    const modal = document.getElementById("upgradeRequestModal");
+    if (modal) modal.remove();
+  }
+
+  async function submitUpgradeRequest() {
+    const name = document.getElementById("upgradeName")?.value.trim();
+    const mobile = document.getElementById("upgradeMobile")?.value.trim();
+    const email = document.getElementById("upgradeEmail")?.value.trim();
+    const requestedLimit = Number(
+      document.getElementById("upgradeLimit")?.value || 5
+    );
+    const message = document.getElementById("upgradeMessage")?.value.trim();
+    const button = document.getElementById("upgradeSubmitButton");
+
+    if (!name || !mobile || !email || !message) {
+      showToast("Please fill all fields", "error");
       return;
     }
 
-    if (data) {
+    if (!/^\d{10}$/.test(mobile)) {
+      showToast("Enter a valid 10 digit mobile number", "error");
       return;
     }
 
-    const {
-      error: insertError,
-    } = await client
-      .from("profiles")
-      .insert({
-        id: activeUser.id,
-
-        full_name:
-          activeUser
-            .user_metadata
-            ?.full_name ||
-          activeUser.email ||
-          "User",
-      });
-
-    if (insertError) {
-      console.error(
-        "Profile create:",
-        insertError
-      );
+    if (!Number.isFinite(requestedLimit) || requestedLimit <= 2) {
+      showToast("Requested limit must be greater than 2", "error");
+      return;
     }
+
+    setButtonLoading(button, true, "Sending request...");
+
+    try {
+      const { data: existing, error: existingError } = await client
+        .from("upgrade_requests")
+        .select("id")
+        .eq("user_id", activeUser.id)
+        .eq("request_type", "project_limit")
+        .eq("status", "pending")
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+
+      if (existing) {
+        showToast("You already have a pending request", "info");
+        closeUpgradeRequest();
+        return;
+      }
+
+      const { error } = await client
+        .from("upgrade_requests")
+        .insert({
+          user_id: activeUser.id,
+          request_type: "project_limit",
+          message,
+          status: "pending",
+          full_name: name,
+          mobile_number: mobile,
+          email,
+          requested_limit: requestedLimit
+        });
+
+      if (error) throw error;
+
+      closeUpgradeRequest();
+      showToast("Request sent to admin", "success");
+    } catch (error) {
+      console.error("Upgrade request:", error);
+      showToast(error.message || "Request failed", "error");
+    } finally {
+      setButtonLoading(button, false);
+    }
+  }
+
+  async function openUpgradeRequest() {
+    await ensureProfile();
+
+    if (!activeUser) {
+      renderAuth("login");
+      return;
+    }
+
+    const pending = await client
+      .from("upgrade_requests")
+      .select("id,status")
+      .eq("user_id", activeUser.id)
+      .eq("request_type", "project_limit")
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (pending.error) {
+      console.error(pending.error);
+    }
+
+    if (pending.data) {
+      showToast("Your request is already pending", "info");
+      return;
+    }
+
+    closeUpgradeRequest();
+
+    root.insertAdjacentHTML("beforeend", `
+      <div id="upgradeRequestModal" style="
+        position:fixed; inset:0; z-index:10000;
+        background:rgba(15,23,42,.65);
+        display:flex; align-items:center; justify-content:center;
+        padding:20px;
+      ">
+        <div style="
+          width:min(520px,100%); max-height:90vh; overflow:auto;
+          background:#fff; border-radius:20px; padding:24px;
+          box-shadow:0 25px 80px rgba(0,0,0,.25);
+        ">
+          <div style="display:flex;justify-content:space-between;gap:15px;align-items:center;">
+            <div>
+              <h2 style="margin:0;">Increase Project Limit</h2>
+              <p style="margin:6px 0 0;color:#64748b;">Admin will review your request.</p>
+            </div>
+            <button class="bp-btn" onclick="window.BuildPilot.closeUpgradeRequest()">✕</button>
+          </div>
+
+          <div class="bp-field" style="margin-top:20px;">
+            <label class="bp-label">Name</label>
+            <input id="upgradeName" class="bp-input" value="${escapeAttribute(activeProfile?.full_name || activeUser.email || "")}" />
+          </div>
+          <div class="bp-field">
+            <label class="bp-label">Mobile Number</label>
+            <input id="upgradeMobile" class="bp-input" inputmode="numeric" maxlength="10" placeholder="10 digit mobile number" />
+          </div>
+          <div class="bp-field">
+            <label class="bp-label">Email ID</label>
+            <input id="upgradeEmail" class="bp-input" type="email" value="${escapeAttribute(activeUser.email || "")}" />
+          </div>
+          <div class="bp-field">
+            <label class="bp-label">Requested Project Limit</label>
+            <input id="upgradeLimit" class="bp-input" type="number" min="3" value="5" />
+          </div>
+          <div class="bp-field">
+            <label class="bp-label">Description</label>
+            <textarea id="upgradeMessage" class="bp-textarea" rows="5" placeholder="Why do you need more projects?"></textarea>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button class="bp-btn" onclick="window.BuildPilot.closeUpgradeRequest()">Cancel</button>
+            <button id="upgradeSubmitButton" class="bp-btn bp-btn-primary" onclick="window.BuildPilot.submitUpgradeRequest()">Send Request</button>
+          </div>
+        </div>
+      </div>
+    `);
   }
 
   /* =========================================================
@@ -2397,14 +2182,11 @@
                 </p>
               </div>
 
-              <button
-                class="bp-btn"
-                onclick="
-                  window.BuildPilot.loadProjects()
-                "
-              >
-                ↻ Refresh
-              </button>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <span id="projectLimitBadge" style="padding:8px 11px;border-radius:999px;background:#eef2ff;color:#4338ca;font-size:12px;font-weight:700;">Projects: ...</span>
+                <button class="bp-btn" onclick="window.BuildPilot.openUpgradeRequest()">⬆ Request Limit</button>
+                <button class="bp-btn" onclick="window.BuildPilot.loadProjects()">↻ Refresh</button>
+              </div>
 
             </div>
 
@@ -2420,6 +2202,14 @@
     `;
 
     await loadProjects();
+
+    try {
+      const info = await getProjectLimitInfo();
+      const badge = document.getElementById("projectLimitBadge");
+      if (badge) badge.textContent = `Projects: ${info.used}/${info.limit}`;
+    } catch (error) {
+      console.error("Project limit:", error);
+    }
   }
 
   /* =========================================================
@@ -2660,7 +2450,7 @@ a professional header.
       </h1>
 
       <p>
-        Your website is ready.
+        Your BuildPilot AI project is ready.
       </p>
 
       <button id="helloButton">
@@ -2770,7 +2560,7 @@ body {
         function () {
 
           alert(
-            "Your website is working!"
+            "BuildPilot AI project is working!"
           );
 
         }
@@ -2978,6 +2768,14 @@ body {
         "error"
       );
 
+      return;
+    }
+
+    const limitInfo = await getProjectLimitInfo();
+
+    if (limitInfo.used >= limitInfo.limit) {
+      showToast(`Project limit reached (${limitInfo.limit})`, "error");
+      await openUpgradeRequest();
       return;
     }
 
@@ -3548,8 +3346,9 @@ body {
                 border-color:#475569;
                 margin-right:5px;
               "
-              onclick="window.BuildPilot.home()"
-              title="Projects"
+              onclick="
+                window.BuildPilot.home()
+              "
             >
               ←
             </button>
@@ -3568,6 +3367,7 @@ body {
           </div>
 
           <div class="bp-actions">
+
             <button
               class="bp-btn"
               style="
@@ -3575,7 +3375,9 @@ body {
                 color:white;
                 border-color:#475569;
               "
-              onclick="window.BuildPilot.refreshFiles()"
+              onclick="
+                window.BuildPilot.refreshFiles()
+              "
             >
               ↻ Refresh
             </button>
@@ -3583,7 +3385,9 @@ body {
             <button
               id="publishButton"
               class="bp-btn bp-btn-success"
-              onclick="window.BuildPilot.togglePublish()"
+              onclick="
+                window.BuildPilot.togglePublish()
+              "
             >
               ${
                 activeProject?.public_enabled
@@ -3591,239 +3395,137 @@ body {
                   : "🚀 Publish"
               }
             </button>
+
           </div>
 
         </header>
 
-        <main class="bp-airo-workspace">
+        <main class="bp-workspace">
 
-          <div class="bp-airo-topbar">
+          <div class="bp-workspace-grid">
 
-            <div class="bp-airo-tabs">
-              <button class="bp-airo-tab active" type="button">
-                ▣&nbsp; Website
-              </button>
+            <aside class="bp-sidebar">
 
-              <button
-                class="bp-airo-tab"
-                type="button"
-                onclick="window.BuildPilot.showToast('Domain settings are ready for the published site.')"
-              >
-                ◉&nbsp; Domain
-              </button>
-            </div>
+              <div class="bp-sidebar-header">
 
-            <div class="bp-airo-top-actions">
-              <button
-                class="bp-icon-btn"
-                type="button"
-                title="Share"
-                onclick="window.BuildPilot.shareProject()"
-              >
-                ⤴
-              </button>
+                <span>
+                  Project Files
+                </span>
 
-              <button
-                class="bp-btn bp-btn-success"
-                type="button"
-                onclick="window.BuildPilot.togglePublish()"
-              >
-                ${
-                  activeProject?.public_enabled
-                    ? "Published"
-                    : "Publish"
+                <span style="
+                  color:#64748b;
+                  font-size:12px;
+                ">
+                  ${
+                    activeFiles.length
+                  }
                 }
-              </button>
-            </div>
-
-          </div>
-
-          <div class="bp-airo-banner">
-            <span>●</span>
-            <span>
-              You currently have a free site. Pick a plan to use premium features.
-            </span>
-            <a href="#" onclick="event.preventDefault();window.BuildPilot.showToast('Plans will be available here.')">
-              View Plans →
-            </a>
-          </div>
-
-          <div class="bp-airo-body">
-
-            <aside class="bp-airo-left">
-
-              <div class="bp-airo-left-head">
-                <div class="bp-airo-brand">
-                  AI Builder
-                </div>
-
-                <button
-                  class="bp-icon-btn"
-                  type="button"
-                  title="Project files"
-                  onclick="window.BuildPilot.switchBuilderTab('files')"
-                >
-                  ☷
-                </button>
-              </div>
-
-              <div class="bp-builder-tabs">
-                <button
-                  id="builderAiTab"
-                  class="bp-builder-tab active"
-                  type="button"
-                  onclick="window.BuildPilot.switchBuilderTab('ai')"
-                >
-                  ✨ AI Builder
-                </button>
-
-                <button
-                  id="builderFilesTab"
-                  class="bp-builder-tab"
-                  type="button"
-                  onclick="window.BuildPilot.switchBuilderTab('files')"
-                >
-                  Files (${activeFiles.length})
-                </button>
-              </div>
-
-              <div class="bp-builder-content">
-
-                <section
-                  id="builderAiView"
-                  class="bp-builder-view active"
-                >
-
-                  <div class="bp-airo-chat-title">
-                    Continue building
-                  </div>
-
-                  <div class="bp-airo-chat-subtitle">
-                    Ask AI to change anything in your website.
-                  </div>
-
-                  <div
-                    id="chatMessages"
-                    class="bp-chat-messages"
-                    style="flex:1;overflow:auto;padding:10px 14px;"
-                  >
-                    <div class="bp-chat-message bp-chat-ai">
-                      <strong>AI Builder</strong>
-                      <div style="margin-top:5px;">
-                        Tell me what you want to change in your website.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="bp-airo-input-wrap">
-                    <form id="aiChatForm">
-
-                      <textarea
-                        id="aiInstruction"
-                        class="bp-textarea"
-                        rows="4"
-                        placeholder="Ask AI to edit your website..."
-                      ></textarea>
-
-                      <div class="bp-airo-input-bottom">
-                        <div class="bp-airo-input-tools">
-                          <button
-                            class="bp-mini-btn"
-                            type="button"
-                            title="Add file"
-                            onclick="window.BuildPilot.switchBuilderTab('files')"
-                          >
-                            ＋
-                          </button>
-
-                          <button
-                            class="bp-mini-btn"
-                            type="button"
-                            title="Voice"
-                            onclick="window.BuildPilot.showToast('Voice input can be connected here.')"
-                          >
-                            ♫
-                          </button>
-                        </div>
-
-                        <button
-                          id="aiSendButton"
-                          class="bp-send-btn"
-                          type="submit"
-                          title="Send"
-                        >
-                          ↑
-                        </button>
-                      </div>
-
-                    </form>
-                  </div>
-
-                </section>
-
-                <section
-                  id="builderFilesView"
-                  class="bp-builder-view"
-                >
-
-                  <div style="padding:12px 14px;border-bottom:1px solid #e5e7eb;background:#fff;display:flex;justify-content:space-between;align-items:center;">
-                    <strong>Project Files</strong>
-                    <button class="bp-mini-btn" type="button" onclick="window.BuildPilot.newFile()">＋</button>
-                  </div>
-
-                  <div
-                    id="filesList"
-                    class="bp-airo-files"
-                  ></div>
-
-                </section>
+                </span>
 
               </div>
+
+              <div
+                id="filesList"
+                class="bp-files"
+              ></div>
 
             </aside>
 
-            <section class="bp-airo-preview">
+            <section class="bp-workspace-main">
 
-              <div class="bp-airo-preview-head">
+              <div class="bp-panel">
 
-                <div style="font-size:13px;color:#64748b;font-weight:700;">
-                  Live Preview
+                <div class="bp-panel-header">
+
+                  <span>
+                    Live Preview
+                  </span>
+
+                  <button
+                    class="bp-btn"
+                    onclick="
+                      window.BuildPilot.updatePreview()
+                    "
+                  >
+                    Refresh
+                  </button>
+
                 </div>
 
-                <div class="bp-device-tools">
-                  <button class="bp-icon-btn" type="button" title="Refresh preview" onclick="window.BuildPilot.updatePreview()">
-                    ↻
-                  </button>
-
-                  <button class="bp-icon-btn" type="button" title="Desktop" onclick="window.BuildPilot.setPreviewWidth('desktop')">
-                    ▣
-                  </button>
-
-                  <button class="bp-icon-btn" type="button" title="Mobile" onclick="window.BuildPilot.setPreviewWidth('mobile')">
-                    ▯
-                  </button>
-
-                  <button class="bp-icon-btn" type="button" title="Open preview" onclick="window.BuildPilot.openPreviewNewTab()">
-                    ↗
-                  </button>
+                <div id="previewContent">
+                  Loading...
                 </div>
 
               </div>
 
-              <div class="bp-preview-relative">
-                <div
-                  id="previewContent"
-                  class="bp-preview-canvas"
-                >
-                  Loading...
+              <div class="bp-panel bp-chat">
+
+                <div class="bp-panel-header">
+                  <span>
+                    ✨ AI Builder
+                  </span>
                 </div>
 
-                <div class="bp-preview-floating">
-                  <button class="bp-icon-btn" type="button" title="Edit with AI" onclick="window.BuildPilot.switchBuilderTab('ai')">✦</button>
-                  <button class="bp-icon-btn" type="button" title="Refresh" onclick="window.BuildPilot.updatePreview()">↻</button>
-                  <button class="bp-icon-btn" type="button" title="Open" onclick="window.BuildPilot.openPreviewNewTab()">↗</button>
-                  <button class="bp-icon-btn" type="button" title="Fullscreen" onclick="window.BuildPilot.fullscreenPreview()">⛶</button>
+                <div
+                  id="chatMessages"
+                  class="bp-chat-messages"
+                >
+
+                  <div class="
+                    bp-chat-message
+                    bp-chat-ai
+                  ">
+                    <strong>
+                      BuildPilot AI
+                    </strong>
+
+                    <div style="
+                      margin-top:5px;
+                    ">
+                      Tell me what you want
+                      to change in your project.
+                    </div>
+                  </div>
+
                 </div>
+
+                <div class="bp-chat-input">
+
+                  <form id="aiChatForm">
+
+                    <textarea
+                      id="aiInstruction"
+                      class="bp-textarea"
+                      rows="4"
+                      placeholder="
+Example:
+Header ka color blue kar do
+
+Contact section add karo
+
+WhatsApp button laga do
+
+Logo header me add karo
+                      "
+                    ></textarea>
+
+                    <button
+                      id="aiSendButton"
+                      class="bp-btn bp-btn-primary"
+                      style="
+                        width:100%;
+                        margin-top:8px;
+                        padding:12px;
+                      "
+                      type="submit"
+                    >
+                      ✨ Build / Modify
+                    </button>
+
+                  </form>
+
+                </div>
+
               </div>
 
             </section>
@@ -3836,84 +3538,17 @@ body {
     `;
 
     document
-      .getElementById("aiChatForm")
+      .getElementById(
+        "aiChatForm"
+      )
       .addEventListener(
         "submit",
         submitAIInstruction
       );
 
     renderFilesList();
+
     updatePreview();
-  }
-
-  /* =========================================================
-     BUILDER TABS / PREVIEW CONTROLS
-     ========================================================= */
-
-  function switchBuilderTab(tab) {
-    const aiView = document.getElementById("builderAiView");
-    const filesView = document.getElementById("builderFilesView");
-    const aiTab = document.getElementById("builderAiTab");
-    const filesTab = document.getElementById("builderFilesTab");
-
-    if (!aiView || !filesView) return;
-
-    const ai = tab !== "files";
-
-    aiView.classList.toggle("active", ai);
-    filesView.classList.toggle("active", !ai);
-
-    aiTab?.classList.toggle("active", ai);
-    filesTab?.classList.toggle("active", !ai);
-  }
-
-  function shareProject() {
-    if (activeProject?.public_enabled && activeProject?.public_id) {
-      copyPublicLink(activeProject.public_id);
-      return;
-    }
-
-    showToast(
-      "Publish the site first to create a shareable public link.",
-      "info"
-    );
-  }
-
-  function setPreviewWidth(mode) {
-    const browser = document.querySelector(".bp-preview-browser");
-    if (!browser) return;
-
-    browser.style.maxWidth =
-      mode === "mobile" ? "430px" : "1500px";
-  }
-
-  function openPreviewNewTab() {
-    const html = buildPreviewHTML();
-    if (!html) {
-      showToast("Nothing to preview yet.", "error");
-      return;
-    }
-
-    const blob = new Blob([html], {
-      type: "text/html",
-    });
-
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank", "noopener,noreferrer");
-
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  }
-
-  function fullscreenPreview() {
-    const browser = document.querySelector(".bp-preview-browser");
-    if (!browser) return;
-
-    if (document.fullscreenElement) {
-      document.exitFullscreen?.();
-      return;
-    }
-
-    browser.requestFullscreen?.();
   }
 
   /* =========================================================
@@ -4882,37 +4517,28 @@ ${js}
     publicId
   ) {
     root.innerHTML = `
-      <div
-        style="
-          position:fixed;
-          inset:0;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          background:#ffffff;
-          font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-        "
-      >
-        <div
+      <div class="bp-auth-page">
+
+        <div class="bp-auth-card"
           style="
             text-align:center;
-            color:#475569;
           "
         >
-          <div
-            style="
-              width:28px;
-              height:28px;
-              border:3px solid #e2e8f0;
-              border-top-color:#64748b;
-              border-radius:50%;
-              animation:bpPublicSpin .8s linear infinite;
-              margin:0 auto 14px;
-            "
-          ></div>
-          <div style="font-size:14px;font-weight:600;">Loading website…</div>
+
+          <div class="bp-auth-logo">
+            ⚡
+          </div>
+
+          <h2 class="bp-auth-title">
+            BuildPilot Preview
+          </h2>
+
+          <p class="bp-auth-subtitle">
+            Loading public project...
+          </p>
+
         </div>
-        <style>@keyframes bpPublicSpin{to{transform:rotate(360deg)}}</style>
+
       </div>
     `;
 
@@ -4960,9 +4586,10 @@ ${js}
       }
 
       /*
-       * PUBLIC MODE:
-       * Render only the client's generated website.
-       * The editor UI is never placed around it.
+       * IMPORTANT:
+       * Do NOT replace the complete document here.
+       * Keep BuildPilot wrapper and put the project
+       * into an iframe.
        */
       renderPublicPreview(
         data
@@ -5018,67 +4645,29 @@ ${js}
     }
   }
 
-  function cleanPublicHTML(html) {
-    return String(html || "")
-      .replaceAll("Your BuildPilot AI project is ready.", "Your website is ready.")
-      .replaceAll("BuildPilot AI project is working!", "Your website is working!")
-      .replaceAll("Published with BuildPilot AI", "")
-      .replaceAll("Powered by BuildPilot AI", "")
-      .replaceAll("Powered by BuildPilot", "")
-      .replaceAll("Build with BuildPilot AI", "")
-      .replaceAll("BuildPilot AI", "")
-      .replaceAll("BuildPilot", "")
-      .replaceAll("AI Builder", "")
-      .replaceAll("Airo", "");
-  }
-
-  function renderPublicPreview(
-    data
-  ) {
-    const html =
-      cleanPublicHTML(
-        data?.html || ""
-      );
-
-    /*
-     * PUBLIC MODE:
-     * The visitor must see ONLY the generated website.
-     * No BuildPilot/Airo header, no AI panel,
-     * no login UI, no editor controls and no ads.
-     */
-    document.title =
-      data?.project?.name ||
-      "Website";
+  function renderPublicPreview(data) {
+    const html = String(data?.html || "");
 
     root.innerHTML = `
-      <div class="bp-public-site-shell">
+      <div id="publicWebsiteOnly" style="
+        position:fixed; inset:0; width:100vw; height:100vh;
+        margin:0; padding:0; background:#fff; overflow:hidden; z-index:999999;
+      ">
         <iframe
           id="publicPreviewFrame"
-          class="bp-public-site-frame"
-          title="Website Preview"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads allow-presentation"
+          title="Website"
+          style="display:block;width:100%;height:100%;min-height:100vh;border:0;margin:0;padding:0;background:#fff;"
+          sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-presentation"
         ></iframe>
       </div>
     `;
 
-    const iframe =
-      document.getElementById(
-        "publicPreviewFrame"
-      );
+    const iframe = document.getElementById("publicPreviewFrame");
+    if (!iframe) return;
 
-    if (iframe) {
-      iframe.srcdoc =
-        html ||
-        `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Website</title>
-</head>
-<body></body>
-</html>`;
-    }
+    iframe.srcdoc = html.trim()
+      ? html
+      : `<!doctype html><html><body style="margin:0;display:grid;place-items:center;min-height:100vh;font-family:system-ui"><h2>Website unavailable</h2></body></html>`;
   }
 
   /* =========================================================
@@ -5133,6 +4722,18 @@ ${js}
     loadProjects:
       loadProjects,
 
+    getProjectLimitInfo:
+      getProjectLimitInfo,
+
+    openUpgradeRequest:
+      openUpgradeRequest,
+
+    closeUpgradeRequest:
+      closeUpgradeRequest,
+
+    submitUpgradeRequest:
+      submitUpgradeRequest,
+
     openProject:
       openProject,
 
@@ -5159,24 +4760,6 @@ ${js}
 
     copyCurrentPublicLink:
       copyCurrentPublicLink,
-
-    switchBuilderTab:
-      switchBuilderTab,
-
-    shareProject:
-      shareProject,
-
-    setPreviewWidth:
-      setPreviewWidth,
-
-    openPreviewNewTab:
-      openPreviewNewTab,
-
-    fullscreenPreview:
-      fullscreenPreview,
-
-    showToast:
-      showToast,
   };
 
   /* =========================================================

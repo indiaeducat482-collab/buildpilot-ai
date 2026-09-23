@@ -2924,33 +2924,6 @@ body {
   async function createProject(
     projectType
   ) {
-    // PROJECT LIMIT
-const { count, error: countError } = await client
-  .from("projects")
-  .select("id", { count: "exact", head: true })
-  .eq("user_id", activeUser.id);
-
-if (countError) {
-  console.error("Project limit check:", countError);
-  showToast("Project limit check failed", "error");
-  return;
-}
-
-const projectLimit = activeProfile?.project_limit || 2;
-
-if (count >= projectLimit) {
-  showToast(
-    `Project limit reached. Your limit is ${projectLimit} projects.`,
-    "error"
-  );
-
-  alert(
-    `आपकी project limit ${projectLimit} है।\n\n` +
-    `नई project बनाने के लिए Admin से limit upgrade request करें।`
-  );
-
-  return;
-}
     await getSession();
 
     if (!activeUser) {

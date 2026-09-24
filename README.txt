@@ -1,18 +1,30 @@
-BUILD PILOT v4 FIX
+BUILD PILOT — CUSTOMER REQUEST + LIMIT REQUEST FIX
 
-1. Replace ONLY app.js with buildpilot-app-v4.js. Keep config.js and all other files.
-2. Run buildpilot-project-limit-customer-requests-v4.sql in Supabase SQL Editor. This adds explicit Data API grants + RLS for customer requests.
-3. Replace admin.html with buildpilot-admin-v4.html.
+Included:
+1. app.js
+   - Customer Requests now load correctly inside the project workspace Requests tab.
+   - Customer requests can be refreshed and marked as read.
+   - Public website Customer Request form saves into customer_requests.
+   - Project-limit request popup is smaller/compact and desktop/mobile friendly.
+   - Duplicate pending project-limit requests are prevented.
+   - No internal builder branding is inserted into the public project HTML.
 
-FIXES
-- Customer Request popup redesigned and compact.
-- Customer request POST no longer sends an invalid Bearer header with a publishable key.
-- Success message appears only after Supabase confirms the row was saved.
-- No “Request could not be sent.” message is used.
-- Customer requests continue to appear in the project Requests area and Admin dashboard.
-- Project-limit request UI/admin cards made smaller and cleaner.
-- 2-project default limit and existing upgrade approval flow preserved.
-- Do not delete/overwrite other repository files.
+2. admin.html
+   - Compact Project Limit Requests section.
+   - Approve / Reject requests.
+   - Customer Requests section for all received public-site requests.
+   - Mark customer requests as read.
 
-IMPORTANT
-The SQL must be run for the public customer form to have the required Data API privileges/RLS. GitHub deployment was not performed by this package.
+3. project-limit-customer-requests.sql
+   - Creates/updates customer_requests.
+   - Owner policies for receiving customer requests.
+   - Admin policies so admin can receive/manage customer requests.
+   - Project limit defaults to 2 for new profiles.
+   - Existing users with a non-null higher limit are preserved.
+
+IMPORTANT:
+- Run the SQL in Supabase SQL Editor before testing.
+- Replace only app.js and admin.html in your existing repository.
+- Keep your existing config.js.
+- Use only the Supabase publishable key in frontend files; never add a service-role key.
+- Do not delete the existing repository files.

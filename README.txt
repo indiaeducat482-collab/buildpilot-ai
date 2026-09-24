@@ -1,21 +1,17 @@
-BuildPilot AI V8 – UI + Limit Fix
+BuildPilot AI index.ts V9 fix
 
-FIXES:
-- Restores the Airo-style Create a new project modal styling.
-- Adds New Website / Rebuild Site / Other tabs to the create modal.
-- Keeps the Search projects bar on My Projects.
-- Keeps default 2-project limit and upgrade request flow.
-- Keeps Admin Approve / Reject flow.
-- Makes Request more projects modal compact.
-- Keeps customer request receiving.
-- Removes Authorization Bearer header from public customer request POST.
-- Public customer request shows success after successful insert.
+Fixes:
+- Uses current Gemini model order: configured model, gemini-3.8-flash, gemini-3.5-flash-lite, gemini-2.5-flash-lite.
+- Tries the next model on 400/401/403/404 model-access/config errors.
+- Retries transient 408/429/5xx errors.
+- Default project limit is 2 when profiles.project_limit is null.
+- Default generation model recorded is gemini-3.8-flash.
+- Returns detailed provider error information instead of a generic failure.
+- Keeps existing Supabase auth, project limit, file limit, generation saving, and project modification logic.
 
-INSTALL:
-1. Replace only app.js in GitHub.
-2. Keep existing config.js, index.html and styles.css.
-3. Run project-limit-v8.sql in Supabase SQL Editor.
-4. Keep admin.html or replace it with this version if needed.
-5. Hard refresh the site with Ctrl+F5.
-
-Do not delete the existing repository files.
+Important:
+1. Replace only the deployed Edge Function index.ts for buildpilot-generate.
+2. Keep your existing Supabase secrets.
+3. Make sure GEMINI_API_KEY is set.
+4. If GEMINI_MODEL is set, it will be tried first.
+5. After deployment, test Generate again.

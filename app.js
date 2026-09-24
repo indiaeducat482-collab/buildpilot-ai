@@ -1365,14 +1365,36 @@ document.head.appendChild(
       .bp-airo-new-title{text-align:center;margin-bottom:18px}.bp-airo-new-title h2{font-size:32px;margin:0 0 7px}.bp-airo-new-title p,.bp-airo-upgrade-modal p,.bp-airo-requests-modal>p{color:#64748b;margin:0}
       .bp-airo-modal-close{position:absolute;right:18px;top:18px;width:38px;height:38px;border:0;background:#f3f4f6;border-radius:9px;font-size:24px;cursor:pointer}
       .bp-airo-prompt-box{border:2px solid #c8b9df;border-radius:20px;padding:14px;box-shadow:0 0 0 5px rgba(109,73,199,.05),0 16px 35px rgba(15,23,42,.09)}.bp-airo-prompt-box textarea{width:100%;min-height:125px;border:0;outline:0;resize:vertical;font-size:17px;box-sizing:border-box}.bp-airo-prompt-actions{display:flex;justify-content:flex-end;gap:7px}.bp-airo-icon-btn{border:0;background:#fff;font-size:20px;padding:8px;cursor:pointer}.bp-airo-generate{border:0;border-radius:12px;background:#b9a5d7;color:#fff;font-weight:800;padding:12px 24px;cursor:pointer}
-      .bp-airo-ideas-title{text-align:center;color:#8a8f98;font-size:13px;margin:22px 0 12px}.bp-airo-pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}.bp-airo-pills button{border:1px solid #6d49c7;background:#fff;border-radius:999px;padding:7px 13px;cursor:pointer}.bp-airo-pills.small button{background:#f7f4fd;border:0;font-size:12px}.bp-airo-ideas-caption{text-align:center;color:#8a8f98;font-size:12px;margin:20px 0 8px}.bp-airo-new-fields,.bp-airo-upgrade-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:20px}.bp-airo-new-fields label,.bp-airo-upgrade-grid label,.bp-airo-upgrade-modal>label{display:block;font-size:12px;font-weight:800;color:#475569;margin-bottom:5px}.bp-airo-limit-note{margin-top:12px;background:#f8fafc;border-radius:10px;padding:10px;color:#64748b;font-size:12px}.bp-airo-upgrade-modal{max-width:650px}.bp-small-upgrade-modal{width:min(470px,100%);padding:20px;border-radius:18px}.bp-small-close{width:32px;height:32px;right:12px;top:12px;font-size:20px}.bp-small-upgrade-head{display:flex;align-items:center;gap:10px;padding-right:28px}.bp-small-upgrade-icon{width:34px;height:34px;border-radius:9px;background:#f0eafa;color:#6742a9;display:grid;place-items:center;font-weight:900}.bp-small-upgrade-head h2{margin:0;font-size:18px}.bp-small-upgrade-head p{margin:3px 0 0!important;font-size:11px!important}.bp-small-upgrade-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}.bp-small-upgrade-fields label,.bp-small-upgrade-label{display:block;font-size:10px;font-weight:800;color:#475569;margin:0 0 4px}.bp-small-upgrade-fields .bp-input{padding:9px 10px;font-size:12px;border-radius:9px}.bp-small-upgrade-label{margin-top:11px}.bp-small-upgrade-textarea{min-height:70px;padding:9px 10px;font-size:12px;border-radius:9px}.bp-small-upgrade-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:11px}.bp-small-upgrade-actions .bp-airo-btn{padding:8px 11px;font-size:11px}.bp-airo-upgrade-grid{grid-template-columns:1fr 1fr}.bp-airo-upgrade-modal>label{margin-top:15px}.bp-airo-upgrade-modal .bp-textarea{width:100%;box-sizing:border-box}.bp-airo-upgrade-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.bp-airo-request-card{border:1px solid #e5e7eb;border-radius:13px;padding:13px;margin-top:9px}.bp-airo-request-card>div:first-child{display:flex;justify-content:space-between;gap:8px}.bp-airo-request-card span{font-size:11px;color:#94a3b8}.bp-airo-request-card p{font-size:12px;color:#64748b}.bp-compact-request-card{border:1px solid #e7e8ec;border-radius:10px;background:#fff;padding:10px;margin-bottom:7px}.bp-compact-request-card.is-new{border-color:#c9b7e5;background:#fcfaff}.bp-compact-request-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.bp-compact-request-top strong{font-size:12px}.bp-compact-request-top>span{font-size:9px;color:#9aa2ad;white-space:nowrap}.bp-new-badge{display:inline-block!important;margin-left:5px;padding:2px 5px;border-radius:999px;background:#eee7fb;color:#6742a9!important;font-size:8px!important;font-weight:800}.bp-compact-request-contact{margin-top:4px;font-size:10px;color:#64748b;word-break:break-word}.bp-compact-request-message{margin-top:6px;font-size:11px;color:#334155;line-height:1.45;white-space:pre-wrap}.bp-compact-request-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:7px;color:#94a3b8;font-size:9px}.bp-request-read-btn{border:1px solid #ddd6eb;background:#faf8ff;color:#6742a9;border-radius:7px;padding:4px 7px;font-size:9px;cursor:pointer}.bp-airo-error{background:#fef2f2;color:#b91c1c;padding:12px;border-radius:10px;margin-top:12px}
-      @media(max-width:700px){.bp-airo-new-project-modal,.bp-airo-upgrade-modal,.bp-airo-requests-modal{padding:22px}.bp-airo-new-fields,.bp-airo-upgrade-grid,.bp-small-upgrade-fields{grid-template-columns:1fr}}
+      .bp-airo-ideas-title{text-align:center;color:#8a8f98;font-size:13px;margin:22px 0 12px}.bp-airo-pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}.bp-airo-pills button{border:1px solid #6d49c7;background:#fff;border-radius:999px;padding:7px 13px;cursor:pointer}.bp-airo-pills.small button{background:#f7f4fd;border:0;font-size:12px}.bp-airo-ideas-caption{text-align:center;color:#8a8f98;font-size:12px;margin:20px 0 8px}.bp-airo-new-fields,.bp-airo-upgrade-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:20px}.bp-airo-new-fields label,.bp-airo-upgrade-grid label,.bp-airo-upgrade-modal>label{display:block;font-size:12px;font-weight:800;color:#475569;margin-bottom:5px}.bp-airo-limit-note{margin-top:12px;background:#f8fafc;border-radius:10px;padding:10px;color:#64748b;font-size:12px}.bp-airo-upgrade-modal{max-width:650px}.bp-small-upgrade-modal{width:min(390px,100%);padding:16px;border-radius:16px}.bp-small-close{width:32px;height:32px;right:12px;top:12px;font-size:20px}.bp-small-upgrade-head{display:flex;align-items:center;gap:10px;padding-right:28px}.bp-small-upgrade-icon{width:34px;height:34px;border-radius:9px;background:#f0eafa;color:#6742a9;display:grid;place-items:center;font-weight:900}.bp-small-upgrade-head h2{margin:0;font-size:16px}.bp-small-upgrade-head p{margin:3px 0 0!important;font-size:11px!important}.bp-small-upgrade-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:12px}.bp-small-upgrade-fields label,.bp-small-upgrade-label{display:block;font-size:10px;font-weight:800;color:#475569;margin:0 0 4px}.bp-small-upgrade-fields .bp-input{padding:9px 10px;font-size:12px;border-radius:9px}.bp-small-upgrade-label{margin-top:11px}.bp-small-upgrade-textarea{min-height:52px;padding:8px 9px;font-size:11px;border-radius:8px}.bp-small-upgrade-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:11px}.bp-small-upgrade-actions .bp-airo-btn{padding:8px 11px;font-size:11px}.bp-airo-upgrade-grid{grid-template-columns:1fr 1fr}.bp-airo-upgrade-modal>label{margin-top:15px}.bp-airo-upgrade-modal .bp-textarea{width:100%;box-sizing:border-box}.bp-airo-upgrade-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.bp-airo-request-card{border:1px solid #e5e7eb;border-radius:13px;padding:13px;margin-top:9px}.bp-airo-request-card>div:first-child{display:flex;justify-content:space-between;gap:8px}.bp-airo-request-card span{font-size:11px;color:#94a3b8}.bp-airo-request-card p{font-size:12px;color:#64748b}.bp-compact-request-card{border:1px solid #e7e8ec;border-radius:10px;background:#fff;padding:10px;margin-bottom:7px}.bp-compact-request-card.is-new{border-color:#c9b7e5;background:#fcfaff}.bp-compact-request-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.bp-compact-request-top strong{font-size:12px}.bp-compact-request-top>span{font-size:9px;color:#9aa2ad;white-space:nowrap}.bp-new-badge{display:inline-block!important;margin-left:5px;padding:2px 5px;border-radius:999px;background:#eee7fb;color:#6742a9!important;font-size:8px!important;font-weight:800}.bp-compact-request-contact{margin-top:4px;font-size:10px;color:#64748b;word-break:break-word}.bp-compact-request-message{margin-top:6px;font-size:11px;color:#334155;line-height:1.45;white-space:pre-wrap}.bp-compact-request-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:7px;color:#94a3b8;font-size:9px}.bp-request-read-btn{border:1px solid #ddd6eb;background:#faf8ff;color:#6742a9;border-radius:7px;padding:4px 7px;font-size:9px;cursor:pointer}.bp-airo-error{background:#fef2f2;color:#b91c1c;padding:12px;border-radius:10px;margin-top:12px}
+      @media(max-width:700px){.bp-airo-new-project-modal,.bp-airo-upgrade-modal,.bp-airo-requests-modal{padding:18px}.bp-airo-new-fields,.bp-airo-upgrade-grid,.bp-small-upgrade-fields{grid-template-columns:1fr}}
     `;
 
     return;
   }
 
   injectStyles();
+
+  // Extra global styles for dynamically-created modals.
+  const bpExtraStyle = document.createElement("style");
+  bpExtraStyle.textContent = `
+    .bp-airo-modal-overlay{position:fixed;inset:0;z-index:5000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto;backdrop-filter:blur(5px)}
+    .bp-small-upgrade-modal{position:relative;width:min(350px,calc(100vw - 28px));background:#fff;border:1px solid #ece7f5;border-radius:18px;padding:16px;box-sizing:border-box;box-shadow:0 24px 70px rgba(15,23,42,.22);font-family:system-ui,-apple-system,sans-serif}
+    .bp-small-close{position:absolute;right:10px;top:10px;width:28px;height:28px;border:0;background:#f5f3f8;border-radius:8px;color:#475569;font-size:18px;line-height:1;cursor:pointer}
+    .bp-small-upgrade-head{display:flex;align-items:center;gap:9px;padding-right:28px}
+    .bp-small-upgrade-icon{width:32px;height:32px;border-radius:9px;background:#f0eafa;color:#6742a9;display:grid;place-items:center;font-weight:900}
+    .bp-small-upgrade-head h2{margin:0;font-size:15px;color:#111827}
+    .bp-small-upgrade-head p{margin:3px 0 0!important;font-size:10px!important;color:#64748b!important}
+    .bp-small-upgrade-fields{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+    .bp-small-upgrade-fields label,.bp-small-upgrade-label{display:block;font-size:9px;font-weight:800;color:#475569;margin:0 0 3px}
+    .bp-small-upgrade-fields .bp-input,.bp-small-upgrade-textarea{width:100%;box-sizing:border-box;padding:8px 9px!important;font-size:11px!important;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;outline:none}
+    .bp-small-upgrade-fields .bp-input:focus,.bp-small-upgrade-textarea:focus{border-color:#a78bfa;background:#fff;box-shadow:0 0 0 2px rgba(139,92,246,.10)}
+    .bp-small-upgrade-label{margin-top:9px}
+    .bp-small-upgrade-textarea{min-height:42px;resize:vertical}
+    .bp-small-upgrade-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:8px}
+    .bp-small-upgrade-actions .bp-airo-btn{padding:7px 10px!important;font-size:10px!important;border-radius:8px}
+    @media(max-width:520px){.bp-top-search{max-width:none;flex:1;margin:0 7px}.bp-airo-breadcrumb{min-width:auto}.bp-airo-top-actions .bp-airo-btn:not(.primary){display:none}.bp-small-upgrade-fields{grid-template-columns:1fr}.bp-small-upgrade-modal{width:min(360px,calc(100vw - 20px));padding:14px}}
+  `;
+  document.head.appendChild(bpExtraStyle);
 
   const client =
     window.supabase.createClient(
@@ -1920,7 +1942,13 @@ document.head.appendChild(
         .bp-airo-logout{width:100%;border:1px solid #ddd;background:#fff;border-radius:8px;padding:9px;cursor:pointer}
         .bp-airo-main{margin-left:248px;width:calc(100% - 248px);min-height:100vh}
         .bp-airo-top{height:68px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;z-index:10}
-        .bp-airo-breadcrumb{font-size:14px;color:#777}.bp-airo-breadcrumb strong{color:#111}
+        .bp-airo-breadcrumb{font-size:14px;color:#777;min-width:130px}.bp-airo-breadcrumb strong{color:#111}
+        .bp-top-search{flex:1;max-width:430px;position:relative;margin:0 22px}
+        .bp-top-search input{width:100%;height:38px;box-sizing:border-box;border:1px solid #e2e4e8;background:#f8f8f9;border-radius:12px;padding:0 42px 0 38px;font-size:13px;color:#171717;outline:none;transition:.15s}
+        .bp-top-search input:focus{background:#fff;border-color:#b7a0d8;box-shadow:0 0 0 3px rgba(109,73,199,.09)}
+        .bp-top-search .bp-search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#7a7f87;font-size:15px;pointer-events:none}
+        .bp-top-search .bp-search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#8b9098;font-size:16px;cursor:pointer;display:none;padding:3px 6px}
+        .bp-top-search .bp-search-clear.show{display:block}
         .bp-airo-top-actions{display:flex;gap:9px;align-items:center}
         .bp-airo-btn{border:1px solid #ddd;background:#fff;color:#222;border-radius:8px;padding:9px 13px;font-size:13px;cursor:pointer}
         .bp-airo-btn:hover{background:#f5f5f5}.bp-airo-btn.primary{background:#111;color:#fff;border-color:#111}.bp-airo-btn.primary:hover{background:#292929}
@@ -1944,7 +1972,7 @@ document.head.appendChild(
         .bp-airo-project-body{padding:15px}.bp-airo-project-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.bp-airo-project-name{font-size:15px;font-weight:650;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bp-airo-menu{border:0;background:transparent;color:#888;font-size:18px;cursor:pointer;line-height:1}
         .bp-airo-description{font-size:12px;color:#777;line-height:1.45;margin:7px 0 13px;min-height:34px}.bp-airo-meta{display:flex;align-items:center;justify-content:space-between;color:#999;font-size:11px}.bp-airo-open{border:0;background:#111;color:#fff;border-radius:7px;padding:7px 11px;font-size:11px;cursor:pointer}.bp-airo-public{color:#17803d}
         .bp-airo-empty{grid-column:1/-1;background:#fff;border:1px dashed #d8d8d8;border-radius:13px;text-align:center;padding:55px 20px;color:#777}.bp-airo-empty-icon{font-size:30px;margin-bottom:8px}.bp-airo-empty h3{color:#222;margin:0 0 5px;font-size:15px}.bp-airo-empty p{margin:0;font-size:12px}
-        @media(max-width:800px){.bp-airo-sidebar{width:62px}.bp-airo-logo span,.bp-airo-nav button span,.bp-airo-sidebar-bottom{display:none}.bp-airo-logo{justify-content:center;padding:0}.bp-airo-nav button{text-align:center;font-size:0}.bp-airo-nav button:before{content:"•";font-size:18px}.bp-airo-main{margin-left:62px;width:calc(100% - 62px)}.bp-airo-content{padding:25px 16px}.bp-airo-heading{align-items:flex-start;flex-direction:column}.bp-airo-top{padding:0 16px}}
+        @media(max-width:800px){.bp-top-search{max-width:260px;margin:0 10px}.bp-airo-sidebar{width:62px}.bp-airo-logo span,.bp-airo-nav button span,.bp-airo-sidebar-bottom{display:none}.bp-airo-logo{justify-content:center;padding:0}.bp-airo-nav button{text-align:center;font-size:0}.bp-airo-nav button:before{content:"•";font-size:18px}.bp-airo-main{margin-left:62px;width:calc(100% - 62px)}.bp-airo-content{padding:25px 16px}.bp-airo-heading{align-items:flex-start;flex-direction:column}.bp-airo-top{padding:0 16px}}
       </style>
 
       <div class="bp-airo-page">
@@ -1964,6 +1992,11 @@ document.head.appendChild(
         <div class="bp-airo-main">
           <header class="bp-airo-top">
             <div class="bp-airo-breadcrumb"><strong>My Projects</strong></div>
+            <div class="bp-top-search">
+              <span class="bp-search-icon">⌕</span>
+              <input id="bpProjectSearch" type="search" autocomplete="off" placeholder="Search projects..." oninput="window.BuildPilot.filterProjects(this.value)">
+              <button id="bpProjectSearchClear" class="bp-search-clear" type="button" onclick="window.BuildPilot.clearProjectSearch()">×</button>
+            </div>
             <div class="bp-airo-top-actions">
               <button class="bp-airo-btn" onclick="window.BuildPilot.loadProjects()">↻ Refresh</button>
               <button class="bp-airo-btn primary" onclick="window.BuildPilot.startProject('website')">＋ Create project</button>
@@ -2724,6 +2757,7 @@ body {
       return;
     }
 
+    window.__bpProjects = data || [];
     const projectLimit = Math.max(1, Number(activeProfile?.project_limit ?? 2));
     const limitBadge = document.querySelector(".bp-airo-count");
     if (limitBadge) limitBadge.textContent = `${data?.length || 0} / ${projectLimit} projects used`;
@@ -2738,7 +2772,17 @@ body {
       return;
     }
 
-    list.innerHTML = data.map(project => {
+    renderProjectCards(data);
+  }
+
+  function renderProjectCards(projects) {
+    const list = document.getElementById("projectsList");
+    if (!list) return;
+    if (!projects?.length) {
+      list.innerHTML = `<div class="bp-airo-empty"><div class="bp-airo-empty-icon">⌕</div><h3>No matching projects</h3><p>Try another project name or clear the search.</p></div>`;
+      return;
+    }
+    list.innerHTML = projects.map(project => {
       const status = project.status || "draft";
       const date = project.created_at ? new Date(project.created_at).toLocaleDateString() : "";
       return `
@@ -2763,12 +2807,29 @@ body {
               <span>${escapeHtml(date)} ${project.public_enabled ? '<b class="bp-airo-public"> · Public</b>' : ''}</span>
               <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
                 <button class="bp-airo-open" onclick="window.BuildPilot.openProject('${escapeAttribute(project.id)}')">Open →</button>
-                <button class="bp-airo-btn" style="padding:7px 10px;font-size:11px" onclick="window.BuildPilot.openCustomerRequests('${escapeAttribute(project.id)}')">Customer Requests</button>
+                ${project.public_enabled && project.public_id ? `<button class="bp-airo-btn" style="padding:7px 10px;font-size:11px" onclick="window.open('${escapeAttribute(createPublicLink(project.public_id))}','_blank','noopener')">Public ↗</button>` : ''}
+                <button class="bp-airo-btn" style="padding:7px 10px;font-size:11px" onclick="window.BuildPilot.openCustomerRequests('${escapeAttribute(project.id)}')">Requests</button>
               </div>
             </div>
           </div>
         </article>`;
     }).join("");
+  }
+
+  function filterProjects(value) {
+    const q = String(value || "").trim().toLowerCase();
+    const clear = document.getElementById("bpProjectSearchClear");
+    if (clear) clear.classList.toggle("show", !!q);
+    const projects = window.__bpProjects || [];
+    if (!q) { renderProjectCards(projects); return; }
+    const filtered = projects.filter(p => [p.name, p.description, p.status, p.frontend, p.backend].some(v => String(v || "").toLowerCase().includes(q)));
+    renderProjectCards(filtered);
+  }
+
+  function clearProjectSearch() {
+    const input = document.getElementById("bpProjectSearch");
+    if (input) { input.value = ""; input.focus(); }
+    filterProjects("");
   }
 
   /* =========================================================
@@ -4126,232 +4187,122 @@ ${js}
 
   function addCustomerRequestWidget(html, projectId) {
     const widget = `<style>
-#bpCustomerRequestButton{position:fixed;right:22px;bottom:22px;z-index:2147483000;border:0;border-radius:999px;padding:13px 18px;background:#111827;color:#fff;font:700 14px system-ui;box-shadow:0 10px 30px rgba(0,0,0,.2);cursor:pointer}#bpCustomerRequestModal{display:none;position:fixed;inset:0;z-index:2147483001;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:18px}#bpCustomerRequestModal .box{width:min(440px,100%);background:#fff;border-radius:18px;padding:22px;box-shadow:0 25px 80px rgba(0,0,0,.25);font-family:system-ui}#bpCustomerRequestModal input,#bpCustomerRequestModal textarea{width:100%;box-sizing:border-box;padding:11px;margin:6px 0 10px;border:1px solid #d1d5db;border-radius:10px}#bpCustomerRequestModal .row{display:flex;justify-content:flex-end;gap:8px}#bpCustomerRequestSubmit{background:#111827;color:#fff;border:0;border-radius:9px;padding:10px 14px}</style>
-<button id="bpCustomerRequestButton">Customer Request</button><div id="bpCustomerRequestModal"><div class="box"><h3>Send a request</h3><p>Fill your details and the project owner will receive your request.</p><input id="bpReqName" placeholder="Your name"><input id="bpReqMobile" placeholder="Mobile number"><input id="bpReqEmail" type="email" placeholder="Email"><textarea id="bpReqMessage" rows="4" placeholder="How can we help?"></textarea><div class="row"><button onclick="document.getElementById('bpCustomerRequestModal').style.display='none'">Cancel</button><button id="bpCustomerRequestSubmit">Send Request</button></div></div></div><script>(function(){var pid=${JSON.stringify(String(projectId||''))},url=${JSON.stringify(SUPABASE_URL)},key=${JSON.stringify(SUPABASE_KEY)};var b=document.getElementById('bpCustomerRequestButton'),m=document.getElementById('bpCustomerRequestModal');b.onclick=function(){m.style.display='flex'};document.getElementById('bpCustomerRequestSubmit').onclick=async function(){var n=document.getElementById('bpReqName').value.trim(),mo=document.getElementById('bpReqMobile').value.trim(),e=document.getElementById('bpReqEmail').value.trim(),msg=document.getElementById('bpReqMessage').value.trim();if(!n||!msg){alert('Name and message are required.');return}var btn=this;btn.disabled=true;btn.textContent='Sending...';try{var r=await fetch(url+'/rest/v1/customer_requests',{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({project_id:pid,customer_name:n,mobile_number:mo,email:e,message:msg,status:'new'})});if(!r.ok)throw new Error(await r.text());alert('Request sent successfully.');m.style.display='none'}catch(err){alert('Request could not be sent.')}finally{btn.disabled=false;btn.textContent='Send Request'}}})();</script>`;
+#bpCustomerRequestButton{position:fixed;right:20px;bottom:20px;z-index:2147483000;border:0;border-radius:12px;padding:11px 15px;background:linear-gradient(135deg,#111827,#334155);color:#fff;font:700 13px system-ui;box-shadow:0 12px 28px rgba(15,23,42,.22);cursor:pointer;transition:.2s}
+#bpCustomerRequestButton:hover{transform:translateY(-1px);box-shadow:0 16px 34px rgba(15,23,42,.28)}
+#bpCustomerRequestModal{display:none;position:fixed;inset:0;z-index:2147483001;background:rgba(15,23,42,.46);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px}
+#bpCustomerRequestModal .box{width:min(390px,100%);background:#fff;border:1px solid rgba(255,255,255,.7);border-radius:20px;padding:20px;box-shadow:0 30px 90px rgba(15,23,42,.28);font-family:system-ui;color:#0f172a}
+#bpCustomerRequestModal .head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+#bpCustomerRequestModal .icon{width:36px;height:36px;border-radius:11px;background:#f1ecfb;color:#6842a8;display:grid;place-items:center;font-weight:900}
+#bpCustomerRequestModal h3{margin:0;font-size:17px}
+#bpCustomerRequestModal .sub{margin:3px 0 0;color:#64748b;font-size:11px;line-height:1.4}
+#bpCustomerRequestModal input,#bpCustomerRequestModal textarea{width:100%;box-sizing:border-box;padding:10px 11px;margin:0 0 8px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;outline:0;font:12px system-ui;color:#0f172a}
+#bpCustomerRequestModal input:focus,#bpCustomerRequestModal textarea:focus{border-color:#a78bfa;background:#fff;box-shadow:0 0 0 3px rgba(139,92,246,.10)}
+#bpCustomerRequestModal textarea{resize:vertical;min-height:78px}
+#bpCustomerRequestModal .row{display:flex;justify-content:flex-end;gap:7px;margin-top:3px}
+#bpCustomerRequestModal .cancel{background:#fff;color:#475569;border:1px solid #e2e8f0;border-radius:9px;padding:9px 12px;font-size:11px;font-weight:700;cursor:pointer}
+#bpCustomerRequestSubmit{background:#111827;color:#fff;border:0;border-radius:9px;padding:9px 13px;font-size:11px;font-weight:800;cursor:pointer}
+#bpCustomerRequestSubmit:disabled{opacity:.65;cursor:wait}
+#bpCustomerRequestStatus{display:none;margin:0 0 9px;padding:8px 10px;border-radius:9px;font-size:11px;line-height:1.35}
+#bpCustomerRequestStatus.ok{display:block;background:#ecfdf5;color:#166534}
+#bpCustomerRequestStatus.err{display:block;background:#fef2f2;color:#b91c1c}
+</style>
+<button id="bpCustomerRequestButton">Customer Request</button>
+<div id="bpCustomerRequestModal"><div class="box">
+  <div class="head"><div class="icon">✦</div><div><h3>Send a request</h3><div class="sub">Your details will be sent securely to the project owner.</div></div></div>
+  <div id="bpCustomerRequestStatus"></div>
+  <input id="bpReqName" placeholder="Your name">
+  <input id="bpReqMobile" placeholder="Mobile number">
+  <input id="bpReqEmail" type="email" placeholder="Email">
+  <textarea id="bpReqMessage" rows="4" placeholder="How can we help?"></textarea>
+  <div class="row"><button class="cancel" onclick="document.getElementById('bpCustomerRequestModal').style.display='none'">Cancel</button><button id="bpCustomerRequestSubmit">Send Request</button></div>
+</div></div>
+<script>(function(){
+var pid=${JSON.stringify(String(projectId||''))},url=${JSON.stringify(SUPABASE_URL)},key=${JSON.stringify(SUPABASE_KEY)};
+var b=document.getElementById('bpCustomerRequestButton'),m=document.getElementById('bpCustomerRequestModal'),btn=document.getElementById('bpCustomerRequestSubmit'),status=document.getElementById('bpCustomerRequestStatus');
+function showStatus(type,msg){status.className=type;status.textContent=msg;status.style.display='block'}
+b.onclick=function(){status.className='';status.textContent='';status.style.display='none';m.style.display='flex'};
+btn.onclick=async function(){
+var n=document.getElementById('bpReqName').value.trim(),mo=document.getElementById('bpReqMobile').value.trim(),e=document.getElementById('bpReqEmail').value.trim(),msg=document.getElementById('bpReqMessage').value.trim();
+if(!n||!msg){showStatus('err','Please enter your name and message.');return}
+if(!pid){showStatus('err','This project is not ready to receive requests.');return}
+btn.disabled=true;btn.textContent='Sending...';
+try{
+var r=await fetch(url+'/rest/v1/customer_requests',{method:'POST',headers:{apikey:key,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify({project_id:pid,customer_name:n,mobile_number:mo,email:e,message:msg,status:'new'})});
+var body=await r.text();
+if(!r.ok)throw new Error(body||('HTTP '+r.status));
+var saved=true;try{var parsed=body?JSON.parse(body):null;saved=Array.isArray(parsed)?parsed.length>0:true}catch(_){}
+if(!saved)throw new Error('Request was not saved');
+showStatus('ok','Request sent successfully. Thank you!');
+document.getElementById('bpReqName').value='';document.getElementById('bpReqMobile').value='';document.getElementById('bpReqEmail').value='';document.getElementById('bpReqMessage').value='';
+setTimeout(function(){m.style.display='none'},900);
+}catch(err){console.error('Customer request error:',err);showStatus('err','Please try again.');}
+finally{btn.disabled=false;btn.textContent='Send Request'}
+};
+})();</script>`;
     return /<\/body>/i.test(html) ? html.replace(/<\/body>/i, widget + '</body>') : html + widget;
   }
-
-  /* =========================================================
-     PUBLIC PROJECT
-     ========================================================= */
-
-  async function loadPublicProject(
-    publicId
-  ) {
+  async function loadPublicProject(publicId) {
     root.innerHTML = `
-      <div class="bp-auth-page">
-
-        <div class="bp-auth-card"
-          style="
-            text-align:center;
-          "
-        >
-
-          <div class="bp-auth-logo">
-            ⚡
-          </div>
-
-          <h2 class="bp-auth-title">
-            Loading...
-          </h2>
-
-          <p class="bp-auth-subtitle">
-            Loading public project...
-          </p>
-
+      <div style="min-height:100vh;display:grid;place-items:center;background:#f8fafc;font-family:system-ui">
+        <div style="text-align:center;color:#64748b">
+          <div style="font-size:28px;margin-bottom:8px">⏳</div>
+          <div>Loading website...</div>
         </div>
-
-      </div>
-    `;
+      </div>`;
 
     try {
-      /*
-       * Public function is intentionally called
-       * directly because visitor has no login session.
-       */
-      const response =
-        await fetch(
-          SUPABASE_URL +
-            "/functions/v1/" +
-            encodeURIComponent(
-              PUBLIC_FUNCTION
-            ) +
-            "?id=" +
-            encodeURIComponent(
-              publicId
-            ),
-          {
-            method:
-              "GET",
+      const { data: project, error: projectError } = await client
+        .from("projects")
+        .select("id,name,description,public_id,public_enabled,published_at,status")
+        .eq("public_id", publicId)
+        .eq("public_enabled", true)
+        .maybeSingle();
 
-            headers: {
-              apikey:
-                SUPABASE_KEY,
+      if (projectError) throw projectError;
+      if (!project) throw new Error("This public link is not available.");
 
-              "Content-Type":
-                "application/json",
-            },
-          }
-        );
+      const { data: files, error: filesError } = await client
+        .from("project_files")
+        .select("file_path,file_content,language")
+        .eq("project_id", project.id)
+        .order("file_path");
 
-      const data =
-        await response.json();
+      if (filesError) throw filesError;
 
-      if (
-        !response.ok ||
-        !data.success
-      ) {
-        throw new Error(
-          data.error ||
-            "Public project unavailable"
-        );
-      }
+      const list = files || [];
+      const indexFile = list.find(f => String(f.file_path || "").toLowerCase() === "index.html")
+        || list.find(f => String(f.file_path || "").toLowerCase().endsWith("/index.html"))
+        || list.find(f => /\.html?$/i.test(String(f.file_path || "")));
 
-      /*
-       * IMPORTANT:
-       * Do NOT replace the complete document here.
-       * Keep BuildPilot wrapper and put the project
-       * into an iframe.
-       */
-      renderPublicPreview(
-        data
-      );
+      if (!indexFile?.file_content) throw new Error("Published website file not found.");
 
+      renderPublicPreview({ project, html: indexFile.file_content });
     } catch (error) {
-      console.error(error);
-
+      console.error("Public project error:", error);
       root.innerHTML = `
-        <div class="bp-auth-page">
-
-          <div class="bp-auth-card"
-            style="
-              text-align:center;
-            "
-          >
-
-            <div
-              class="bp-auth-logo"
-              style="
-                background:#fee2e2;
-                color:#b91c1c;
-              "
-            >
-              !
-            </div>
-
-            <h2 class="bp-auth-title">
-              Project unavailable
-            </h2>
-
-            <p class="bp-auth-subtitle">
-              यह project publish नहीं किया गया है
-              या public link invalid है।
-            </p>
-
-            <div style="
-              padding:12px;
-              background:#fef2f2;
-              border-radius:10px;
-              color:#991b1b;
-              font-size:13px;
-            ">
-              ${escapeHtml(
-                error.message
-              )}
-            </div>
-
+        <div style="min-height:100vh;display:grid;place-items:center;background:#f8fafc;font-family:system-ui;padding:20px">
+          <div style="max-width:430px;text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:26px;box-shadow:0 18px 50px rgba(15,23,42,.08)">
+            <div style="font-size:34px">⚠️</div>
+            <h2 style="margin:10px 0 6px;color:#111827">Website unavailable</h2>
+            <p style="margin:0;color:#64748b;font-size:13px;line-height:1.5">${escapeHtml(error.message || "This public link is not available.")}</p>
           </div>
-
-        </div>
-      `;
+        </div>`;
     }
   }
 
-  function renderPublicPreview(
-    data
-  ) {
-    const project =
-      data.project || {};
-
+  function renderPublicPreview(data) {
+    const project = data.project || {};
     let html = data.html || "";
     html = addCustomerRequestWidget(html, project.id || data.project_id || "");
 
+    // Public link must show only the customer's website, not the builder UI.
     root.innerHTML = `
-      <div class="bp-app">
+      <div style="position:fixed;inset:0;background:#fff">
+        <iframe id="publicPreviewFrame" title="Public website" style="display:block;width:100%;height:100%;border:0;background:#fff" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
+      </div>`;
 
-        <header class="bp-topbar">
-
-          <div class="bp-brand">
-
-            <div class="bp-logo">
-              ⚡
-            </div>
-
-            <span>
-              ${escapeHtml(
-                project.name ||
-                  "BuildPilot Project"
-              )}
-            </span>
-
-          </div>
-
-          <div style="
-            color:#cbd5e1;
-            font-size:13px;
-          ">
-            
-          </div>
-
-        </header>
-
-        <main style="
-          padding:15px;
-          background:#f1f5f9;
-          min-height:
-            calc(100vh - 70px);
-        ">
-
-          <div style="
-            background:white;
-            border:1px solid #e2e8f0;
-            border-radius:16px;
-            overflow:hidden;
-            max-width:1500px;
-            margin:auto;
-          ">
-
-            <iframe
-              id="publicPreviewFrame"
-              class="bp-preview-frame"
-              style="
-                height:calc(100vh - 110px);
-                min-height:700px;
-              "
-              sandbox="
-                allow-scripts
-                allow-forms
-                allow-modals
-                allow-popups
-              "
-            ></iframe>
-
-          </div>
-
-        </main>
-
-      </div>
-    `;
-
-    const iframe =
-      document.getElementById(
-        "publicPreviewFrame"
-      );
-
-    if (iframe) {
-      iframe.srcdoc =
-        html;
-    }
+    const iframe = document.getElementById("publicPreviewFrame");
+    if (iframe) iframe.srcdoc = html;
   }
 
   /* =========================================================
@@ -4405,6 +4356,12 @@ ${js}
 
     loadProjects:
       loadProjects,
+
+    filterProjects:
+      filterProjects,
+
+    clearProjectSearch:
+      clearProjectSearch,
 
     openProject:
       openProject,
@@ -4464,7 +4421,7 @@ ${js}
 
   async function boot() {
     const publicId =
-      getPublicIdFromUrl();
+      decodeURIComponent(getPublicIdFromUrl());
 
     /*
      * Public page does NOT require login.

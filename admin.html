@@ -1,186 +1,1287 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#f6f7f9;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#111827}
-.wrap{max-width:1120px;margin:auto;padding:20px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 3px 14px rgba(15,23,42,.04)}
-.login-card{max-width:390px;margin:70px auto}
-h1{font-size:22px;margin:0}h2{font-size:16px;margin:0 0 10px}h3{font-size:13px;margin:0}
-.muted{color:#64748b;font-size:11px;line-height:1.5}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.stat{padding:10px;background:#fafafa;border:1px solid #eee;border-radius:9px}
-.stat span{font-size:10px;color:#64748b}.stat b{display:block;font-size:19px;margin-top:1px}
-.input{width:100%;padding:9px 10px;border:1px solid #d1d5db;border-radius:9px;font-size:12px;outline:0}
-.field{margin-bottom:9px}.field label{display:block;font-size:10px;font-weight:800;color:#475569;margin-bottom:4px}
-.btn{border:1px solid #d1d5db;background:#fff;color:#111827;border-radius:7px;padding:5px 8px;font-size:9px;font-weight:700;cursor:pointer}
-.btn.ok{background:#166534;color:#fff;border-color:#166534}.btn.no{background:#b91c1c;color:#fff;border-color:#b91c1c}
-.btn.dark{background:#111827;color:#fff;border-color:#111827}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.req{border:1px solid #e7e8ec;border-radius:9px;padding:7px 8px;margin-top:5px;background:#fff}
-.req.new{border-color:#c9b7e5;background:#fcfaff}
-.req-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
-.req-name{font-size:11px;font-weight:800}.date{font-size:9px;color:#94a3b8;white-space:nowrap}
-.badge{font-size:8px;padding:2px 5px;border-radius:999px;background:#eee7fb;color:#6742a9;margin-left:5px}
-.req-contact{font-size:9px;color:#64748b;margin-top:3px;word-break:break-word}
-.req-message{font-size:10px;color:#334155;margin-top:4px;line-height:1.35;white-space:pre-wrap}
-.req-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:8px;color:#94a3b8}
-.actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.limit{width:58px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;font-size:9px}
-.empty{padding:18px;text-align:center;color:#94a3b8;font-size:11px}
-@media(max-width:700px){.wrap{padding:12px}.grid{grid-template-columns:1fr 1fr}.top{align-items:flex-start}.req-top{align-items:flex-start;flex-direction:column;gap:3px}}
-</style>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Admin Login</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: #0b1020;
+      color: #ffffff;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* =========================
+       LOGIN
+    ========================= */
+
+    #loginView {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(
+          circle at top left,
+          rgba(79, 70, 229, 0.22),
+          transparent 35%
+        ),
+        radial-gradient(
+          circle at bottom right,
+          rgba(14, 165, 233, 0.18),
+          transparent 35%
+        ),
+        #0b1020;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      padding: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 22px;
+      background: rgba(17, 24, 39, 0.94);
+      box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .admin-icon {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      border-radius: 18px;
+      background: linear-gradient(
+        135deg,
+        #4f46e5,
+        #2563eb
+      );
+      font-size: 30px;
+    }
+
+    .login-card h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: -0.5px;
+    }
+
+    .login-card p {
+      margin: 0 0 26px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid #334155;
+      border-radius: 11px;
+      outline: none;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 13px 14px;
+      transition: 0.2s;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
+    }
+
+    #loginBtn {
+      width: 100%;
+      border: 0;
+      border-radius: 11px;
+      padding: 13px 16px;
+      background: linear-gradient(
+        135deg,
+        #4f46e5,
+        #2563eb
+      );
+      color: #ffffff;
+      font-weight: 700;
+      transition: 0.2s;
+    }
+
+    #loginBtn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    #loginBtn:disabled {
+      opacity: 0.6;
+      cursor: wait;
+      transform: none;
+    }
+
+    #msg {
+      display: none;
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .security-note {
+      margin-top: 20px;
+      text-align: center;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    /* =========================
+       ADMIN APP
+    ========================= */
+
+    #adminView {
+      min-height: 100vh;
+      background: #0b1020;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid #1e293b;
+      background: rgba(11, 16, 32, 0.94);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 11px;
+      background: linear-gradient(
+        135deg,
+        #4f46e5,
+        #2563eb
+      );
+    }
+
+    .brand-text {
+      font-size: 16px;
+    }
+
+    .brand-subtitle {
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #adminEmail {
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    .btn {
+      border: 1px solid #334155;
+      border-radius: 9px;
+      padding: 9px 14px;
+      background: #111827;
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+
+    .btn:hover {
+      background: #1e293b;
+    }
+
+    .btn-danger {
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .dashboard {
+      max-width: 1450px;
+      margin: 0 auto;
+      padding: 28px 24px 60px;
+    }
+
+    .page-title {
+      margin-bottom: 25px;
+    }
+
+    .page-title h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: -0.6px;
+    }
+
+    .page-title p {
+      margin: 7px 0 0;
+      color: #64748b;
+    }
+
+    /* STATS */
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      min-height: 118px;
+      padding: 20px;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      background: #111827;
+    }
+
+    .stat-label {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    /* TABS */
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      border: 1px solid #1e293b;
+      border-radius: 9px;
+      padding: 10px 15px;
+      background: #111827;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .tab-btn.active {
+      border-color: #4f46e5;
+      background: rgba(79, 70, 229, 0.16);
+      color: #ffffff;
+    }
+
+    .panel {
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #111827;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .search-box {
+      width: 280px;
+      max-width: 100%;
+      border: 1px solid #334155;
+      border-radius: 9px;
+      padding: 10px 12px;
+      outline: none;
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* TABLE */
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 850px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid #1e293b;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    th {
+      color: #64748b;
+      font-weight: 700;
+      background: #0f172a;
+    }
+
+    td {
+      color: #cbd5e1;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .badge-active {
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac;
+    }
+
+    .badge-blocked {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fca5a5;
+    }
+
+    .badge-admin {
+      background: rgba(99, 102, 241, 0.14);
+      color: #a5b4fc;
+    }
+
+    .badge-user {
+      background: rgba(148, 163, 184, 0.12);
+      color: #cbd5e1;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 7px;
+    }
+
+    .small-btn {
+      border: 1px solid #334155;
+      border-radius: 7px;
+      padding: 7px 10px;
+      background: #0f172a;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .small-btn:hover {
+      background: #1e293b;
+    }
+
+    .empty {
+      padding: 45px 20px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .loading {
+      padding: 40px 20px;
+      text-align: center;
+      color: #94a3b8;
+    }
+
+    /* MODAL */
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.68);
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid #334155;
+      border-radius: 18px;
+      background: #111827;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .modal-close {
+      border: 0;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 24px;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      padding: 16px 20px;
+      border-top: 1px solid #1e293b;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 1100px) {
+      .stats-grid {
+        grid-template-columns:
+          repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .topbar {
+        height: auto;
+        min-height: 68px;
+        padding: 12px 16px;
+      }
+
+      .top-actions {
+        gap: 7px;
+      }
+
+      #adminEmail {
+        display: none;
+      }
+
+      .dashboard {
+        padding: 22px 14px 45px;
+      }
+
+      .stats-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .search-box {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .login-card {
+        padding: 25px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<div class="wrap">
-  <div id="login" class="card login-card">
-    <h2>Admin Login</h2>
-    <form id="loginForm">
-      <div class="field"><label>Email</label><input id="email" class="input" type="email" placeholder="Admin email" required></div>
-      <div class="field"><label>Password</label><input id="password" class="input" type="password" placeholder="Password" required></div>
-      <button class="btn dark" style="width:100%;padding:10px" type="submit">Login</button>
-    </form>
-    <p id="error" class="muted"></p>
+
+  <!-- =========================
+       ADMIN LOGIN
+  ========================== -->
+
+  <section id="loginView">
+
+    <div class="login-card">
+
+      <div class="admin-icon">
+        🛡️
+      </div>
+
+      <h1>Admin Login</h1>
+
+      <p>
+        Sign in with your administrator account.
+        This page is separate from the client login.
+      </p>
+
+      <div id="msg"></div>
+
+      <form id="loginForm">
+
+        <div class="field">
+          <label for="email">
+            Admin Email
+          </label>
+
+          <input
+            id="email"
+            type="email"
+            placeholder="admin@example.com"
+            autocomplete="username"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="password">
+            Password
+          </label>
+
+          <input
+            id="password"
+            type="password"
+            placeholder="Enter admin password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <button
+          id="loginBtn"
+          type="submit"
+        >
+          Admin Login
+        </button>
+
+      </form>
+
+      <div class="security-note">
+        Administrator access only
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================
+       ADMIN DASHBOARD
+  ========================== -->
+
+  <section
+    id="adminView"
+    style="display:none;"
+  >
+
+    <header class="topbar">
+
+      <div class="brand">
+
+        <div class="brand-icon">
+          🛡️
+        </div>
+
+        <div>
+          <div class="brand-text">
+            Admin Dashboard
+          </div>
+
+          <span class="brand-subtitle">
+            Management Panel
+          </span>
+        </div>
+
+      </div>
+
+      <div class="top-actions">
+
+        <span id="adminEmail">
+          Admin
+        </span>
+
+        <button
+          id="logoutBtn"
+          class="btn btn-danger"
+          type="button"
+        >
+          Logout
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <main class="dashboard">
+
+      <div class="page-title">
+
+        <h1>
+          Dashboard
+        </h1>
+
+        <p>
+          Manage users, projects and upgrade requests.
+        </p>
+
+      </div>
+
+
+      <!-- STATS -->
+
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <div class="stat-label">
+            Total Users
+          </div>
+
+          <div
+            id="users"
+            class="stat-value"
+          >
+            0
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">
+            Active Users
+          </div>
+
+          <div
+            id="active"
+            class="stat-value"
+          >
+            0
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">
+            Blocked Users
+          </div>
+
+          <div
+            id="blocked"
+            class="stat-value"
+          >
+            0
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">
+            Total Projects
+          </div>
+
+          <div
+            id="projects"
+            class="stat-value"
+          >
+            0
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">
+            Pending Requests
+          </div>
+
+          <div
+            id="pendingRequests"
+            class="stat-value"
+          >
+            0
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- TABS -->
+
+      <div class="tabs">
+
+        <button
+          class="tab-btn active"
+          data-tab="usersPanel"
+          type="button"
+        >
+          Users
+        </button>
+
+        <button
+          class="tab-btn"
+          data-tab="requestsPanel"
+          type="button"
+        >
+          Upgrade Requests
+        </button>
+
+        <button
+          class="tab-btn"
+          data-tab="projectsPanel"
+          type="button"
+        >
+          Projects
+        </button>
+
+        <button
+          class="tab-btn"
+          data-tab="generationsPanel"
+          type="button"
+        >
+          AI Generations
+        </button>
+
+      </div>
+
+
+      <!-- USERS -->
+
+      <section
+        id="usersPanel"
+        class="panel dashboard-panel"
+      >
+
+        <div class="panel-header">
+
+          <h2>
+            Users
+          </h2>
+
+          <input
+            id="userSearch"
+            class="search-box"
+            type="search"
+            placeholder="Search users..."
+          />
+
+        </div>
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Plan</th>
+                <th>Projects</th>
+                <th>GitHub Files</th>
+                <th>Actions</th>
+              </tr>
+
+            </thead>
+
+            <tbody id="usersTableBody">
+
+              <tr>
+                <td
+                  colspan="7"
+                  class="loading"
+                >
+                  Loading users...
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+
+      <!-- REQUESTS -->
+
+      <section
+        id="requestsPanel"
+        class="panel dashboard-panel"
+        style="display:none;"
+      >
+
+        <div class="panel-header">
+
+          <h2>
+            Upgrade Requests
+          </h2>
+
+        </div>
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>User</th>
+                <th>Request</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+
+            </thead>
+
+            <tbody id="requestsTableBody">
+
+              <tr>
+                <td
+                  colspan="6"
+                  class="loading"
+                >
+                  Loading requests...
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+
+      <!-- PROJECTS -->
+
+      <section
+        id="projectsPanel"
+        class="panel dashboard-panel"
+        style="display:none;"
+      >
+
+        <div class="panel-header">
+
+          <h2>
+            Projects
+          </h2>
+
+          <input
+            id="projectSearch"
+            class="search-box"
+            type="search"
+            placeholder="Search projects..."
+          />
+
+        </div>
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>Project</th>
+                <th>User</th>
+                <th>Frontend</th>
+                <th>Backend</th>
+                <th>Created</th>
+                <th>Updated</th>
+              </tr>
+
+            </thead>
+
+            <tbody id="projectsTableBody">
+
+              <tr>
+                <td
+                  colspan="6"
+                  class="loading"
+                >
+                  Loading projects...
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+
+      <!-- GENERATIONS -->
+
+      <section
+        id="generationsPanel"
+        class="panel dashboard-panel"
+        style="display:none;"
+      >
+
+        <div class="panel-header">
+
+          <h2>
+            AI Generations
+          </h2>
+
+        </div>
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>User</th>
+                <th>Project</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+
+            </thead>
+
+            <tbody id="generationsTableBody">
+
+              <tr>
+                <td
+                  colspan="5"
+                  class="loading"
+                >
+                  Loading generations...
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </section>
+
+
+  <!-- =========================
+       EDIT USER MODAL
+  ========================== -->
+
+  <div
+    id="editUserModal"
+    class="modal-overlay"
+  >
+
+    <div class="modal">
+
+      <div class="modal-header">
+
+        <h3>
+          Edit User
+        </h3>
+
+        <button
+          id="closeEditUser"
+          class="modal-close"
+          type="button"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div class="modal-body">
+
+        <input
+          id="editUserId"
+          type="hidden"
+        />
+
+        <div class="field">
+
+          <label>
+            Plan
+          </label>
+
+          <select id="editPlan">
+
+            <option value="free">
+              Free
+            </option>
+
+            <option value="pro">
+              Pro
+            </option>
+
+            <option value="premium">
+              Premium
+            </option>
+
+          </select>
+
+        </div>
+
+        <div class="field">
+
+          <label>
+            Status
+          </label>
+
+          <select id="editStatus">
+
+            <option value="active">
+              Active
+            </option>
+
+            <option value="blocked">
+              Blocked
+            </option>
+
+          </select>
+
+        </div>
+
+        <div class="field">
+
+          <label>
+            Project Limit
+          </label>
+
+          <input
+            id="editProjectLimit"
+            type="number"
+            min="1"
+            value="5"
+          />
+
+        </div>
+
+        <div class="field">
+
+          <label>
+            GitHub File Limit
+          </label>
+
+          <input
+            id="editGithubFileLimit"
+            type="number"
+            min="1"
+            value="2"
+          />
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+
+        <button
+          id="cancelEditUser"
+          class="btn"
+          type="button"
+        >
+          Cancel
+        </button>
+
+        <button
+          id="saveEditUser"
+          class="btn"
+          type="button"
+        >
+          Save Changes
+        </button>
+
+      </div>
+
+    </div>
+
   </div>
 
-  <div id="dash" style="display:none">
-    <div class="card top">
-      <div><h1>Admin Dashboard</h1><div class="muted">Manage project limits and customer requests.</div></div>
-      <button id="logout" class="btn">Logout</button>
-    </div>
 
-    <div class="grid" style="margin-bottom:14px">
-      <div class="stat"><span>Users</span><b id="users">0</b></div>
-      <div class="stat"><span>Active</span><b id="active">0</b></div>
-      <div class="stat"><span>Blocked</span><b id="blocked">0</b></div>
-      <div class="stat"><span>Projects</span><b id="projects">0</b></div>
-    </div>
+  <!-- =========================
+       REQUEST MODAL
+  ========================== -->
 
-    <div class="card">
-      <div class="section-head">
-        <div><h2>Project Limit Requests</h2><div class="muted">Approve or reject limit requests.</div></div>
-        <button class="btn" onclick="loadUpgradeRequests()">Refresh</button>
+  <div
+    id="requestModal"
+    class="modal-overlay"
+  >
+
+    <div class="modal">
+
+      <div class="modal-header">
+
+        <h3>
+          Review Upgrade Request
+        </h3>
+
+        <button
+          id="closeRequestModal"
+          class="modal-close"
+          type="button"
+        >
+          ×
+        </button>
+
       </div>
-      <div id="requests">Loading...</div>
+
+      <div class="modal-body">
+
+        <input
+          id="requestId"
+          type="hidden"
+        />
+
+        <div class="field">
+
+          <label>
+            Admin Note
+          </label>
+
+          <textarea
+            id="adminNote"
+            rows="5"
+            placeholder="Write admin note..."
+          ></textarea>
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+
+        <button
+          id="rejectRequest"
+          class="btn btn-danger"
+          type="button"
+        >
+          Reject
+        </button>
+
+        <button
+          id="approveRequest"
+          class="btn"
+          type="button"
+        >
+          Approve
+        </button>
+
+      </div>
+
     </div>
 
-    <div class="card">
-      <div class="section-head">
-        <div><h2>Customer Requests</h2><div class="muted">Requests received from published client websites.</div></div>
-        <button class="btn" onclick="loadCustomerRequests()">Refresh</button>
-      </div>
-      <div id="customerRequests">Loading...</div>
-    </div>
   </div>
-</div>
 
-<script>
-const cfg=window.BUILDPILOT_CONFIG||{};
-const sb=supabase.createClient(cfg.SUPABASE_URL||'',cfg.SUPABASE_PUBLISHABLE_KEY||'');
-const $=id=>document.getElementById(id);
-function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
-function msg(t){$('error').textContent=t}
-async function adminProfile(user){
-  const {data,error}=await sb.from('profiles').select('id,full_name,role,status').eq('id',user.id).maybeSingle();
-  if(error)throw error;
-  if(!data||data.role!=='admin'||data.status!=='active')throw new Error('Admin access required.');
-  return data;
-}
-async function dashboard(user){
-  await adminProfile(user);
-  $('login').style.display='none';$('dash').style.display='block';
-  const [u,p]=await Promise.all([
-    sb.from('profiles').select('id,status'),
-    sb.from('projects').select('id')
-  ]);
-  $('users').textContent=u.data?.length||0;
-  $('active').textContent=(u.data||[]).filter(x=>x.status==='active').length;
-  $('blocked').textContent=(u.data||[]).filter(x=>x.status==='blocked').length;
-  $('projects').textContent=p.data?.length||0;
-  await Promise.all([loadUpgradeRequests(),loadCustomerRequests()]);
-}
-async function loadUpgradeRequests(){
-  const box=$('requests');box.innerHTML='<div class="empty">Loading...</div>';
-  const {data,error}=await sb.from('upgrade_requests')
-    .select('id,user_id,full_name,mobile_number,email,message,status,requested_limit,approved_limit,created_at')
-    .eq('request_type','project_limit').order('created_at',{ascending:false});
-  if(error){box.innerHTML='<div class="empty">'+esc(error.message)+'</div>';return}
-  if(!data?.length){box.innerHTML='<div class="empty">No project limit requests.</div>';return}
-  box.innerHTML=data.map(r=>`
-    <div class="req ${r.status==='pending'?'new':''}">
-      <div class="req-top">
-        <div><span class="req-name">${esc(r.full_name||'User')}</span>${r.status==='pending'?'<span class="badge">NEW</span>':''}</div>
-        <span class="date">${esc(new Date(r.created_at).toLocaleString())}</span>
-      </div>
-      <div class="req-contact">${r.email?`✉ ${esc(r.email)}`:''}${r.mobile_number?` · 📱 ${esc(r.mobile_number)}`:''} · Current/Requested: ${esc(r.requested_limit||'-')}</div>
-      <div class="req-message">${esc(r.message||'')}</div>
-      <div class="req-bottom">
-        <span>Status: ${esc(r.status||'pending')}</span>
-        ${r.status==='pending'?`<div class="actions"><input id="limit-${r.id}" class="limit" type="number" min="1" value="${esc(r.requested_limit||5)}"><button class="btn ok" onclick="approve('${esc(r.id)}')">Approve</button><button class="btn no" onclick="rejectRequest('${esc(r.id)}')">Reject</button></div>`:`<span>Approved: ${esc(r.approved_limit||'-')}</span>`}
-      </div>
-    </div>`).join('');
-}
-async function approve(id){
-  const limit=Number($('limit-'+id)?.value||0);
-  if(limit<1)return alert('Enter a valid limit.');
-  const {data:r,error:e}=await sb.from('upgrade_requests').select('user_id').eq('id',id).single();
-  if(e)throw e;
-  const {error:pe}=await sb.from('profiles').update({project_limit:limit}).eq('id',r.user_id);
-  if(pe)throw pe;
-  const {error:re}=await sb.from('upgrade_requests').update({status:'approved',approved_limit:limit,updated_at:new Date().toISOString()}).eq('id',id);
-  if(re)throw re;
-  await loadUpgradeRequests();alert('Approved.');
-}
-async function rejectRequest(id){
-  const {error}=await sb.from('upgrade_requests').update({status:'rejected',updated_at:new Date().toISOString()}).eq('id',id);
-  if(error)throw error;
-  await loadUpgradeRequests();
-}
-async function loadCustomerRequests(){
-  const box=$('customerRequests');box.innerHTML='<div class="empty">Loading...</div>';
-  const {data,error}=await sb.from('customer_requests')
-    .select('id,project_id,customer_name,mobile_number,email,message,status,created_at')
-    .order('created_at',{ascending:false}).limit(100);
-  if(error){box.innerHTML='<div class="empty">'+esc(error.message)+'</div>';return}
-  if(!data?.length){box.innerHTML='<div class="empty">No customer requests received.</div>';return}
-  const projectIds=[...new Set(data.map(x=>x.project_id).filter(Boolean))];
-  let projectMap={};
-  if(projectIds.length){
-    const {data:projects}=await sb.from('projects').select('id,name').in('id',projectIds);
-    (projects||[]).forEach(p=>projectMap[p.id]=p.name);
-  }
-  box.innerHTML=data.map(r=>`
-    <div class="req ${r.status==='new'?'new':''}">
-      <div class="req-top">
-        <div><span class="req-name">${esc(r.customer_name||'Customer')}</span>${r.status==='new'?'<span class="badge">NEW</span>':''}</div>
-        <span class="date">${esc(new Date(r.created_at).toLocaleString())}</span>
-      </div>
-      <div class="req-contact">Project: <b>${esc(projectMap[r.project_id]||r.project_id||'-')}</b>${r.mobile_number?` · 📱 ${esc(r.mobile_number)}`:''}${r.email?` · ✉ ${esc(r.email)}`:''}</div>
-      <div class="req-message">${esc(r.message||'')}</div>
-      <div class="req-bottom"><span>Status: ${esc(r.status||'new')}</span>${r.status==='new'?`<button class="btn" onclick="markCustomerRead('${esc(r.id)}')">Mark read</button>`:''}</div>
-    </div>`).join('');
-}
-async function markCustomerRead(id){
-  const {error}=await sb.from('customer_requests').update({status:'read',updated_at:new Date().toISOString()}).eq('id',id);
-  if(error){alert(error.message);return}
-  await loadCustomerRequests();
-}
-$('loginForm').onsubmit=async e=>{
-  e.preventDefault();
-  try{
-    const {data,error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
-    if(error)throw error;
-    await dashboard(data.user);
-  }catch(e){msg(e.message)}
-};
-$('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
-sb.auth.getSession().then(x=>{if(x.data.session?.user)dashboard(x.data.session.user).catch(e=>msg(e.message))});
-</script>
+
+  <!-- ADMIN JS -->
+  <script src="./admin.js"></script>
+
 </body>
 </html>

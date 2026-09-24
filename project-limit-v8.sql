@@ -1,0 +1,197 @@
+-- BuildPilot: project limit + customer requests + upgrade requests
+-- Run once in Supabase SQL Editor. Existing project/user data is preserved.
+
+alter table public.profiles alter column project_limit set default 2;
+update public.profiles set project_limit = 2 where project_limit is null;
+
+alter table public.upgrade_requests
+  add column if not exists full_name text,
+  add column if not exists mobile_number text,
+  add column if not exists email text,
+  add column if not exists requested_limit integer,
+  add column if not exists approved_limit integer;
+
+update public.upgrade_requests set requested_limit = 5 where requested_limit is null;
+create index if not exists upgrade_requests_user_status_idx on public.upgrade_requests(user_id,status);
+create index if not exists upgrade_requests_created_idx on public.upgrade_requests(created_at desc);
+
+create table if not exists public.customer_requests (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references public.projects(id) on delete cascade,
+  customer_name text not null,
+  mobile_number text,
+  email text,
+  message text not null,
+  status text not null default 'new',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.customer_requests enable row level security;
+drop policy if exists "customer_requests_public_insert" on public.customer_requests;
+create policy "customer_requests_public_insert" on public.customer_requests
+for insert to anon,authenticated
+with check (length(trim(customer_name)) > 0 and length(trim(message)) > 0);
+
+drop policy if exists "customer_requests_owner_select" on public.customer_requests;
+create policy "customer_requests_owner_select" on public.customer_requests
+for select to authenticated
+using (exists(select 1 from public.projects p where p.id=customer_requests.project_id and p.user_id=(select auth.uid())));
+
+drop policy if exists "customer_requests_owner_update" on public.customer_requests;
+create policy "customer_requests_owner_update" on public.customer_requests
+for update to authenticated
+using (exists(select 1 from public.projects p where p.id=customer_requests.project_id and p.user_id=(select auth.uid())))
+with check (exists(select 1 from public.projects p where p.id=customer_requests.project_id and p.user_id=(select auth.uid())));
+
+create index if not exists customer_requests_project_created_idx on public.customer_requests(project_id,created_at desc);
+
+
+-- Admin can receive/manage customer requests from all published client sites.
+drop policy if exists "customer_requests_admin_select" on public.customer_requests;
+create policy "customer_requests_admin_select" on public.customer_requests
+for select to authenticated
+using (
+  exists (
+    select 1
+    from public.profiles pr
+    where pr.id = (select auth.uid())
+      and pr.role = 'admin'
+      and pr.status = 'active'
+  )
+);
+
+drop policy if exists "customer_requests_admin_update" on public.customer_requests;
+create policy "customer_requests_admin_update" on public.customer_requests
+for update to authenticated
+using (
+  exists (
+    select 1
+    from public.profiles pr
+    where pr.id = (select auth.uid())
+      and pr.role = 'admin'
+      and pr.status = 'active'
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.profiles pr
+    where pr.id = (select auth.uid())
+      and pr.role = 'admin'
+      and pr.status = 'active'
+  )
+);
+
+create index if not exists customer_requests_status_created_idx
+on public.customer_requests(status, created_at desc);
+
+
+-- Final customer-request delivery fix:
+-- Explicit Data API privileges for the public request form and authenticated dashboards.
+grant usage on schema public to anon, authenticated;
+grant insert on table public.customer_requests to anon, authenticated;
+grant select, update on table public.customer_requests to authenticated;
+
+-- Recreate the public insert policy so anonymous visitors can submit requests.
+drop policy if exists "customer_requests_public_insert" on public.customer_requests;
+create policy "customer_requests_public_insert"
+on public.customer_requests
+for insert
+to anon, authenticated
+with check (
+  length(trim(customer_name)) > 0
+  and length(trim(message)) > 0
+  and project_id is not null
+  and status = 'new'
+);
+
+-- Keep owner/admin read access.
+drop policy if exists "customer_requests_owner_select" on public.customer_requests;
+create policy "customer_requests_owner_select"
+on public.customer_requests
+for select
+to authenticated
+using (
+  exists (
+    select 1 from public.projects p
+    where p.id = customer_requests.project_id
+      and p.user_id = (select auth.uid())
+  )
+);
+
+drop policy if exists "customer_requests_owner_update" on public.customer_requests;
+create policy "customer_requests_owner_update"
+on public.customer_requests
+for update
+to authenticated
+using (
+  exists (
+    select 1 from public.projects p
+    where p.id = customer_requests.project_id
+      and p.user_id = (select auth.uid())
+  )
+)
+with check (
+  exists (
+    select 1 from public.projects p
+    where p.id = customer_requests.project_id
+      and p.user_id = (select auth.uid())
+  )
+);
+
+-- Public published websites: allow anonymous visitors to read only published projects.
+drop policy if exists "public_published_projects_select" on public.projects;
+create policy "public_published_projects_select"
+on public.projects
+for select to anon, authenticated
+using (public_enabled = true and public_id is not null);
+
+-- Public published website files are readable only when their parent project is published.
+drop policy if exists "public_published_project_files_select" on public.project_files;
+create policy "public_published_project_files_select"
+on public.project_files
+for select to anon, authenticated
+using (
+  exists (
+    select 1 from public.projects p
+    where p.id = project_files.project_id
+      and p.public_enabled = true
+      and p.public_id is not null
+  )
+);
+
+-- Make sure the REST API roles can access the published rows; RLS above still controls them.
+grant select on public.projects to anon, authenticated;
+grant select on public.project_files to anon, authenticated;
+
+
+-- Project-limit requests: users submit; active admins can review/approve/reject.
+alter table public.upgrade_requests enable row level security;
+grant select, insert, update on public.upgrade_requests to authenticated;
+
+drop policy if exists "upgrade_requests_owner_insert" on public.upgrade_requests;
+create policy "upgrade_requests_owner_insert" on public.upgrade_requests
+for insert to authenticated
+with check ((select auth.uid()) = user_id);
+
+drop policy if exists "upgrade_requests_owner_select" on public.upgrade_requests;
+create policy "upgrade_requests_owner_select" on public.upgrade_requests
+for select to authenticated
+using (
+  (select auth.uid()) = user_id
+  or exists (select 1 from public.profiles pr where pr.id=(select auth.uid()) and pr.role='admin' and pr.status='active')
+);
+
+drop policy if exists "upgrade_requests_admin_update" on public.upgrade_requests;
+create policy "upgrade_requests_admin_update" on public.upgrade_requests
+for update to authenticated
+using (exists (select 1 from public.profiles pr where pr.id=(select auth.uid()) and pr.role='admin' and pr.status='active'))
+with check (exists (select 1 from public.profiles pr where pr.id=(select auth.uid()) and pr.role='admin' and pr.status='active'));
+
+-- Admin approval updates the user's project limit.
+drop policy if exists "profiles_admin_update" on public.profiles;
+create policy "profiles_admin_update" on public.profiles
+for update to authenticated
+using (exists (select 1 from public.profiles pr where pr.id=(select auth.uid()) and pr.role='admin' and pr.status='active'))
+with check (exists (select 1 from public.profiles pr where pr.id=(select auth.uid()) and pr.role='admin' and pr.status='active'));

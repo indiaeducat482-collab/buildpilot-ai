@@ -1,17 +1,21 @@
-BUILD PILOT AI V7
+BuildPilot AI V8 – UI + Limit Fix
 
-1) Replace only GitHub app.js with this app.js.
-2) Run project-limit-v7.sql once in Supabase SQL Editor.
-3) Keep existing config.js, index.html, styles.css and other files.
-4) Admin page remains admin.html. Admin can Approve/Reject project-limit requests.
+FIXES:
+- Restores the Airo-style Create a new project modal styling.
+- Adds New Website / Rebuild Site / Other tabs to the create modal.
+- Keeps the Search projects bar on My Projects.
+- Keeps default 2-project limit and upgrade request flow.
+- Keeps Admin Approve / Reject flow.
+- Makes Request more projects modal compact.
+- Keeps customer request receiving.
+- Removes Authorization Bearer header from public customer request POST.
+- Public customer request shows success after successful insert.
 
-FEATURES
-- Every new/free user has a default project limit of 2 (Supabase default).
-- When a user reaches 2 projects, creating another project opens a compact Limit Request form.
-- User sends requested limit to Admin.
-- Admin can approve or reject from admin.html.
-- Approving updates that user's project_limit.
-- Search bar added to Projects page; filters name, description, status, frontend and backend.
-- Public project link remains supported with ?public=<public_id>.
-- Customer request public form no longer shows the old "Request could not be sent." message; successful requests show success, actual failures show a generic retry message.
-- Existing files/config are preserved; do not delete repo files.
+INSTALL:
+1. Replace only app.js in GitHub.
+2. Keep existing config.js, index.html and styles.css.
+3. Run project-limit-v8.sql in Supabase SQL Editor.
+4. Keep admin.html or replace it with this version if needed.
+5. Hard refresh the site with Ctrl+F5.
+
+Do not delete the existing repository files.

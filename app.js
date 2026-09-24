@@ -215,6 +215,16 @@
       "buildpilotStyles";
 
     style.textContent = `
+      .bp-editor-shell{min-height:100vh;background:#f4f5f7;color:#111827;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+      .bp-editor-topbar{height:64px;background:#fff;border-bottom:1px solid #e4e6eb;display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 10px;gap:12px;position:relative;z-index:30}
+      .bp-editor-left-top,.bp-editor-right-top{display:flex;align-items:center;gap:7px}.bp-editor-icon-btn{width:42px;height:42px;border:1px solid transparent;background:#fff;border-radius:10px;font-size:18px;cursor:pointer;color:#111827}.bp-editor-icon-btn:hover{background:#f3f4f6;border-color:#e5e7eb}.bp-editor-tab{height:42px;border:0;background:#fff;border-radius:10px;padding:0 15px;font-size:14px;cursor:pointer}.bp-editor-tab.active{background:#111827;color:#fff;font-weight:700}.bp-editor-plus{border:0;background:#fff;font-size:25px;cursor:pointer;padding:3px 8px}.bp-editor-top-btn{border:1px solid #e2e4e8;background:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:650}.bp-editor-publish{border:0;background:#6540b7;color:#fff;border-radius:10px;padding:11px 17px;font-weight:800;cursor:pointer}
+      .bp-editor-planbar{height:38px;background:#6540b7;color:#fff;display:flex;align-items:center;justify-content:center;gap:16px;font-size:13px}.bp-editor-planbar button{border:0;background:transparent;color:#fff;text-decoration:underline;font-weight:800;cursor:pointer}
+      .bp-editor-body{display:grid;grid-template-columns:395px minmax(0,1fr);height:calc(100vh - 102px);min-height:620px}.bp-editor-panel{background:#f5f6f7;border-right:1px solid #dfe2e7;display:flex;flex-direction:column;min-width:0;position:relative;z-index:10}.bp-editor-panel-head{background:#fff;padding:16px 16px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e4e6eb}.bp-editor-panel-head strong{display:block;font-size:15px}.bp-editor-panel-head small{display:block;color:#8a94a3;margin-top:3px}.bp-editor-close{border:0;background:#f2f3f5;border-radius:8px;width:34px;height:34px;font-size:21px;cursor:pointer}
+      .bp-editor-credit-card{margin:12px;background:#fff;border:1px solid #e3e5e9;border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(15,23,42,.04)}.bp-credit-icon{width:35px;height:35px;border-radius:9px;background:#f0eaff;color:#6945b9;display:grid;place-items:center}.bp-editor-credit-card strong{display:block;font-size:12px}.bp-editor-credit-card span{display:block;color:#8993a1;font-size:10px;margin-top:2px}.bp-editor-credit-card button{margin-left:auto;border:1px solid #d9d2eb;background:#f7f3ff;color:#5f3cab;border-radius:8px;padding:7px 9px;font-size:11px;cursor:pointer}
+      .bp-editor-continue{margin:0 12px 10px;background:#fff;border:1px solid #e3e5e9;border-radius:14px;overflow:hidden}.bp-continue-head{display:flex;justify-content:space-between;padding:13px 14px;border-bottom:1px solid #e8eaee}.bp-continue-head span{font-size:11px;color:#6d49c7;font-weight:800}.bp-step{display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid #edf0f3;font-size:12px;color:#4b5563}.bp-step:last-child{border-bottom:0}.bp-step b{width:20px;height:20px;border-radius:5px;background:#e9eaed;display:grid;place-items:center;font-size:10px;color:#475569}
+      .bp-editor-tabs{display:flex;background:#fff;border-top:1px solid #e4e6eb;border-bottom:1px solid #e4e6eb}.bp-editor-tabs button{flex:1;border:0;background:#fff;padding:11px 4px;font-size:12px;color:#64748b;cursor:pointer}.bp-editor-tabs button.active{color:#111827;font-weight:800;box-shadow:inset 0 -2px #6540b7}.bp-editor-view{display:none;overflow:auto;flex:1;min-height:0}.bp-editor-view.active{display:block}.bp-ai-message{padding:14px}.bp-ai-message strong{display:block;font-size:13px}.bp-ai-message span{display:block;color:#64748b;font-size:12px;margin-top:5px;line-height:1.5}.bp-ai-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px}.bp-ai-chips button{border:1px solid #ddd7eb;background:#faf8ff;color:#5f3cab;border-radius:999px;padding:7px 9px;font-size:10px;cursor:pointer}.bp-editor-files{padding:8px}.bp-editor-files .bp-file{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:9px 10px;color:#475569;cursor:pointer}.bp-editor-files .bp-file:hover,.bp-editor-files .bp-file-active{background:#e9e7ee;color:#111827}.bp-editor-requests{padding:10px}.bp-editor-ask{margin-top:auto;background:#fff;border-top:1px solid #e2e5e9;padding:10px}.bp-editor-ask-input{width:100%;border:1px solid #d9dde3;border-radius:12px;resize:none;padding:10px 11px;outline:0;min-height:72px;font-size:13px}.bp-editor-ask-input:focus{border-color:#a98ed4;box-shadow:0 0 0 3px rgba(105,69,185,.08)}.bp-editor-ask-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:5px}.bp-editor-small{border:0;background:#fff;font-size:22px;color:#64748b;cursor:pointer}.bp-editor-send{width:38px;height:38px;border:0;border-radius:11px;background:#c1addd;color:#fff;font-size:20px;cursor:pointer}.bp-editor-ask small{display:block;color:#9aa2ad;font-size:9px;margin-top:5px}
+      .bp-editor-preview-wrap{position:relative;min-width:0;display:flex;flex-direction:column;background:#e9ebee;overflow:hidden}.bp-editor-preview-toolbar{height:46px;background:#fff;border-bottom:1px solid #e0e3e7;display:flex;align-items:center;justify-content:space-between;padding:0 15px;color:#475569;font-size:12px}.bp-editor-preview-toolbar div{display:flex;gap:5px}.bp-editor-preview-toolbar button{border:0;background:#f5f6f7;border-radius:7px;padding:7px 10px;cursor:pointer}.bp-editor-preview{flex:1;min-height:0;overflow:auto;background:#fff;margin:0}.bp-editor-preview iframe{width:100%;height:100%;min-height:100%;border:0;background:#fff}.bp-editor-floating-tools{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);background:#fff;border:1px solid #e2e5e9;border-radius:15px;box-shadow:0 12px 30px rgba(15,23,42,.16);padding:6px;display:flex;gap:2px;z-index:20}.bp-editor-floating-tools button{border:0;background:#fff;padding:10px 13px;border-right:1px solid #e5e7eb;cursor:pointer;font-size:12px}.bp-editor-floating-tools button:last-child{border-right:0}
+      @media(max-width:900px){.bp-editor-body{grid-template-columns:330px 1fr}.bp-editor-planbar{font-size:11px}.bp-editor-top-btn{display:none}}@media(max-width:680px){.bp-editor-body{display:block;height:auto}.bp-editor-panel{min-height:520px}.bp-editor-preview-wrap{height:620px}.bp-editor-right-top .bp-editor-icon-btn:first-child{display:none}.bp-editor-tab span{display:none}}
       * {
         box-sizing: border-box;
       }
@@ -1985,10 +1995,26 @@ document.head.appendChild(
      NEW PROJECT
      ========================================================= */
 
-  function startProject(
+  async function startProject(
     projectType
   ) {
     const projectLimit = Math.max(1, Number(activeProfile?.project_limit ?? 2));
+
+    const { count, error: limitError } = await client
+      .from("projects")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", activeUser.id);
+
+    if (limitError) {
+      showToast("Could not check project limit: " + limitError.message, "error");
+      return;
+    }
+
+    if ((count || 0) >= projectLimit) {
+      openUpgradeRequest(projectLimit);
+      return;
+    }
+
     const modalOld = document.getElementById("bpNewProjectModal");
     if (modalOld) modalOld.remove();
 
@@ -2082,7 +2108,7 @@ document.head.appendChild(
       </h1>
 
       <p>
-        Your BuildPilot AI project is ready.
+        Your website is ready.
       </p>
 
       <button id="helloButton">
@@ -2192,7 +2218,7 @@ body {
         function () {
 
           alert(
-            "BuildPilot AI project is working!"
+            "Your website is working!"
           );
 
         }
@@ -2835,230 +2861,124 @@ body {
     projectId
   ) {
     root.innerHTML = `
-      <div class="bp-app">
-
-        <header class="bp-topbar">
-
-          <div class="bp-brand">
-
-            <button
-              class="bp-btn"
-              style="
-                background:transparent;
-                color:white;
-                border-color:#475569;
-                margin-right:5px;
-              "
-              onclick="
-                window.BuildPilot.home()
-              "
-            >
-              ←
-            </button>
-
-            <div class="bp-logo">
-              ⚡
-            </div>
-
-            <span>
-              ${escapeHtml(
-                activeProject?.name ||
-                  "Project"
-              )}
-            </span>
-
+      <div class="bp-editor-shell">
+        <header class="bp-editor-topbar">
+          <div class="bp-editor-left-top">
+            <button class="bp-editor-icon-btn" onclick="window.BuildPilot.home()" title="Projects">←</button>
+            <button class="bp-editor-tab active">▣ <span>Website</span></button>
+            <button class="bp-editor-tab" onclick="window.BuildPilot.showToast('Domain settings can be connected here.')">◉ <span>Domain</span></button>
+            <button class="bp-editor-plus" onclick="window.BuildPilot.showToast('Add a page or feature')">＋</button>
           </div>
-
-          <div class="bp-actions">
-
-            <button
-              class="bp-btn"
-              style="
-                background:transparent;
-                color:white;
-                border-color:#475569;
-              "
-              onclick="
-                window.BuildPilot.refreshFiles()
-              "
-            >
-              ↻ Refresh
-            </button>
-
-            <button
-              class="bp-btn"
-              onclick="window.BuildPilot.openCustomerRequests('${escapeAttribute(activeProject?.id || '')}')"
-            >
-              📩 Customer Requests
-            </button>
-
-            <button
-              id="publishButton"
-              class="bp-btn bp-btn-success"
-              onclick="
-                window.BuildPilot.togglePublish()
-              "
-            >
-              ${
-                activeProject?.public_enabled
-                  ? "🔗 Public Link"
-                  : "🚀 Publish"
-              }
-            </button>
-
+          <div class="bp-editor-right-top">
+            <button class="bp-editor-icon-btn" onclick="window.BuildPilot.openCustomerRequests('${escapeAttribute(activeProject?.id || '')}')" title="Customer Requests">♧</button>
+            <button class="bp-editor-top-btn" onclick="window.BuildPilot.openUpgradeRequest()">◇ Upgrade</button>
+            <button id="publishButton" class="bp-editor-publish" onclick="window.BuildPilot.togglePublish()">${activeProject?.public_enabled ? 'Public Link' : 'Publish'}</button>
+            <button class="bp-editor-icon-btn" onclick="window.BuildPilot.showToast('More options')">☰</button>
           </div>
-
         </header>
 
-        <main class="bp-workspace">
+        <div class="bp-editor-planbar">
+          <span>You are using the free plan. Premium features are available after an upgrade.</span>
+          <button onclick="window.BuildPilot.openUpgradeRequest()">View Plans →</button>
+        </div>
 
-          <div class="bp-workspace-grid">
-
-            <aside class="bp-sidebar">
-
-              <div class="bp-sidebar-header">
-
-                <span>
-                  Project Files
-                </span>
-
-                <span style="
-                  color:#64748b;
-                  font-size:12px;
-                ">
-                  ${
-                    activeFiles.length
-                  }
-                }
-                </span>
-
+        <div class="bp-editor-body">
+          <aside class="bp-editor-panel">
+            <div class="bp-editor-panel-head">
+              <div>
+                <strong>${escapeHtml(activeProject?.name || 'Project')}</strong>
+                <small>Website builder</small>
               </div>
+              <button class="bp-editor-close" onclick="window.BuildPilot.home()">×</button>
+            </div>
 
-              <div
-                id="filesList"
-                class="bp-files"
-              ></div>
+            <div class="bp-editor-credit-card">
+              <div class="bp-credit-icon">✦</div>
+              <div><strong>Free project</strong><span>Project limit: ${Math.max(1, Number(activeProfile?.project_limit ?? 2))}</span></div>
+              <button onclick="window.BuildPilot.openUpgradeRequest()">Upgrade</button>
+            </div>
 
-            </aside>
+            <div class="bp-editor-continue">
+              <div class="bp-continue-head"><strong>Continue building</strong><span>Live</span></div>
+              <div class="bp-step"><b>1</b><span>Describe your website changes</span></div>
+              <div class="bp-step"><b>2</b><span>Review the live preview</span></div>
+              <div class="bp-step"><b>3</b><span>Publish when ready</span></div>
+            </div>
 
-            <section class="bp-workspace-main">
+            <div class="bp-editor-tabs">
+              <button id="workspaceAiTab" class="active" onclick="window.BuildPilot.workspaceTab('ai')">✦ AI</button>
+              <button id="workspaceFilesTab" onclick="window.BuildPilot.workspaceTab('files')">Files</button>
+              <button id="workspaceRequestsTab" onclick="window.BuildPilot.workspaceTab('requests')">Requests</button>
+            </div>
 
-              <div class="bp-panel">
-
-                <div class="bp-panel-header">
-
-                  <span>
-                    Live Preview
-                  </span>
-
-                  <button
-                    class="bp-btn"
-                    onclick="
-                      window.BuildPilot.updatePreview()
-                    "
-                  >
-                    Refresh
-                  </button>
-
-                </div>
-
-                <div id="previewContent">
-                  Loading...
-                </div>
-
+            <section id="workspaceAiView" class="bp-editor-view active">
+              <div class="bp-ai-message"><strong>AI Builder</strong><span>Tell me what you want to change in this website.</span></div>
+              <div class="bp-ai-chips">
+                <button onclick="window.BuildPilot.fillAIInstruction('Make the header more modern')">Modern header</button>
+                <button onclick="window.BuildPilot.fillAIInstruction('Add a WhatsApp contact button')">WhatsApp button</button>
+                <button onclick="window.BuildPilot.fillAIInstruction('Make the website mobile responsive')">Mobile responsive</button>
               </div>
-
-              <div class="bp-panel bp-chat">
-
-                <div class="bp-panel-header">
-                  <span>
-                    ✨ AI Builder
-                  </span>
-                </div>
-
-                <div
-                  id="chatMessages"
-                  class="bp-chat-messages"
-                >
-
-                  <div class="
-                    bp-chat-message
-                    bp-chat-ai
-                  ">
-                    <strong>
-                      BuildPilot AI
-                    </strong>
-
-                    <div style="
-                      margin-top:5px;
-                    ">
-                      Tell me what you want
-                      to change in your project.
-                    </div>
-                  </div>
-
-                </div>
-
-                <div class="bp-chat-input">
-
-                  <form id="aiChatForm">
-
-                    <textarea
-                      id="aiInstruction"
-                      class="bp-textarea"
-                      rows="4"
-                      placeholder="
-Example:
-Header ka color blue kar do
-
-Contact section add karo
-
-WhatsApp button laga do
-
-Logo header me add karo
-                      "
-                    ></textarea>
-
-                    <button
-                      id="aiSendButton"
-                      class="bp-btn bp-btn-primary"
-                      style="
-                        width:100%;
-                        margin-top:8px;
-                        padding:12px;
-                      "
-                      type="submit"
-                    >
-                      ✨ Build / Modify
-                    </button>
-
-                  </form>
-
-                </div>
-
-              </div>
-
             </section>
 
-          </div>
+            <section id="workspaceFilesView" class="bp-editor-view">
+              <div id="filesList" class="bp-editor-files"></div>
+            </section>
 
-        </main>
+            <section id="workspaceRequestsView" class="bp-editor-view">
+              <div id="customerRequestsList" class="bp-editor-requests">Loading...</div>
+            </section>
 
+            <div class="bp-editor-ask">
+              <form id="aiChatForm">
+                <textarea id="aiInstruction" class="bp-editor-ask-input" rows="3" placeholder="Ask AI to change something..."></textarea>
+                <div class="bp-editor-ask-bottom">
+                  <button type="button" class="bp-editor-small" onclick="window.BuildPilot.showToast('File attachment can be added here.')">＋</button>
+                  <button id="aiSendButton" class="bp-editor-send" type="submit">↑</button>
+                </div>
+              </form>
+              <small>AI changes are saved into your project files.</small>
+            </div>
+          </aside>
+
+          <main class="bp-editor-preview-wrap">
+            <div class="bp-editor-preview-toolbar">
+              <span>Preview</span>
+              <div>
+                <button onclick="window.BuildPilot.updatePreview()">↻</button>
+                <button onclick="window.BuildPilot.openCustomerRequests('${escapeAttribute(activeProject?.id || '')}')">📩</button>
+                <button onclick="window.BuildPilot.showToast('Preview opened')">↗</button>
+              </div>
+            </div>
+            <div id="previewContent" class="bp-editor-preview">Loading...</div>
+            <div class="bp-editor-floating-tools">
+              <button onclick="window.BuildPilot.workspaceTab('ai')">✦ Edit</button>
+              <button onclick="window.BuildPilot.updatePreview()">↻</button>
+              <button onclick="window.BuildPilot.openCustomerRequests('${escapeAttribute(activeProject?.id || '')}')">📩</button>
+              <button onclick="window.BuildPilot.showToast('Preview zoom')">↗</button>
+            </div>
+          </main>
+        </div>
       </div>
     `;
 
-    document
-      .getElementById(
-        "aiChatForm"
-      )
-      .addEventListener(
-        "submit",
-        submitAIInstruction
-      );
-
+    document.getElementById('aiChatForm')?.addEventListener('submit', submitAIInstruction);
     renderFilesList();
-
     updatePreview();
+  }
+
+  function workspaceTab(tab) {
+    const tabs={ai:'workspaceAiTab',files:'workspaceFilesTab',requests:'workspaceRequestsTab'};
+    const views={ai:'workspaceAiView',files:'workspaceFilesView',requests:'workspaceRequestsView'};
+    Object.keys(tabs).forEach(k=>{
+      document.getElementById(tabs[k])?.classList.toggle('active',k===tab);
+      document.getElementById(views[k])?.classList.toggle('active',k===tab);
+    });
+    if(tab==='requests') loadCustomerRequests(activeProject?.id);
+  }
+
+  function fillAIInstruction(text) {
+    const el=document.getElementById('aiInstruction');
+    if(el){el.value=text;el.focus();}
   }
 
   /* =========================================================
@@ -4400,6 +4320,12 @@ ${js}
 
     openUpgradeRequest:
       openUpgradeRequest,
+
+    workspaceTab:
+      workspaceTab,
+
+    fillAIInstruction:
+      fillAIInstruction,
 
     sendUpgradeRequest:
       sendUpgradeRequest,

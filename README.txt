@@ -1,18 +1,13 @@
-BuildPilot AI – Airo-style Projects + 2-project limit + Customer Requests
+BUILD PILOT V2 — Airo-inspired project workspace (without Airo branding)
 
 Files:
-- app.js: updated frontend. Replace the existing app.js only after making a backup.
-- customer_requests_and_limits.sql: run in Supabase SQL Editor.
+- app.js: updated frontend. Keeps existing project generation, adds 2-project limit gate, upgrade request flow, customer requests and a builder layout inspired by the supplied screenshot.
+- project-limit-customer-requests.sql: run once in Supabase SQL Editor.
+- admin.html: standalone admin page for receiving, approving and rejecting project-limit upgrade requests.
 
-Features:
-1. Airo-style Projects page and Create New Project modal.
-2. Default project limit shown from profiles.project_limit (fallback 2).
-3. Project 3 is blocked when the account limit is reached.
-4. Upgrade request form sends full_name, mobile, email, requested_limit and message to upgrade_requests.
-5. Customer Request button is injected into the public project and requests are visible to the project owner.
-6. Customer request RLS permits public insert and owner-only read/update.
-
-Important:
-- Do not expose Supabase secret/service_role keys in the frontend.
-- Keep your existing config.js.
-- Back up the current app.js before replacing it.
+IMPORTANT:
+1. Do not delete the existing repository files. Replace only app.js if you want the new frontend.
+2. Run the SQL before testing Customer Requests and Upgrade Requests.
+3. Keep config.js publishable key only. Never put a service-role/secret key in frontend files.
+4. The public website preview is kept separate; internal builder UI is not inserted into the client's published page.
+5. Default project_limit is 2 for new profiles; users already above 2 are not reduced.

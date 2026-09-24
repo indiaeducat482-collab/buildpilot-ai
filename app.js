@@ -1365,8 +1365,8 @@ document.head.appendChild(
       .bp-airo-new-title{text-align:center;margin-bottom:18px}.bp-airo-new-title h2{font-size:32px;margin:0 0 7px}.bp-airo-new-title p,.bp-airo-upgrade-modal p,.bp-airo-requests-modal>p{color:#64748b;margin:0}
       .bp-airo-modal-close{position:absolute;right:18px;top:18px;width:38px;height:38px;border:0;background:#f3f4f6;border-radius:9px;font-size:24px;cursor:pointer}
       .bp-airo-prompt-box{border:2px solid #c8b9df;border-radius:20px;padding:14px;box-shadow:0 0 0 5px rgba(109,73,199,.05),0 16px 35px rgba(15,23,42,.09)}.bp-airo-prompt-box textarea{width:100%;min-height:125px;border:0;outline:0;resize:vertical;font-size:17px;box-sizing:border-box}.bp-airo-prompt-actions{display:flex;justify-content:flex-end;gap:7px}.bp-airo-icon-btn{border:0;background:#fff;font-size:20px;padding:8px;cursor:pointer}.bp-airo-generate{border:0;border-radius:12px;background:#b9a5d7;color:#fff;font-weight:800;padding:12px 24px;cursor:pointer}
-      .bp-airo-ideas-title{text-align:center;color:#8a8f98;font-size:13px;margin:22px 0 12px}.bp-airo-pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}.bp-airo-pills button{border:1px solid #6d49c7;background:#fff;border-radius:999px;padding:7px 13px;cursor:pointer}.bp-airo-pills.small button{background:#f7f4fd;border:0;font-size:12px}.bp-airo-ideas-caption{text-align:center;color:#8a8f98;font-size:12px;margin:20px 0 8px}.bp-airo-new-fields,.bp-airo-upgrade-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:20px}.bp-airo-new-fields label,.bp-airo-upgrade-grid label,.bp-airo-upgrade-modal>label{display:block;font-size:12px;font-weight:800;color:#475569;margin-bottom:5px}.bp-airo-limit-note{margin-top:12px;background:#f8fafc;border-radius:10px;padding:10px;color:#64748b;font-size:12px}.bp-airo-upgrade-modal{max-width:650px}.bp-airo-upgrade-grid{grid-template-columns:1fr 1fr}.bp-airo-upgrade-modal>label{margin-top:15px}.bp-airo-upgrade-modal .bp-textarea{width:100%;box-sizing:border-box}.bp-airo-upgrade-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.bp-airo-request-card{border:1px solid #e5e7eb;border-radius:13px;padding:13px;margin-top:9px}.bp-airo-request-card>div:first-child{display:flex;justify-content:space-between;gap:8px}.bp-airo-request-card span{font-size:11px;color:#94a3b8}.bp-airo-request-card p{font-size:12px;color:#64748b}.bp-airo-error{background:#fef2f2;color:#b91c1c;padding:12px;border-radius:10px;margin-top:12px}
-      @media(max-width:700px){.bp-airo-new-project-modal,.bp-airo-upgrade-modal,.bp-airo-requests-modal{padding:22px}.bp-airo-new-fields,.bp-airo-upgrade-grid{grid-template-columns:1fr}}
+      .bp-airo-ideas-title{text-align:center;color:#8a8f98;font-size:13px;margin:22px 0 12px}.bp-airo-pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}.bp-airo-pills button{border:1px solid #6d49c7;background:#fff;border-radius:999px;padding:7px 13px;cursor:pointer}.bp-airo-pills.small button{background:#f7f4fd;border:0;font-size:12px}.bp-airo-ideas-caption{text-align:center;color:#8a8f98;font-size:12px;margin:20px 0 8px}.bp-airo-new-fields,.bp-airo-upgrade-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:20px}.bp-airo-new-fields label,.bp-airo-upgrade-grid label,.bp-airo-upgrade-modal>label{display:block;font-size:12px;font-weight:800;color:#475569;margin-bottom:5px}.bp-airo-limit-note{margin-top:12px;background:#f8fafc;border-radius:10px;padding:10px;color:#64748b;font-size:12px}.bp-airo-upgrade-modal{max-width:650px}.bp-small-upgrade-modal{width:min(470px,100%);padding:20px;border-radius:18px}.bp-small-close{width:32px;height:32px;right:12px;top:12px;font-size:20px}.bp-small-upgrade-head{display:flex;align-items:center;gap:10px;padding-right:28px}.bp-small-upgrade-icon{width:34px;height:34px;border-radius:9px;background:#f0eafa;color:#6742a9;display:grid;place-items:center;font-weight:900}.bp-small-upgrade-head h2{margin:0;font-size:18px}.bp-small-upgrade-head p{margin:3px 0 0!important;font-size:11px!important}.bp-small-upgrade-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}.bp-small-upgrade-fields label,.bp-small-upgrade-label{display:block;font-size:10px;font-weight:800;color:#475569;margin:0 0 4px}.bp-small-upgrade-fields .bp-input{padding:9px 10px;font-size:12px;border-radius:9px}.bp-small-upgrade-label{margin-top:11px}.bp-small-upgrade-textarea{min-height:70px;padding:9px 10px;font-size:12px;border-radius:9px}.bp-small-upgrade-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:11px}.bp-small-upgrade-actions .bp-airo-btn{padding:8px 11px;font-size:11px}.bp-airo-upgrade-grid{grid-template-columns:1fr 1fr}.bp-airo-upgrade-modal>label{margin-top:15px}.bp-airo-upgrade-modal .bp-textarea{width:100%;box-sizing:border-box}.bp-airo-upgrade-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.bp-airo-request-card{border:1px solid #e5e7eb;border-radius:13px;padding:13px;margin-top:9px}.bp-airo-request-card>div:first-child{display:flex;justify-content:space-between;gap:8px}.bp-airo-request-card span{font-size:11px;color:#94a3b8}.bp-airo-request-card p{font-size:12px;color:#64748b}.bp-compact-request-card{border:1px solid #e7e8ec;border-radius:10px;background:#fff;padding:10px;margin-bottom:7px}.bp-compact-request-card.is-new{border-color:#c9b7e5;background:#fcfaff}.bp-compact-request-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.bp-compact-request-top strong{font-size:12px}.bp-compact-request-top>span{font-size:9px;color:#9aa2ad;white-space:nowrap}.bp-new-badge{display:inline-block!important;margin-left:5px;padding:2px 5px;border-radius:999px;background:#eee7fb;color:#6742a9!important;font-size:8px!important;font-weight:800}.bp-compact-request-contact{margin-top:4px;font-size:10px;color:#64748b;word-break:break-word}.bp-compact-request-message{margin-top:6px;font-size:11px;color:#334155;line-height:1.45;white-space:pre-wrap}.bp-compact-request-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:7px;color:#94a3b8;font-size:9px}.bp-request-read-btn{border:1px solid #ddd6eb;background:#faf8ff;color:#6742a9;border-radius:7px;padding:4px 7px;font-size:9px;cursor:pointer}.bp-airo-error{background:#fef2f2;color:#b91c1c;padding:12px;border-radius:10px;margin-top:12px}
+      @media(max-width:700px){.bp-airo-new-project-modal,.bp-airo-upgrade-modal,.bp-airo-requests-modal{padding:22px}.bp-airo-new-fields,.bp-airo-upgrade-grid,.bp-small-upgrade-fields{grid-template-columns:1fr}}
     `;
 
     return;
@@ -3947,27 +3947,52 @@ ${js}
   function openUpgradeRequest(currentLimit) {
     const old = document.getElementById("bpUpgradeModal");
     if (old) old.remove();
+
     const limit = Math.max(1, Number(currentLimit || activeProfile?.project_limit || 2));
     const modal = document.createElement("div");
     modal.id = "bpUpgradeModal";
     modal.className = "bp-airo-modal-overlay";
     modal.innerHTML = `
-      <div class="bp-airo-upgrade-modal">
-        <button class="bp-airo-modal-close" onclick="document.getElementById('bpUpgradeModal').remove()">×</button>
-        <h2>Project limit reached</h2>
-        <p>Your current limit is <strong>${limit} projects</strong>. Send a request to Admin for a higher limit.</p>
-        <div class="bp-airo-upgrade-grid">
-          <div><label>Full Name</label><input id="upgradeFullName" class="bp-input" value="${escapeAttribute(activeProfile?.full_name || activeUser?.email || '')}"></div>
-          <div><label>Mobile Number</label><input id="upgradeMobile" class="bp-input" placeholder="10 digit mobile"></div>
-          <div><label>Email</label><input id="upgradeEmail" class="bp-input" value="${escapeAttribute(activeUser?.email || '')}"></div>
-          <div><label>Requested Project Limit</label><input id="upgradeLimit" class="bp-input" type="number" min="${limit+1}" value="${limit+3}"></div>
+      <div class="bp-airo-upgrade-modal bp-small-upgrade-modal">
+        <button class="bp-airo-modal-close bp-small-close" onclick="document.getElementById('bpUpgradeModal').remove()">×</button>
+        <div class="bp-small-upgrade-head">
+          <div class="bp-small-upgrade-icon">↑</div>
+          <div>
+            <h2>Request more projects</h2>
+            <p>Current limit: <strong>${limit}</strong>. Send a short request to Admin.</p>
+          </div>
         </div>
-        <label>Reason / Description</label>
-        <textarea id="upgradeMessage" class="bp-textarea" rows="5" placeholder="Tell Admin why you need more projects..."></textarea>
-        <div class="bp-airo-upgrade-actions"><button class="bp-airo-btn" onclick="document.getElementById('bpUpgradeModal').remove()">Cancel</button><button id="upgradeSendButton" class="bp-airo-btn primary" onclick="window.BuildPilot.sendUpgradeRequest()">Send to Admin</button></div>
+
+        <div class="bp-small-upgrade-fields">
+          <div>
+            <label>Name</label>
+            <input id="upgradeFullName" class="bp-input" value="${escapeAttribute(activeProfile?.full_name || activeUser?.email || '')}">
+          </div>
+          <div>
+            <label>Mobile</label>
+            <input id="upgradeMobile" class="bp-input" inputmode="numeric" placeholder="10 digit mobile">
+          </div>
+          <div>
+            <label>Email</label>
+            <input id="upgradeEmail" class="bp-input" value="${escapeAttribute(activeUser?.email || '')}">
+          </div>
+          <div>
+            <label>New limit</label>
+            <input id="upgradeLimit" class="bp-input" type="number" min="${limit+1}" value="${limit+3}">
+          </div>
+        </div>
+
+        <label class="bp-small-upgrade-label">Message</label>
+        <textarea id="upgradeMessage" class="bp-textarea bp-small-upgrade-textarea" rows="3" placeholder="Why do you need more projects?"></textarea>
+
+        <div class="bp-small-upgrade-actions">
+          <button class="bp-airo-btn" onclick="document.getElementById('bpUpgradeModal').remove()">Cancel</button>
+          <button id="upgradeSendButton" class="bp-airo-btn primary" onclick="window.BuildPilot.sendUpgradeRequest()">Send Request</button>
+        </div>
       </div>`;
     document.body.appendChild(modal);
   }
+
 
   async function sendUpgradeRequest() {
     const button = document.getElementById("upgradeSendButton");
@@ -3976,6 +4001,21 @@ ${js}
     if (requested <= current) { showToast("Requested limit must be higher than current limit.", "error"); return; }
     setButtonLoading(button, true, "Sending...");
     try {
+      const { data: pendingRequest, error: pendingError } = await client
+        .from("upgrade_requests")
+        .select("id")
+        .eq("user_id", activeUser.id)
+        .eq("request_type", "project_limit")
+        .eq("status", "pending")
+        .limit(1);
+
+      if (pendingError) throw pendingError;
+      if (pendingRequest?.length) {
+        document.getElementById("bpUpgradeModal")?.remove();
+        showToast("A project limit request is already pending with Admin.", "info");
+        return;
+      }
+
       const { error } = await client.from("upgrade_requests").insert({
         user_id: activeUser.id,
         request_type: "project_limit",
@@ -3991,6 +4031,81 @@ ${js}
       showToast("Upgrade request sent to Admin.", "success");
     } catch (e) { showToast(e.message || "Upgrade request failed.", "error"); }
     finally { setButtonLoading(button, false); }
+  }
+
+  async function loadCustomerRequests(projectId) {
+    const box = document.getElementById("customerRequestsList");
+    if (!box || !projectId) return;
+
+    box.innerHTML = `
+      <div style="padding:18px;text-align:center;color:#94a3b8;font-size:12px">
+        Loading customer requests...
+      </div>`;
+
+    const { data, error } = await client
+      .from("customer_requests")
+      .select("id,customer_name,mobile_number,email,message,status,created_at")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      box.innerHTML = `<div class="bp-airo-error">${escapeHtml(error.message)}</div>`;
+      return;
+    }
+
+    if (!data?.length) {
+      box.innerHTML = `
+        <div class="bp-airo-empty" style="padding:24px 12px;text-align:center">
+          <div class="bp-airo-empty-icon" style="font-size:24px">📩</div>
+          <h3 style="margin:8px 0 4px;font-size:14px">No customer requests yet</h3>
+          <p style="margin:0;color:#94a3b8;font-size:11px">
+            Requests submitted from the public website will appear here.
+          </p>
+        </div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:12px">${data.length} request${data.length === 1 ? "" : "s"}</strong>
+        <button class="bp-btn" style="padding:5px 8px;font-size:10px" onclick="window.BuildPilot.loadCustomerRequests('${escapeAttribute(projectId)}')">Refresh</button>
+      </div>
+      ${data.map(r => `
+        <article class="bp-compact-request-card ${r.status === "new" ? "is-new" : ""}">
+          <div class="bp-compact-request-top">
+            <div>
+              <strong>${escapeHtml(r.customer_name || "Customer")}</strong>
+              ${r.status === "new" ? `<span class="bp-new-badge">NEW</span>` : ""}
+            </div>
+            <span>${escapeHtml(new Date(r.created_at).toLocaleString())}</span>
+          </div>
+          <div class="bp-compact-request-contact">
+            ${r.mobile_number ? `📱 ${escapeHtml(r.mobile_number)}` : ""}
+            ${r.email ? ` · ✉ ${escapeHtml(r.email)}` : ""}
+          </div>
+          <div class="bp-compact-request-message">${escapeHtml(r.message || "")}</div>
+          <div class="bp-compact-request-bottom">
+            <span>Status: ${escapeHtml(r.status || "new")}</span>
+            ${r.status === "new" ? `<button class="bp-request-read-btn" onclick="window.BuildPilot.markCustomerRequestRead('${escapeAttribute(r.id)}','${escapeAttribute(projectId)}')">Mark read</button>` : ""}
+          </div>
+        </article>
+      `).join("")}`;
+  }
+
+  async function markCustomerRequestRead(requestId, projectId) {
+    const { error } = await client
+      .from("customer_requests")
+      .update({ status: "read", updated_at: new Date().toISOString() })
+      .eq("id", requestId)
+      .eq("project_id", projectId);
+
+    if (error) {
+      showToast("Could not update request: " + error.message, "error");
+      return;
+    }
+
+    await loadCustomerRequests(projectId);
+    showToast("Request marked as read.", "success");
   }
 
   async function openCustomerRequests(projectId) {
@@ -4335,6 +4450,12 @@ ${js}
 
     openCustomerRequests:
       openCustomerRequests,
+
+    loadCustomerRequests:
+      loadCustomerRequests,
+
+    markCustomerRequestRead:
+      markCustomerRequestRead,
   };
 
   /* =========================================================

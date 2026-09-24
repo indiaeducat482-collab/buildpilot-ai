@@ -1,1 +1,186 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><style>body{margin:0;background:#f5f6f8;font-family:Inter,system-ui,sans-serif;color:#111827}.wrap{max-width:1150px;margin:auto;padding:28px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 4px 18px rgba(15,23,42,.05)}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{padding:16px;background:#fafafa;border-radius:12px}.stat b{display:block;font-size:25px;margin-top:4px}.row{display:flex;gap:8px;align-items:center;justify-content:space-between;border-top:1px solid #eee;padding:14px 0}.muted{color:#64748b;font-size:12px}.btn{border:1px solid #d1d5db;background:#fff;border-radius:9px;padding:9px 12px;cursor:pointer}.ok{background:#166534;color:#fff;border-color:#166534}.no{background:#b91c1c;color:#fff;border-color:#b91c1c}input{padding:9px;border:1px solid #d1d5db;border-radius:8px;width:90px}@media(max-width:700px){.grid{grid-template-columns:1fr 1fr}.row{align-items:flex-start;flex-direction:column}}</style></head><body><div class="wrap"><div id="login" class="card"><h2>Admin Login</h2><form id="loginForm"><input id="email" style="width:100%;box-sizing:border-box;margin-bottom:8px" type="email" placeholder="Admin email" required><input id="password" style="width:100%;box-sizing:border-box;margin-bottom:8px" type="password" placeholder="Password" required><button class="btn ok" type="submit">Login</button></form><p id="error" class="muted"></p></div><div id="dash" style="display:none"><div class="card"><h1>Admin Dashboard</h1><button id="logout" class="btn">Logout</button></div><div class="grid"><div class="stat">Users<b id="users">0</b></div><div class="stat">Active<b id="active">0</b></div><div class="stat">Blocked<b id="blocked">0</b></div><div class="stat">Projects<b id="projects">0</b></div></div><div class="card"><h2>Project Limit Upgrade Requests</h2><div id="requests">Loading...</div></div></div></div><script>const cfg=window.BUILDPILOT_CONFIG||{};const sb=supabase.createClient(cfg.SUPABASE_URL||'',cfg.SUPABASE_PUBLISHABLE_KEY||'');const $=id=>document.getElementById(id);function msg(t){$('error').textContent=t}async function adminProfile(user){const {data,error}=await sb.from('profiles').select('id,full_name,role,status').eq('id',user.id).maybeSingle();if(error)throw error;if(!data||data.role!=='admin'||data.status!=='active')throw new Error('Admin access required.');return data}async function dashboard(user){await adminProfile(user);$('login').style.display='none';$('dash').style.display='block';const [u,p]=await Promise.all([sb.from('profiles').select('id,status'),sb.from('projects').select('id')]);$('users').textContent=u.data?.length||0;$('active').textContent=(u.data||[]).filter(x=>x.status==='active').length;$('blocked').textContent=(u.data||[]).filter(x=>x.status==='blocked').length;$('projects').textContent=p.data?.length||0;await requests()}async function requests(){const box=$('requests');const {data,error}=await sb.from('upgrade_requests').select('id,user_id,full_name,mobile_number,email,message,status,requested_limit,approved_limit,created_at').eq('request_type','project_limit').order('created_at',{ascending:false});if(error){box.innerHTML='<p class="muted">'+error.message+'</p>';return}if(!data?.length){box.innerHTML='<p class="muted">No requests.</p>';return}box.innerHTML=data.map(r=>'<div class="row"><div><b>'+esc(r.full_name||'User')+'</b> · '+esc(r.email||'')+'<div class="muted">Mobile: '+esc(r.mobile_number||'-')+' · Requested: '+esc(r.requested_limit||'-')+' · Status: '+esc(r.status||'pending')+'</div><div style="margin-top:6px">'+esc(r.message||'')+'</div></div><div>'+((r.status==='pending')?'<input id="limit-'+r.id+'" type="number" min="1" value="'+esc(r.requested_limit||5)+'"><button class="btn ok" onclick="approve(''+r.id+'')">Approve</button><button class="btn no" onclick="reject(''+r.id+'')">Reject</button>':'<span class="muted">'+esc(r.status)+'</span>')+'</div></div>').join('')}function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}async function approve(id){const limit=Number($('limit-'+id)?.value||0);if(limit<1)return alert('Enter a valid limit.');const {data:r,error:e}=await sb.from('upgrade_requests').select('user_id').eq('id',id).single();if(e)throw e;const {error:pe}=await sb.from('profiles').update({project_limit:limit}).eq('id',r.user_id);if(pe)throw pe;const {error:re}=await sb.from('upgrade_requests').update({status:'approved',approved_limit:limit,updated_at:new Date().toISOString()}).eq('id',id);if(re)throw re;await requests();alert('Approved.')}async function reject(id){const {error}=await sb.from('upgrade_requests').update({status:'rejected',updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;await requests()}$('loginForm').onsubmit=async e=>{e.preventDefault();try{const {data,error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;await dashboard(data.user)}catch(e){msg(e.message)}};$('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};sb.auth.getSession().then(x=>{if(x.data.session?.user)dashboard(x.data.session.user).catch(e=>msg(e.message))});</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f6f7f9;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#111827}
+.wrap{max-width:1120px;margin:auto;padding:20px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 3px 14px rgba(15,23,42,.04)}
+.login-card{max-width:390px;margin:70px auto}
+h1{font-size:22px;margin:0}h2{font-size:16px;margin:0 0 10px}h3{font-size:13px;margin:0}
+.muted{color:#64748b;font-size:11px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{padding:13px;background:#fafafa;border:1px solid #eee;border-radius:11px}
+.stat span{font-size:10px;color:#64748b}.stat b{display:block;font-size:22px;margin-top:2px}
+.input{width:100%;padding:9px 10px;border:1px solid #d1d5db;border-radius:9px;font-size:12px;outline:0}
+.field{margin-bottom:9px}.field label{display:block;font-size:10px;font-weight:800;color:#475569;margin-bottom:4px}
+.btn{border:1px solid #d1d5db;background:#fff;color:#111827;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer}
+.btn.ok{background:#166534;color:#fff;border-color:#166534}.btn.no{background:#b91c1c;color:#fff;border-color:#b91c1c}
+.btn.dark{background:#111827;color:#fff;border-color:#111827}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.req{border:1px solid #e7e8ec;border-radius:11px;padding:10px;margin-top:7px;background:#fff}
+.req.new{border-color:#c9b7e5;background:#fcfaff}
+.req-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.req-name{font-size:12px;font-weight:800}.date{font-size:9px;color:#94a3b8;white-space:nowrap}
+.badge{font-size:8px;padding:2px 5px;border-radius:999px;background:#eee7fb;color:#6742a9;margin-left:5px}
+.req-contact{font-size:10px;color:#64748b;margin-top:4px;word-break:break-word}
+.req-message{font-size:11px;color:#334155;margin-top:6px;line-height:1.45;white-space:pre-wrap}
+.req-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:9px;color:#94a3b8}
+.actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.limit{width:72px;padding:6px 7px;border:1px solid #d1d5db;border-radius:7px;font-size:10px}
+.empty{padding:18px;text-align:center;color:#94a3b8;font-size:11px}
+@media(max-width:700px){.wrap{padding:12px}.grid{grid-template-columns:1fr 1fr}.top{align-items:flex-start}.req-top{align-items:flex-start;flex-direction:column;gap:3px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="login" class="card login-card">
+    <h2>Admin Login</h2>
+    <form id="loginForm">
+      <div class="field"><label>Email</label><input id="email" class="input" type="email" placeholder="Admin email" required></div>
+      <div class="field"><label>Password</label><input id="password" class="input" type="password" placeholder="Password" required></div>
+      <button class="btn dark" style="width:100%;padding:10px" type="submit">Login</button>
+    </form>
+    <p id="error" class="muted"></p>
+  </div>
+
+  <div id="dash" style="display:none">
+    <div class="card top">
+      <div><h1>Admin Dashboard</h1><div class="muted">Manage project limits and customer requests.</div></div>
+      <button id="logout" class="btn">Logout</button>
+    </div>
+
+    <div class="grid" style="margin-bottom:14px">
+      <div class="stat"><span>Users</span><b id="users">0</b></div>
+      <div class="stat"><span>Active</span><b id="active">0</b></div>
+      <div class="stat"><span>Blocked</span><b id="blocked">0</b></div>
+      <div class="stat"><span>Projects</span><b id="projects">0</b></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div><h2>Project Limit Requests</h2><div class="muted">Small, compact request list.</div></div>
+        <button class="btn" onclick="loadUpgradeRequests()">Refresh</button>
+      </div>
+      <div id="requests">Loading...</div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div><h2>Customer Requests</h2><div class="muted">Requests received from published client websites.</div></div>
+        <button class="btn" onclick="loadCustomerRequests()">Refresh</button>
+      </div>
+      <div id="customerRequests">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cfg=window.BUILDPILOT_CONFIG||{};
+const sb=supabase.createClient(cfg.SUPABASE_URL||'',cfg.SUPABASE_PUBLISHABLE_KEY||'');
+const $=id=>document.getElementById(id);
+function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
+function msg(t){$('error').textContent=t}
+async function adminProfile(user){
+  const {data,error}=await sb.from('profiles').select('id,full_name,role,status').eq('id',user.id).maybeSingle();
+  if(error)throw error;
+  if(!data||data.role!=='admin'||data.status!=='active')throw new Error('Admin access required.');
+  return data;
+}
+async function dashboard(user){
+  await adminProfile(user);
+  $('login').style.display='none';$('dash').style.display='block';
+  const [u,p]=await Promise.all([
+    sb.from('profiles').select('id,status'),
+    sb.from('projects').select('id')
+  ]);
+  $('users').textContent=u.data?.length||0;
+  $('active').textContent=(u.data||[]).filter(x=>x.status==='active').length;
+  $('blocked').textContent=(u.data||[]).filter(x=>x.status==='blocked').length;
+  $('projects').textContent=p.data?.length||0;
+  await Promise.all([loadUpgradeRequests(),loadCustomerRequests()]);
+}
+async function loadUpgradeRequests(){
+  const box=$('requests');box.innerHTML='<div class="empty">Loading...</div>';
+  const {data,error}=await sb.from('upgrade_requests')
+    .select('id,user_id,full_name,mobile_number,email,message,status,requested_limit,approved_limit,created_at')
+    .eq('request_type','project_limit').order('created_at',{ascending:false});
+  if(error){box.innerHTML='<div class="empty">'+esc(error.message)+'</div>';return}
+  if(!data?.length){box.innerHTML='<div class="empty">No project limit requests.</div>';return}
+  box.innerHTML=data.map(r=>`
+    <div class="req ${r.status==='pending'?'new':''}">
+      <div class="req-top">
+        <div><span class="req-name">${esc(r.full_name||'User')}</span>${r.status==='pending'?'<span class="badge">NEW</span>':''}</div>
+        <span class="date">${esc(new Date(r.created_at).toLocaleString())}</span>
+      </div>
+      <div class="req-contact">${r.email?`✉ ${esc(r.email)}`:''}${r.mobile_number?` · 📱 ${esc(r.mobile_number)}`:''} · Current/Requested: ${esc(r.requested_limit||'-')}</div>
+      <div class="req-message">${esc(r.message||'')}</div>
+      <div class="req-bottom">
+        <span>Status: ${esc(r.status||'pending')}</span>
+        ${r.status==='pending'?`<div class="actions"><input id="limit-${r.id}" class="limit" type="number" min="1" value="${esc(r.requested_limit||5)}"><button class="btn ok" onclick="approve('${esc(r.id)}')">Approve</button><button class="btn no" onclick="rejectRequest('${esc(r.id)}')">Reject</button></div>`:`<span>Approved: ${esc(r.approved_limit||'-')}</span>`}
+      </div>
+    </div>`).join('');
+}
+async function approve(id){
+  const limit=Number($('limit-'+id)?.value||0);
+  if(limit<1)return alert('Enter a valid limit.');
+  const {data:r,error:e}=await sb.from('upgrade_requests').select('user_id').eq('id',id).single();
+  if(e)throw e;
+  const {error:pe}=await sb.from('profiles').update({project_limit:limit}).eq('id',r.user_id);
+  if(pe)throw pe;
+  const {error:re}=await sb.from('upgrade_requests').update({status:'approved',approved_limit:limit,updated_at:new Date().toISOString()}).eq('id',id);
+  if(re)throw re;
+  await loadUpgradeRequests();alert('Approved.');
+}
+async function rejectRequest(id){
+  const {error}=await sb.from('upgrade_requests').update({status:'rejected',updated_at:new Date().toISOString()}).eq('id',id);
+  if(error)throw error;
+  await loadUpgradeRequests();
+}
+async function loadCustomerRequests(){
+  const box=$('customerRequests');box.innerHTML='<div class="empty">Loading...</div>';
+  const {data,error}=await sb.from('customer_requests')
+    .select('id,project_id,customer_name,mobile_number,email,message,status,created_at')
+    .order('created_at',{ascending:false}).limit(100);
+  if(error){box.innerHTML='<div class="empty">'+esc(error.message)+'</div>';return}
+  if(!data?.length){box.innerHTML='<div class="empty">No customer requests received.</div>';return}
+  const projectIds=[...new Set(data.map(x=>x.project_id).filter(Boolean))];
+  let projectMap={};
+  if(projectIds.length){
+    const {data:projects}=await sb.from('projects').select('id,name').in('id',projectIds);
+    (projects||[]).forEach(p=>projectMap[p.id]=p.name);
+  }
+  box.innerHTML=data.map(r=>`
+    <div class="req ${r.status==='new'?'new':''}">
+      <div class="req-top">
+        <div><span class="req-name">${esc(r.customer_name||'Customer')}</span>${r.status==='new'?'<span class="badge">NEW</span>':''}</div>
+        <span class="date">${esc(new Date(r.created_at).toLocaleString())}</span>
+      </div>
+      <div class="req-contact">Project: <b>${esc(projectMap[r.project_id]||r.project_id||'-')}</b>${r.mobile_number?` · 📱 ${esc(r.mobile_number)}`:''}${r.email?` · ✉ ${esc(r.email)}`:''}</div>
+      <div class="req-message">${esc(r.message||'')}</div>
+      <div class="req-bottom"><span>Status: ${esc(r.status||'new')}</span>${r.status==='new'?`<button class="btn" onclick="markCustomerRead('${esc(r.id)}')">Mark read</button>`:''}</div>
+    </div>`).join('');
+}
+async function markCustomerRead(id){
+  const {error}=await sb.from('customer_requests').update({status:'read',updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){alert(error.message);return}
+  await loadCustomerRequests();
+}
+$('loginForm').onsubmit=async e=>{
+  e.preventDefault();
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+    if(error)throw error;
+    await dashboard(data.user);
+  }catch(e){msg(e.message)}
+};
+$('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
+sb.auth.getSession().then(x=>{if(x.data.session?.user)dashboard(x.data.session.user).catch(e=>msg(e.message))});
+</script>
+</body>
+</html>

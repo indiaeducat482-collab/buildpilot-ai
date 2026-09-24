@@ -45,3 +45,43 @@ using (exists(select 1 from public.projects p where p.id=customer_requests.proje
 with check (exists(select 1 from public.projects p where p.id=customer_requests.project_id and p.user_id=(select auth.uid())));
 
 create index if not exists customer_requests_project_created_idx on public.customer_requests(project_id,created_at desc);
+
+
+-- Admin can receive/manage customer requests from all published client sites.
+drop policy if exists "customer_requests_admin_select" on public.customer_requests;
+create policy "customer_requests_admin_select" on public.customer_requests
+for select to authenticated
+using (
+  exists (
+    select 1
+    from public.profiles pr
+    where pr.id = (select auth.uid())
+      and pr.role = 'admin'
+      and pr.status = 'active'
+  )
+);
+
+drop policy if exists "customer_requests_admin_update" on public.customer_requests;
+create policy "customer_requests_admin_update" on public.customer_requests
+for update to authenticated
+using (
+  exists (
+    select 1
+    from public.profiles pr
+    where pr.id = (select auth.uid())
+      and pr.role = 'admin'
+      and pr.status = 'active'
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.profiles pr
+    where pr.id = (select auth.uid())
+      and pr.role = 'admin'
+      and pr.status = 'active'
+  )
+);
+
+create index if not exists customer_requests_status_created_idx
+on public.customer_requests(status, created_at desc);

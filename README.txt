@@ -1,30 +1,17 @@
-BUILD PILOT — CUSTOMER REQUEST + LIMIT REQUEST FIX
+BUILD PILOT AI V7
 
-Included:
-1. app.js
-   - Customer Requests now load correctly inside the project workspace Requests tab.
-   - Customer requests can be refreshed and marked as read.
-   - Public website Customer Request form saves into customer_requests.
-   - Project-limit request popup is smaller/compact and desktop/mobile friendly.
-   - Duplicate pending project-limit requests are prevented.
-   - No internal builder branding is inserted into the public project HTML.
+1) Replace only GitHub app.js with this app.js.
+2) Run project-limit-v7.sql once in Supabase SQL Editor.
+3) Keep existing config.js, index.html, styles.css and other files.
+4) Admin page remains admin.html. Admin can Approve/Reject project-limit requests.
 
-2. admin.html
-   - Compact Project Limit Requests section.
-   - Approve / Reject requests.
-   - Customer Requests section for all received public-site requests.
-   - Mark customer requests as read.
-
-3. project-limit-customer-requests.sql
-   - Creates/updates customer_requests.
-   - Owner policies for receiving customer requests.
-   - Admin policies so admin can receive/manage customer requests.
-   - Project limit defaults to 2 for new profiles.
-   - Existing users with a non-null higher limit are preserved.
-
-IMPORTANT:
-- Run the SQL in Supabase SQL Editor before testing.
-- Replace only app.js and admin.html in your existing repository.
-- Keep your existing config.js.
-- Use only the Supabase publishable key in frontend files; never add a service-role key.
-- Do not delete the existing repository files.
+FEATURES
+- Every new/free user has a default project limit of 2 (Supabase default).
+- When a user reaches 2 projects, creating another project opens a compact Limit Request form.
+- User sends requested limit to Admin.
+- Admin can approve or reject from admin.html.
+- Approving updates that user's project_limit.
+- Search bar added to Projects page; filters name, description, status, frontend and backend.
+- Public project link remains supported with ?public=<public_id>.
+- Customer request public form no longer shows the old "Request could not be sent." message; successful requests show success, actual failures show a generic retry message.
+- Existing files/config are preserved; do not delete repo files.

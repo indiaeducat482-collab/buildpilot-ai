@@ -15,24 +15,24 @@ body{margin:0;background:#f6f7f9;font-family:Inter,system-ui,-apple-system,"Sego
 h1{font-size:22px;margin:0}h2{font-size:16px;margin:0 0 10px}h3{font-size:13px;margin:0}
 .muted{color:#64748b;font-size:11px;line-height:1.5}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.stat{padding:13px;background:#fafafa;border:1px solid #eee;border-radius:11px}
-.stat span{font-size:10px;color:#64748b}.stat b{display:block;font-size:22px;margin-top:2px}
+.stat{padding:10px;background:#fafafa;border:1px solid #eee;border-radius:9px}
+.stat span{font-size:10px;color:#64748b}.stat b{display:block;font-size:19px;margin-top:1px}
 .input{width:100%;padding:9px 10px;border:1px solid #d1d5db;border-radius:9px;font-size:12px;outline:0}
 .field{margin-bottom:9px}.field label{display:block;font-size:10px;font-weight:800;color:#475569;margin-bottom:4px}
-.btn{border:1px solid #d1d5db;background:#fff;color:#111827;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer}
+.btn{border:1px solid #d1d5db;background:#fff;color:#111827;border-radius:7px;padding:5px 8px;font-size:9px;font-weight:700;cursor:pointer}
 .btn.ok{background:#166534;color:#fff;border-color:#166534}.btn.no{background:#b91c1c;color:#fff;border-color:#b91c1c}
 .btn.dark{background:#111827;color:#fff;border-color:#111827}
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.req{border:1px solid #e7e8ec;border-radius:11px;padding:10px;margin-top:7px;background:#fff}
+.req{border:1px solid #e7e8ec;border-radius:9px;padding:7px 8px;margin-top:5px;background:#fff}
 .req.new{border-color:#c9b7e5;background:#fcfaff}
 .req-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
-.req-name{font-size:12px;font-weight:800}.date{font-size:9px;color:#94a3b8;white-space:nowrap}
+.req-name{font-size:11px;font-weight:800}.date{font-size:9px;color:#94a3b8;white-space:nowrap}
 .badge{font-size:8px;padding:2px 5px;border-radius:999px;background:#eee7fb;color:#6742a9;margin-left:5px}
-.req-contact{font-size:10px;color:#64748b;margin-top:4px;word-break:break-word}
-.req-message{font-size:11px;color:#334155;margin-top:6px;line-height:1.45;white-space:pre-wrap}
-.req-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:9px;color:#94a3b8}
-.actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.limit{width:72px;padding:6px 7px;border:1px solid #d1d5db;border-radius:7px;font-size:10px}
+.req-contact{font-size:9px;color:#64748b;margin-top:3px;word-break:break-word}
+.req-message{font-size:10px;color:#334155;margin-top:4px;line-height:1.35;white-space:pre-wrap}
+.req-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:8px;color:#94a3b8}
+.actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.limit{width:58px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;font-size:9px}
 .empty{padding:18px;text-align:center;color:#94a3b8;font-size:11px}
 @media(max-width:700px){.wrap{padding:12px}.grid{grid-template-columns:1fr 1fr}.top{align-items:flex-start}.req-top{align-items:flex-start;flex-direction:column;gap:3px}}
 </style>
@@ -64,7 +64,7 @@ h1{font-size:22px;margin:0}h2{font-size:16px;margin:0 0 10px}h3{font-size:13px;m
 
     <div class="card">
       <div class="section-head">
-        <div><h2>Project Limit Requests</h2><div class="muted">Small, compact request list.</div></div>
+        <div><h2>Project Limit Requests</h2><div class="muted">Approve or reject limit requests.</div></div>
         <button class="btn" onclick="loadUpgradeRequests()">Refresh</button>
       </div>
       <div id="requests">Loading...</div>

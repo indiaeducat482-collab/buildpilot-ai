@@ -1365,8 +1365,8 @@ document.head.appendChild(
       .bp-airo-new-title{text-align:center;margin-bottom:18px}.bp-airo-new-title h2{font-size:32px;margin:0 0 7px}.bp-airo-new-title p,.bp-airo-upgrade-modal p,.bp-airo-requests-modal>p{color:#64748b;margin:0}
       .bp-airo-modal-close{position:absolute;right:18px;top:18px;width:38px;height:38px;border:0;background:#f3f4f6;border-radius:9px;font-size:24px;cursor:pointer}
       .bp-airo-prompt-box{border:2px solid #c8b9df;border-radius:20px;padding:14px;box-shadow:0 0 0 5px rgba(109,73,199,.05),0 16px 35px rgba(15,23,42,.09)}.bp-airo-prompt-box textarea{width:100%;min-height:125px;border:0;outline:0;resize:vertical;font-size:17px;box-sizing:border-box}.bp-airo-prompt-actions{display:flex;justify-content:flex-end;gap:7px}.bp-airo-icon-btn{border:0;background:#fff;font-size:20px;padding:8px;cursor:pointer}.bp-airo-generate{border:0;border-radius:12px;background:#b9a5d7;color:#fff;font-weight:800;padding:12px 24px;cursor:pointer}
-      .bp-airo-ideas-title{text-align:center;color:#8a8f98;font-size:13px;margin:22px 0 12px}.bp-airo-pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}.bp-airo-pills button{border:1px solid #6d49c7;background:#fff;border-radius:999px;padding:7px 13px;cursor:pointer}.bp-airo-pills.small button{background:#f7f4fd;border:0;font-size:12px}.bp-airo-ideas-caption{text-align:center;color:#8a8f98;font-size:12px;margin:20px 0 8px}.bp-airo-new-fields,.bp-airo-upgrade-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:20px}.bp-airo-new-fields label,.bp-airo-upgrade-grid label,.bp-airo-upgrade-modal>label{display:block;font-size:12px;font-weight:800;color:#475569;margin-bottom:5px}.bp-airo-limit-note{margin-top:12px;background:#f8fafc;border-radius:10px;padding:10px;color:#64748b;font-size:12px}.bp-airo-upgrade-modal{max-width:650px}.bp-small-upgrade-modal{width:min(470px,100%);padding:20px;border-radius:18px}.bp-small-close{width:32px;height:32px;right:12px;top:12px;font-size:20px}.bp-small-upgrade-head{display:flex;align-items:center;gap:10px;padding-right:28px}.bp-small-upgrade-icon{width:34px;height:34px;border-radius:9px;background:#f0eafa;color:#6742a9;display:grid;place-items:center;font-weight:900}.bp-small-upgrade-head h2{margin:0;font-size:18px}.bp-small-upgrade-head p{margin:3px 0 0!important;font-size:11px!important}.bp-small-upgrade-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}.bp-small-upgrade-fields label,.bp-small-upgrade-label{display:block;font-size:10px;font-weight:800;color:#475569;margin:0 0 4px}.bp-small-upgrade-fields .bp-input{padding:9px 10px;font-size:12px;border-radius:9px}.bp-small-upgrade-label{margin-top:11px}.bp-small-upgrade-textarea{min-height:70px;padding:9px 10px;font-size:12px;border-radius:9px}.bp-small-upgrade-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:11px}.bp-small-upgrade-actions .bp-airo-btn{padding:8px 11px;font-size:11px}.bp-airo-upgrade-grid{grid-template-columns:1fr 1fr}.bp-airo-upgrade-modal>label{margin-top:15px}.bp-airo-upgrade-modal .bp-textarea{width:100%;box-sizing:border-box}.bp-airo-upgrade-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.bp-airo-request-card{border:1px solid #e5e7eb;border-radius:13px;padding:13px;margin-top:9px}.bp-airo-request-card>div:first-child{display:flex;justify-content:space-between;gap:8px}.bp-airo-request-card span{font-size:11px;color:#94a3b8}.bp-airo-request-card p{font-size:12px;color:#64748b}.bp-compact-request-card{border:1px solid #e7e8ec;border-radius:10px;background:#fff;padding:10px;margin-bottom:7px}.bp-compact-request-card.is-new{border-color:#c9b7e5;background:#fcfaff}.bp-compact-request-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.bp-compact-request-top strong{font-size:12px}.bp-compact-request-top>span{font-size:9px;color:#9aa2ad;white-space:nowrap}.bp-new-badge{display:inline-block!important;margin-left:5px;padding:2px 5px;border-radius:999px;background:#eee7fb;color:#6742a9!important;font-size:8px!important;font-weight:800}.bp-compact-request-contact{margin-top:4px;font-size:10px;color:#64748b;word-break:break-word}.bp-compact-request-message{margin-top:6px;font-size:11px;color:#334155;line-height:1.45;white-space:pre-wrap}.bp-compact-request-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:7px;color:#94a3b8;font-size:9px}.bp-request-read-btn{border:1px solid #ddd6eb;background:#faf8ff;color:#6742a9;border-radius:7px;padding:4px 7px;font-size:9px;cursor:pointer}.bp-airo-error{background:#fef2f2;color:#b91c1c;padding:12px;border-radius:10px;margin-top:12px}
-      @media(max-width:700px){.bp-airo-new-project-modal,.bp-airo-upgrade-modal,.bp-airo-requests-modal{padding:22px}.bp-airo-new-fields,.bp-airo-upgrade-grid,.bp-small-upgrade-fields{grid-template-columns:1fr}}
+      .bp-airo-ideas-title{text-align:center;color:#8a8f98;font-size:13px;margin:22px 0 12px}.bp-airo-pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}.bp-airo-pills button{border:1px solid #6d49c7;background:#fff;border-radius:999px;padding:7px 13px;cursor:pointer}.bp-airo-pills.small button{background:#f7f4fd;border:0;font-size:12px}.bp-airo-ideas-caption{text-align:center;color:#8a8f98;font-size:12px;margin:20px 0 8px}.bp-airo-new-fields,.bp-airo-upgrade-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:20px}.bp-airo-new-fields label,.bp-airo-upgrade-grid label,.bp-airo-upgrade-modal>label{display:block;font-size:12px;font-weight:800;color:#475569;margin-bottom:5px}.bp-airo-limit-note{margin-top:12px;background:#f8fafc;border-radius:10px;padding:10px;color:#64748b;font-size:12px}.bp-airo-upgrade-modal{max-width:650px}.bp-small-upgrade-modal{width:min(390px,100%);padding:16px;border-radius:16px}.bp-small-close{width:32px;height:32px;right:12px;top:12px;font-size:20px}.bp-small-upgrade-head{display:flex;align-items:center;gap:10px;padding-right:28px}.bp-small-upgrade-icon{width:34px;height:34px;border-radius:9px;background:#f0eafa;color:#6742a9;display:grid;place-items:center;font-weight:900}.bp-small-upgrade-head h2{margin:0;font-size:16px}.bp-small-upgrade-head p{margin:3px 0 0!important;font-size:11px!important}.bp-small-upgrade-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:12px}.bp-small-upgrade-fields label,.bp-small-upgrade-label{display:block;font-size:10px;font-weight:800;color:#475569;margin:0 0 4px}.bp-small-upgrade-fields .bp-input{padding:9px 10px;font-size:12px;border-radius:9px}.bp-small-upgrade-label{margin-top:11px}.bp-small-upgrade-textarea{min-height:52px;padding:8px 9px;font-size:11px;border-radius:8px}.bp-small-upgrade-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:11px}.bp-small-upgrade-actions .bp-airo-btn{padding:8px 11px;font-size:11px}.bp-airo-upgrade-grid{grid-template-columns:1fr 1fr}.bp-airo-upgrade-modal>label{margin-top:15px}.bp-airo-upgrade-modal .bp-textarea{width:100%;box-sizing:border-box}.bp-airo-upgrade-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.bp-airo-request-card{border:1px solid #e5e7eb;border-radius:13px;padding:13px;margin-top:9px}.bp-airo-request-card>div:first-child{display:flex;justify-content:space-between;gap:8px}.bp-airo-request-card span{font-size:11px;color:#94a3b8}.bp-airo-request-card p{font-size:12px;color:#64748b}.bp-compact-request-card{border:1px solid #e7e8ec;border-radius:10px;background:#fff;padding:10px;margin-bottom:7px}.bp-compact-request-card.is-new{border-color:#c9b7e5;background:#fcfaff}.bp-compact-request-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.bp-compact-request-top strong{font-size:12px}.bp-compact-request-top>span{font-size:9px;color:#9aa2ad;white-space:nowrap}.bp-new-badge{display:inline-block!important;margin-left:5px;padding:2px 5px;border-radius:999px;background:#eee7fb;color:#6742a9!important;font-size:8px!important;font-weight:800}.bp-compact-request-contact{margin-top:4px;font-size:10px;color:#64748b;word-break:break-word}.bp-compact-request-message{margin-top:6px;font-size:11px;color:#334155;line-height:1.45;white-space:pre-wrap}.bp-compact-request-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:7px;color:#94a3b8;font-size:9px}.bp-request-read-btn{border:1px solid #ddd6eb;background:#faf8ff;color:#6742a9;border-radius:7px;padding:4px 7px;font-size:9px;cursor:pointer}.bp-airo-error{background:#fef2f2;color:#b91c1c;padding:12px;border-radius:10px;margin-top:12px}
+      @media(max-width:700px){.bp-airo-new-project-modal,.bp-airo-upgrade-modal,.bp-airo-requests-modal{padding:18px}.bp-airo-new-fields,.bp-airo-upgrade-grid,.bp-small-upgrade-fields{grid-template-columns:1fr}}
     `;
 
     return;
@@ -4126,147 +4126,60 @@ ${js}
 
   function addCustomerRequestWidget(html, projectId) {
     const widget = `<style>
-#bpCustomerRequestButton{position:fixed;right:22px;bottom:22px;z-index:2147483000;border:0;border-radius:999px;padding:13px 18px;background:#111827;color:#fff;font:700 14px system-ui;box-shadow:0 10px 30px rgba(0,0,0,.2);cursor:pointer}#bpCustomerRequestModal{display:none;position:fixed;inset:0;z-index:2147483001;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:18px}#bpCustomerRequestModal .box{width:min(440px,100%);background:#fff;border-radius:18px;padding:22px;box-shadow:0 25px 80px rgba(0,0,0,.25);font-family:system-ui}#bpCustomerRequestModal input,#bpCustomerRequestModal textarea{width:100%;box-sizing:border-box;padding:11px;margin:6px 0 10px;border:1px solid #d1d5db;border-radius:10px}#bpCustomerRequestModal .row{display:flex;justify-content:flex-end;gap:8px}#bpCustomerRequestSubmit{background:#111827;color:#fff;border:0;border-radius:9px;padding:10px 14px}</style>
-<button id="bpCustomerRequestButton">Customer Request</button><div id="bpCustomerRequestModal"><div class="box"><h3>Send a request</h3><p>Fill your details and the project owner will receive your request.</p><input id="bpReqName" placeholder="Your name"><input id="bpReqMobile" placeholder="Mobile number"><input id="bpReqEmail" type="email" placeholder="Email"><textarea id="bpReqMessage" rows="4" placeholder="How can we help?"></textarea><div class="row"><button onclick="document.getElementById('bpCustomerRequestModal').style.display='none'">Cancel</button><button id="bpCustomerRequestSubmit">Send Request</button></div></div></div><script>(function(){var pid=${JSON.stringify(String(projectId||''))},url=${JSON.stringify(SUPABASE_URL)},key=${JSON.stringify(SUPABASE_KEY)};var b=document.getElementById('bpCustomerRequestButton'),m=document.getElementById('bpCustomerRequestModal');b.onclick=function(){m.style.display='flex'};document.getElementById('bpCustomerRequestSubmit').onclick=async function(){var n=document.getElementById('bpReqName').value.trim(),mo=document.getElementById('bpReqMobile').value.trim(),e=document.getElementById('bpReqEmail').value.trim(),msg=document.getElementById('bpReqMessage').value.trim();if(!n||!msg){alert('Name and message are required.');return}var btn=this;btn.disabled=true;btn.textContent='Sending...';try{var r=await fetch(url+'/rest/v1/customer_requests',{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({project_id:pid,customer_name:n,mobile_number:mo,email:e,message:msg,status:'new'})});if(!r.ok)throw new Error(await r.text());alert('Request sent successfully.');m.style.display='none'}catch(err){alert('Request could not be sent.')}finally{btn.disabled=false;btn.textContent='Send Request'}}})();</script>`;
+#bpCustomerRequestButton{position:fixed;right:20px;bottom:20px;z-index:2147483000;border:0;border-radius:12px;padding:11px 15px;background:linear-gradient(135deg,#111827,#334155);color:#fff;font:700 13px system-ui;box-shadow:0 12px 28px rgba(15,23,42,.22);cursor:pointer;transition:.2s}
+#bpCustomerRequestButton:hover{transform:translateY(-1px);box-shadow:0 16px 34px rgba(15,23,42,.28)}
+#bpCustomerRequestModal{display:none;position:fixed;inset:0;z-index:2147483001;background:rgba(15,23,42,.46);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px}
+#bpCustomerRequestModal .box{width:min(390px,100%);background:#fff;border:1px solid rgba(255,255,255,.7);border-radius:20px;padding:20px;box-shadow:0 30px 90px rgba(15,23,42,.28);font-family:system-ui;color:#0f172a}
+#bpCustomerRequestModal .head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+#bpCustomerRequestModal .icon{width:36px;height:36px;border-radius:11px;background:#f1ecfb;color:#6842a8;display:grid;place-items:center;font-weight:900}
+#bpCustomerRequestModal h3{margin:0;font-size:17px}
+#bpCustomerRequestModal .sub{margin:3px 0 0;color:#64748b;font-size:11px;line-height:1.4}
+#bpCustomerRequestModal input,#bpCustomerRequestModal textarea{width:100%;box-sizing:border-box;padding:10px 11px;margin:0 0 8px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;outline:0;font:12px system-ui;color:#0f172a}
+#bpCustomerRequestModal input:focus,#bpCustomerRequestModal textarea:focus{border-color:#a78bfa;background:#fff;box-shadow:0 0 0 3px rgba(139,92,246,.10)}
+#bpCustomerRequestModal textarea{resize:vertical;min-height:78px}
+#bpCustomerRequestModal .row{display:flex;justify-content:flex-end;gap:7px;margin-top:3px}
+#bpCustomerRequestModal .cancel{background:#fff;color:#475569;border:1px solid #e2e8f0;border-radius:9px;padding:9px 12px;font-size:11px;font-weight:700;cursor:pointer}
+#bpCustomerRequestSubmit{background:#111827;color:#fff;border:0;border-radius:9px;padding:9px 13px;font-size:11px;font-weight:800;cursor:pointer}
+#bpCustomerRequestSubmit:disabled{opacity:.65;cursor:wait}
+#bpCustomerRequestStatus{display:none;margin:0 0 9px;padding:8px 10px;border-radius:9px;font-size:11px;line-height:1.35}
+#bpCustomerRequestStatus.ok{display:block;background:#ecfdf5;color:#166534}
+#bpCustomerRequestStatus.err{display:block;background:#fef2f2;color:#b91c1c}
+</style>
+<button id="bpCustomerRequestButton">Customer Request</button>
+<div id="bpCustomerRequestModal"><div class="box">
+  <div class="head"><div class="icon">✦</div><div><h3>Send a request</h3><div class="sub">Your details will be sent securely to the project owner.</div></div></div>
+  <div id="bpCustomerRequestStatus"></div>
+  <input id="bpReqName" placeholder="Your name">
+  <input id="bpReqMobile" placeholder="Mobile number">
+  <input id="bpReqEmail" type="email" placeholder="Email">
+  <textarea id="bpReqMessage" rows="4" placeholder="How can we help?"></textarea>
+  <div class="row"><button class="cancel" onclick="document.getElementById('bpCustomerRequestModal').style.display='none'">Cancel</button><button id="bpCustomerRequestSubmit">Send Request</button></div>
+</div></div>
+<script>(function(){
+var pid=${JSON.stringify(String(projectId||''))},url=${JSON.stringify(SUPABASE_URL)},key=${JSON.stringify(SUPABASE_KEY)};
+var b=document.getElementById('bpCustomerRequestButton'),m=document.getElementById('bpCustomerRequestModal'),btn=document.getElementById('bpCustomerRequestSubmit'),status=document.getElementById('bpCustomerRequestStatus');
+function showStatus(type,msg){status.className=type;status.textContent=msg;status.style.display='block'}
+b.onclick=function(){status.className='';status.textContent='';status.style.display='none';m.style.display='flex'};
+btn.onclick=async function(){
+var n=document.getElementById('bpReqName').value.trim(),mo=document.getElementById('bpReqMobile').value.trim(),e=document.getElementById('bpReqEmail').value.trim(),msg=document.getElementById('bpReqMessage').value.trim();
+if(!n||!msg){showStatus('err','Please enter your name and message.');return}
+if(!pid){showStatus('err','This project is not ready to receive requests.');return}
+btn.disabled=true;btn.textContent='Sending...';
+try{
+var r=await fetch(url+'/rest/v1/customer_requests',{method:'POST',headers:{apikey:key,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify({project_id:pid,customer_name:n,mobile_number:mo,email:e,message:msg,status:'new'})});
+var body=await r.text();
+if(!r.ok)throw new Error(body||('HTTP '+r.status));
+var saved=true;try{var parsed=body?JSON.parse(body):null;saved=Array.isArray(parsed)?parsed.length>0:true}catch(_){}
+if(!saved)throw new Error('Request was not saved');
+showStatus('ok','Request sent successfully. Thank you!');
+document.getElementById('bpReqName').value='';document.getElementById('bpReqMobile').value='';document.getElementById('bpReqEmail').value='';document.getElementById('bpReqMessage').value='';
+setTimeout(function(){m.style.display='none'},900);
+}catch(err){console.error('Customer request error:',err);showStatus('err','Please try again.');}
+finally{btn.disabled=false;btn.textContent='Send Request'}
+};
+})();</script>`;
     return /<\/body>/i.test(html) ? html.replace(/<\/body>/i, widget + '</body>') : html + widget;
   }
-
-  /* =========================================================
-     PUBLIC PROJECT
-     ========================================================= */
-
-  async function loadPublicProject(
-    publicId
-  ) {
-    root.innerHTML = `
-      <div class="bp-auth-page">
-
-        <div class="bp-auth-card"
-          style="
-            text-align:center;
-          "
-        >
-
-          <div class="bp-auth-logo">
-            ⚡
-          </div>
-
-          <h2 class="bp-auth-title">
-            Loading...
-          </h2>
-
-          <p class="bp-auth-subtitle">
-            Loading public project...
-          </p>
-
-        </div>
-
-      </div>
-    `;
-
-    try {
-      /*
-       * Public function is intentionally called
-       * directly because visitor has no login session.
-       */
-      const response =
-        await fetch(
-          SUPABASE_URL +
-            "/functions/v1/" +
-            encodeURIComponent(
-              PUBLIC_FUNCTION
-            ) +
-            "?id=" +
-            encodeURIComponent(
-              publicId
-            ),
-          {
-            method:
-              "GET",
-
-            headers: {
-              apikey:
-                SUPABASE_KEY,
-
-              "Content-Type":
-                "application/json",
-            },
-          }
-        );
-
-      const data =
-        await response.json();
-
-      if (
-        !response.ok ||
-        !data.success
-      ) {
-        throw new Error(
-          data.error ||
-            "Public project unavailable"
-        );
-      }
-
-      /*
-       * IMPORTANT:
-       * Do NOT replace the complete document here.
-       * Keep BuildPilot wrapper and put the project
-       * into an iframe.
-       */
-      renderPublicPreview(
-        data
-      );
-
-    } catch (error) {
-      console.error(error);
-
-      root.innerHTML = `
-        <div class="bp-auth-page">
-
-          <div class="bp-auth-card"
-            style="
-              text-align:center;
-            "
-          >
-
-            <div
-              class="bp-auth-logo"
-              style="
-                background:#fee2e2;
-                color:#b91c1c;
-              "
-            >
-              !
-            </div>
-
-            <h2 class="bp-auth-title">
-              Project unavailable
-            </h2>
-
-            <p class="bp-auth-subtitle">
-              यह project publish नहीं किया गया है
-              या public link invalid है।
-            </p>
-
-            <div style="
-              padding:12px;
-              background:#fef2f2;
-              border-radius:10px;
-              color:#991b1b;
-              font-size:13px;
-            ">
-              ${escapeHtml(
-                error.message
-              )}
-            </div>
-
-          </div>
-
-        </div>
-      `;
-    }
-  }
-
   function renderPublicPreview(
     data
   ) {

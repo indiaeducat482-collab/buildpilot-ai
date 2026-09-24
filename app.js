@@ -16,7 +16,7 @@
 
   const GENERATE_FUNCTION =
     CONFIG.FUNCTION_NAME ||
-    "buildpilot-generate";
+    "super-function";
 
   const PUBLIC_FUNCTION =
     CONFIG.PUBLIC_FUNCTION_NAME ||
@@ -26,6 +26,7 @@
 
   let activeUser = null;
   let activeSession = null;
+  let activeProfile = null;
 
   let activeProject = null;
   let activeFiles = [];
@@ -1246,394 +1247,6 @@
           #b91c1c;
       }
 
-
-      /* =====================================================
-         AIRO-STYLE BUILDER WORKSPACE
-         ===================================================== */
-
-      .bp-airo-workspace {
-        min-height: calc(100vh - 70px);
-        background: #f3f4f6;
-        padding: 0;
-      }
-
-      .bp-airo-topbar {
-        height: 48px;
-        background: #ffffff;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 14px;
-        gap: 12px;
-      }
-
-      .bp-airo-tabs {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .bp-airo-tab {
-        border: 0;
-        background: transparent;
-        color: #475569;
-        padding: 8px 13px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 13px;
-      }
-
-      .bp-airo-tab.active {
-        background: #111827;
-        color: #ffffff;
-      }
-
-      .bp-airo-top-actions {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-      }
-
-      .bp-icon-btn {
-        width: 34px;
-        height: 34px;
-        display: grid;
-        place-items: center;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        color: #334155;
-        border-radius: 9px;
-        cursor: pointer;
-      }
-
-      .bp-airo-banner {
-        height: 34px;
-        background: #6841ad;
-        color: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        font-size: 13px;
-        font-weight: 600;
-      }
-
-      .bp-airo-banner a {
-        color: #ffffff;
-        text-decoration: underline;
-      }
-
-      .bp-airo-body {
-        height: calc(100vh - 152px);
-        min-height: 600px;
-        display: grid;
-        grid-template-columns: 350px minmax(0, 1fr);
-        gap: 0;
-      }
-
-      .bp-airo-left {
-        background: #f8fafc;
-        border-right: 1px solid #dfe3e8;
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-        overflow: hidden;
-      }
-
-      .bp-airo-left-head {
-        min-height: 58px;
-        padding: 11px 14px;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        background: #ffffff;
-      }
-
-      .bp-airo-brand {
-        font-weight: 900;
-        font-size: 20px;
-        letter-spacing: -1px;
-      }
-
-      .bp-airo-brand span {
-        background: #6d49c7;
-        color: #ffffff;
-        border-radius: 4px;
-        padding: 2px 5px;
-        font-size: 9px;
-        vertical-align: middle;
-        letter-spacing: 0;
-      }
-
-      .bp-builder-tabs {
-        display: flex;
-        border-bottom: 1px solid #e5e7eb;
-        background: #ffffff;
-      }
-
-      .bp-builder-tab {
-        flex: 1;
-        border: 0;
-        background: transparent;
-        padding: 11px 8px;
-        color: #64748b;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 13px;
-      }
-
-      .bp-builder-tab.active {
-        color: #111827;
-        box-shadow: inset 0 -2px #111827;
-      }
-
-      .bp-builder-content {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .bp-builder-view {
-        display: none;
-        height: 100%;
-        min-height: 0;
-        flex-direction: column;
-      }
-
-      .bp-builder-view.active {
-        display: flex;
-      }
-
-      .bp-airo-chat-title {
-        padding: 16px 16px 7px;
-        font-size: 15px;
-        font-weight: 800;
-      }
-
-      .bp-airo-chat-subtitle {
-        padding: 0 16px 12px;
-        color: #64748b;
-        font-size: 12px;
-      }
-
-      .bp-chat-messages {
-        background: #f8fafc;
-      }
-
-      .bp-airo-input-wrap {
-        margin: 10px;
-        background: #ffffff;
-        border: 1px solid #d8dee8;
-        border-radius: 15px;
-        padding: 10px;
-        box-shadow: 0 3px 15px rgba(15,23,42,.06);
-      }
-
-      .bp-airo-input-wrap .bp-textarea {
-        border: 0;
-        box-shadow: none;
-        resize: none;
-        min-height: 92px;
-      }
-
-      .bp-airo-input-bottom {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        margin-top: 4px;
-      }
-
-      .bp-airo-input-tools {
-        display: flex;
-        gap: 5px;
-      }
-
-      .bp-mini-btn {
-        width: 31px;
-        height: 31px;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        border-radius: 8px;
-        cursor: pointer;
-      }
-
-      .bp-send-btn {
-        width: 34px;
-        height: 34px;
-        border: 0;
-        border-radius: 9px;
-        background: #c9b8e9;
-        color: #ffffff;
-        cursor: pointer;
-        font-size: 17px;
-      }
-
-      .bp-airo-files {
-        flex: 1;
-        overflow: auto;
-        padding: 10px;
-      }
-
-      .bp-airo-preview {
-        min-width: 0;
-        background: #e9eaec;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      .bp-airo-preview-head {
-        min-height: 44px;
-        background: #ffffff;
-        border-bottom: 1px solid #dfe3e8;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 10px;
-        gap: 8px;
-      }
-
-      .bp-device-tools {
-        display: flex;
-        gap: 5px;
-        align-items: center;
-      }
-
-      .bp-preview-canvas {
-        flex: 1;
-        min-height: 0;
-        padding: 10px;
-        overflow: auto;
-        display: flex;
-        justify-content: center;
-      }
-
-      .bp-preview-browser {
-        width: 100%;
-        max-width: 1500px;
-        height: 100%;
-        min-height: 560px;
-        background: #ffffff;
-        border: 1px solid #d9dde3;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 10px 35px rgba(15,23,42,.08);
-      }
-
-      .bp-preview-browser iframe {
-        width: 100%;
-        height: 100%;
-        min-height: 560px;
-        border: 0;
-        display: block;
-        background: #ffffff;
-      }
-
-      .bp-preview-floating {
-        position: absolute;
-        left: 50%;
-        bottom: 18px;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 2px;
-        padding: 4px;
-        background: rgba(255,255,255,.96);
-        border: 1px solid #d9dde3;
-        border-radius: 12px;
-        box-shadow: 0 8px 30px rgba(15,23,42,.14);
-        z-index: 10;
-      }
-
-      .bp-preview-relative {
-        position: relative;
-        flex: 1;
-        min-height: 0;
-        display: flex;
-      }
-
-      .bp-file-row-actions {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-      }
-
-      .bp-file-row {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-bottom: 3px;
-      }
-
-      .bp-file-row .bp-file {
-        flex: 1;
-      }
-
-      .bp-file-delete {
-        width: 28px;
-        height: 28px;
-        border: 0;
-        background: transparent;
-        color: #94a3b8;
-        border-radius: 7px;
-        cursor: pointer;
-      }
-
-      .bp-file-delete:hover {
-        background: #fee2e2;
-        color: #b91c1c;
-      }
-
-      /* Public site must be ONLY the generated website. */
-      .bp-public-site-shell {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        background: #ffffff;
-        overflow: hidden;
-      }
-
-      .bp-public-site-frame {
-        width: 100%;
-        height: 100%;
-        min-height: 100vh;
-        border: 0;
-        display: block;
-        background: #ffffff;
-      }
-
-
-      @media (max-width: 950px) {
-        .bp-airo-body {
-          grid-template-columns: 300px minmax(0,1fr);
-        }
-      }
-
-      @media (max-width: 760px) {
-        .bp-airo-body {
-          grid-template-columns: 1fr;
-          grid-template-rows: 48% 52%;
-        }
-
-        .bp-airo-left {
-          border-right: 0;
-          border-bottom: 1px solid #dfe3e8;
-        }
-
-        .bp-airo-banner {
-          font-size: 11px;
-          padding: 0 8px;
-          text-align: center;
-        }
-      }
-
       @media (max-width: 950px) {
         .bp-workspace-grid {
           grid-template-columns:
@@ -1685,7 +1298,7 @@
       }
     `;
 
-    document.head.appendChild(
+document.head.appendChild(
       style
     );
   }
@@ -1736,6 +1349,14 @@
           </p>
         </div>
       </div>
+
+      .bp-airo-modal-overlay{position:fixed;inset:0;z-index:5000;background:rgba(15,23,42,.58);display:flex;align-items:flex-start;justify-content:center;padding:28px 18px;overflow:auto}
+      .bp-airo-new-project-modal,.bp-airo-upgrade-modal,.bp-airo-requests-modal{position:relative;width:min(930px,100%);background:#fff;border-radius:24px;padding:30px;box-shadow:0 30px 100px rgba(15,23,42,.28)}
+      .bp-airo-new-title{text-align:center;margin-bottom:18px}.bp-airo-new-title h2{font-size:32px;margin:0 0 7px}.bp-airo-new-title p,.bp-airo-upgrade-modal p,.bp-airo-requests-modal>p{color:#64748b;margin:0}
+      .bp-airo-modal-close{position:absolute;right:18px;top:18px;width:38px;height:38px;border:0;background:#f3f4f6;border-radius:9px;font-size:24px;cursor:pointer}
+      .bp-airo-prompt-box{border:2px solid #c8b9df;border-radius:20px;padding:14px;box-shadow:0 0 0 5px rgba(109,73,199,.05),0 16px 35px rgba(15,23,42,.09)}.bp-airo-prompt-box textarea{width:100%;min-height:125px;border:0;outline:0;resize:vertical;font-size:17px;box-sizing:border-box}.bp-airo-prompt-actions{display:flex;justify-content:flex-end;gap:7px}.bp-airo-icon-btn{border:0;background:#fff;font-size:20px;padding:8px;cursor:pointer}.bp-airo-generate{border:0;border-radius:12px;background:#b9a5d7;color:#fff;font-weight:800;padding:12px 24px;cursor:pointer}
+      .bp-airo-ideas-title{text-align:center;color:#8a8f98;font-size:13px;margin:22px 0 12px}.bp-airo-pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}.bp-airo-pills button{border:1px solid #6d49c7;background:#fff;border-radius:999px;padding:7px 13px;cursor:pointer}.bp-airo-pills.small button{background:#f7f4fd;border:0;font-size:12px}.bp-airo-ideas-caption{text-align:center;color:#8a8f98;font-size:12px;margin:20px 0 8px}.bp-airo-new-fields,.bp-airo-upgrade-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:20px}.bp-airo-new-fields label,.bp-airo-upgrade-grid label,.bp-airo-upgrade-modal>label{display:block;font-size:12px;font-weight:800;color:#475569;margin-bottom:5px}.bp-airo-limit-note{margin-top:12px;background:#f8fafc;border-radius:10px;padding:10px;color:#64748b;font-size:12px}.bp-airo-upgrade-modal{max-width:650px}.bp-airo-upgrade-grid{grid-template-columns:1fr 1fr}.bp-airo-upgrade-modal>label{margin-top:15px}.bp-airo-upgrade-modal .bp-textarea{width:100%;box-sizing:border-box}.bp-airo-upgrade-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.bp-airo-request-card{border:1px solid #e5e7eb;border-radius:13px;padding:13px;margin-top:9px}.bp-airo-request-card>div:first-child{display:flex;justify-content:space-between;gap:8px}.bp-airo-request-card span{font-size:11px;color:#94a3b8}.bp-airo-request-card p{font-size:12px;color:#64748b}.bp-airo-error{background:#fef2f2;color:#b91c1c;padding:12px;border-radius:10px;margin-top:12px}
+      @media(max-width:700px){.bp-airo-new-project-modal,.bp-airo-upgrade-modal,.bp-airo-requests-modal{padding:22px}.bp-airo-new-fields,.bp-airo-upgrade-grid{grid-template-columns:1fr}}
     `;
 
     return;
@@ -1794,7 +1415,7 @@
       error,
     } = await client
       .from("profiles")
-      .select("id")
+      .select("id,full_name,role,status,plan,project_limit,github_file_limit")
       .eq(
         "id",
         activeUser.id
@@ -1811,6 +1432,7 @@
     }
 
     if (data) {
+      activeProfile = data;
       return;
     }
 
@@ -1834,7 +1456,24 @@
         "Profile create:",
         insertError
       );
+      return;
     }
+
+    const { data: freshProfile } = await client
+      .from("profiles")
+      .select("id,full_name,role,status,plan,project_limit,github_file_limit")
+      .eq("id", activeUser.id)
+      .maybeSingle();
+
+    activeProfile = freshProfile || {
+      id: activeUser.id,
+      full_name: activeUser.user_metadata?.full_name || activeUser.email || "User",
+      role: "user",
+      status: "active",
+      plan: "free",
+      project_limit: 2,
+      github_file_limit: 2
+    };
   }
 
   /* =========================================================
@@ -2249,173 +1888,93 @@
     await getSession();
 
     if (!activeUser) {
-      renderAuth(
-        "login"
-      );
-
+      renderAuth("login");
       return;
     }
 
     await ensureProfile();
 
+    const projectLimit = activeProfile?.project_limit ?? 2;
+
     root.innerHTML = `
-      <div class="bp-app">
+      <style>
+        .bp-airo-page{min-height:100vh;background:#f7f7f8;color:#171717;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex}
+        .bp-airo-sidebar{width:248px;background:#fff;border-right:1px solid #e5e7eb;position:fixed;left:0;top:0;bottom:0;z-index:20;display:flex;flex-direction:column}
+        .bp-airo-logo{height:68px;padding:0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #eee;font-weight:700;font-size:17px}
+        .bp-airo-logo-mark{width:31px;height:31px;border-radius:9px;background:#111;color:#fff;display:grid;place-items:center;font-size:15px}
+        .bp-airo-nav{padding:18px 12px;display:grid;gap:5px}
+        .bp-airo-nav button{border:0;background:transparent;width:100%;text-align:left;padding:11px 13px;border-radius:9px;color:#666;font-size:14px;cursor:pointer}
+        .bp-airo-nav button.active,.bp-airo-nav button:hover{background:#f1f1f2;color:#111}
+        .bp-airo-sidebar-bottom{margin-top:auto;padding:14px;border-top:1px solid #eee}
+        .bp-airo-account{font-size:12px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 9px}
+        .bp-airo-logout{width:100%;border:1px solid #ddd;background:#fff;border-radius:8px;padding:9px;cursor:pointer}
+        .bp-airo-main{margin-left:248px;width:calc(100% - 248px);min-height:100vh}
+        .bp-airo-top{height:68px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;z-index:10}
+        .bp-airo-breadcrumb{font-size:14px;color:#777}.bp-airo-breadcrumb strong{color:#111}
+        .bp-airo-top-actions{display:flex;gap:9px;align-items:center}
+        .bp-airo-btn{border:1px solid #ddd;background:#fff;color:#222;border-radius:8px;padding:9px 13px;font-size:13px;cursor:pointer}
+        .bp-airo-btn:hover{background:#f5f5f5}.bp-airo-btn.primary{background:#111;color:#fff;border-color:#111}.bp-airo-btn.primary:hover{background:#292929}
+        .bp-airo-content{max-width:1240px;margin:0 auto;padding:34px 32px 60px}
+        .bp-airo-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:25px}
+        .bp-airo-heading h1{font-size:28px;letter-spacing:-.7px;margin:0 0 7px}.bp-airo-heading p{margin:0;color:#777;font-size:14px}
+        .bp-airo-create{display:flex;gap:9px;flex-wrap:wrap}
+        .bp-airo-create-card{background:#fff;border:1px solid #e2e2e2;border-radius:12px;padding:18px;cursor:pointer;display:flex;align-items:center;gap:13px;min-width:205px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+        .bp-airo-create-card:hover{border-color:#aaa;box-shadow:0 5px 18px rgba(0,0,0,.06);transform:translateY(-1px)}
+        .bp-airo-create-icon{width:38px;height:38px;border-radius:9px;background:#f2f2f2;display:grid;place-items:center;font-size:18px}.bp-airo-create-card b{font-size:14px}.bp-airo-create-card span{display:block;color:#888;font-size:11px;margin-top:3px}
+        .bp-airo-section-title{display:flex;align-items:center;justify-content:space-between;margin:36px 0 14px}.bp-airo-section-title h2{font-size:17px;margin:0}.bp-airo-count{font-size:12px;color:#888}
+        #projectsList{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:17px}
+        #projectsList>.bp-airo-project-card{min-width:0}
+        .bp-airo-project-card{background:#fff;border:1px solid #e3e3e3;border-radius:13px;overflow:hidden;transition:.18s;box-shadow:0 1px 2px rgba(0,0,0,.025)}
+        .bp-airo-project-card:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,.07);border-color:#d0d0d0}
+        .bp-airo-preview{height:150px;background:linear-gradient(135deg,#f4f4f5,#e8e8ea);position:relative;overflow:hidden;padding:13px}
+        .bp-airo-browser{height:100%;background:#fff;border-radius:7px;box-shadow:0 3px 15px rgba(0,0,0,.08);overflow:hidden;border:1px solid #eee}
+        .bp-airo-browser-bar{height:21px;background:#f7f7f7;border-bottom:1px solid #eee;display:flex;align-items:center;gap:4px;padding-left:8px}.bp-airo-dot{width:5px;height:5px;border-radius:50%;background:#bbb}
+        .bp-airo-browser-body{padding:14px}.bp-airo-line{height:7px;background:#e9e9eb;border-radius:5px;margin-bottom:7px;width:65%}.bp-airo-line.short{width:38%}.bp-airo-blocks{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:13px}.bp-airo-block{height:43px;background:#f2f2f3;border-radius:5px}
+        .bp-airo-status{position:absolute;top:10px;right:10px;background:#fff;border:1px solid #ddd;border-radius:999px;padding:4px 8px;font-size:10px;color:#555}
+        .bp-airo-project-body{padding:15px}.bp-airo-project-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.bp-airo-project-name{font-size:15px;font-weight:650;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bp-airo-menu{border:0;background:transparent;color:#888;font-size:18px;cursor:pointer;line-height:1}
+        .bp-airo-description{font-size:12px;color:#777;line-height:1.45;margin:7px 0 13px;min-height:34px}.bp-airo-meta{display:flex;align-items:center;justify-content:space-between;color:#999;font-size:11px}.bp-airo-open{border:0;background:#111;color:#fff;border-radius:7px;padding:7px 11px;font-size:11px;cursor:pointer}.bp-airo-public{color:#17803d}
+        .bp-airo-empty{grid-column:1/-1;background:#fff;border:1px dashed #d8d8d8;border-radius:13px;text-align:center;padding:55px 20px;color:#777}.bp-airo-empty-icon{font-size:30px;margin-bottom:8px}.bp-airo-empty h3{color:#222;margin:0 0 5px;font-size:15px}.bp-airo-empty p{margin:0;font-size:12px}
+        @media(max-width:800px){.bp-airo-sidebar{width:62px}.bp-airo-logo span,.bp-airo-nav button span,.bp-airo-sidebar-bottom{display:none}.bp-airo-logo{justify-content:center;padding:0}.bp-airo-nav button{text-align:center;font-size:0}.bp-airo-nav button:before{content:"•";font-size:18px}.bp-airo-main{margin-left:62px;width:calc(100% - 62px)}.bp-airo-content{padding:25px 16px}.bp-airo-heading{align-items:flex-start;flex-direction:column}.bp-airo-top{padding:0 16px}}
+      </style>
 
-        <header class="bp-topbar">
-
-          <div class="bp-brand">
-
-            <div class="bp-logo">
-              ⚡
-            </div>
-
-            <span>
-              BuildPilot AI
-            </span>
-
+      <div class="bp-airo-page">
+        <aside class="bp-airo-sidebar">
+          <div class="bp-airo-logo"><div class="bp-airo-logo-mark">✦</div><span>Projects</span></div>
+          <nav class="bp-airo-nav">
+            <button class="active" onclick="window.BuildPilot.home()">⌂ &nbsp; <span>Projects</span></button>
+            <button onclick="window.BuildPilot.startProject('website')">＋ &nbsp; <span>New Website</span></button>
+            <button onclick="window.BuildPilot.startProject('complete_system')">▣ &nbsp; <span>New System</span></button>
+          </nav>
+          <div class="bp-airo-sidebar-bottom">
+            <div class="bp-airo-account" title="${escapeAttribute(activeUser.email || '')}">${escapeHtml(activeUser.email || '')}</div>
+            <button class="bp-airo-logout" onclick="window.BuildPilot.logout()">Logout</button>
           </div>
+        </aside>
 
-          <div class="bp-user-area">
+        <div class="bp-airo-main">
+          <header class="bp-airo-top">
+            <div class="bp-airo-breadcrumb"><strong>My Projects</strong></div>
+            <div class="bp-airo-top-actions">
+              <button class="bp-airo-btn" onclick="window.BuildPilot.loadProjects()">↻ Refresh</button>
+              <button class="bp-airo-btn primary" onclick="window.BuildPilot.startProject('website')">＋ Create project</button>
+            </div>
+          </header>
 
-            <span class="bp-user-email">
-              ${escapeHtml(
-                activeUser.email ||
-                  ""
-              )}
-            </span>
-
-            <button
-              class="bp-btn"
-              style="
-                background:transparent;
-                color:white;
-                border-color:#475569;
-              "
-              onclick="window.BuildPilot.logout()"
-            >
-              Logout
-            </button>
-
-          </div>
-
-        </header>
-
-        <main class="bp-main">
-
-          <section class="bp-hero">
-
-            <h1>
-              Build anything with
-              <span class="bp-gradient-text">
-                AI
-              </span>
-            </h1>
-
-            <p>
-              Describe your idea in simple language.
-              BuildPilot AI creates the project,
-              lets you edit it with AI,
-              previews it live and generates a
-              shareable public link.
-            </p>
-
-          </section>
-
-          <section>
-
-            <div class="bp-builder-grid">
-
-              <div
-                class="bp-card bp-card-hover"
-                onclick="
-                  window.BuildPilot.startProject(
-                    'complete_system'
-                  )
-                "
-              >
-
-                <div class="bp-card-icon">
-                  🚀
-                </div>
-
-                <h3>
-                  Complete System
-                </h3>
-
-                <p>
-                  Build websites, dashboards,
-                  authentication, database
-                  and business features.
-                </p>
-
-              </div>
-
-              <div
-                class="bp-card bp-card-hover"
-                onclick="
-                  window.BuildPilot.startProject(
-                    'website'
-                  )
-                "
-              >
-
-                <div class="bp-card-icon">
-                  🌐
-                </div>
-
-                <h3>
-                  Website
-                </h3>
-
-                <p>
-                  Create responsive HTML, CSS
-                  and JavaScript websites
-                  quickly with AI.
-                </p>
-
-              </div>
-
+          <main class="bp-airo-content">
+            <div class="bp-airo-heading">
+              <div><h1>Your projects</h1><p>Create, edit and manage your AI-built websites and systems.</p></div>
+              <div class="bp-airo-count">${projectLimit} project${projectLimit === 1 ? '' : 's'} allowed</div>
             </div>
 
-          </section>
-
-          <section class="bp-section">
-
-            <div class="bp-section-header">
-
-              <div>
-                <h2>
-                  My Projects
-                </h2>
-
-                <p style="
-                  margin:5px 0 0;
-                  color:#64748b;
-                  font-size:14px;
-                ">
-                  Your saved BuildPilot projects
-                </p>
-              </div>
-
-              <button
-                class="bp-btn"
-                onclick="
-                  window.BuildPilot.loadProjects()
-                "
-              >
-                ↻ Refresh
-              </button>
-
+            <div class="bp-airo-create">
+              <div class="bp-airo-create-card" onclick="window.BuildPilot.startProject('website')"><div class="bp-airo-create-icon">🌐</div><div><b>Website</b><span>HTML, CSS & JavaScript</span></div></div>
+              <div class="bp-airo-create-card" onclick="window.BuildPilot.startProject('complete_system')"><div class="bp-airo-create-icon">⚡</div><div><b>Complete System</b><span>App, dashboard & database</span></div></div>
             </div>
 
-            <div id="projectsList">
-              Loading projects...
-            </div>
-
-          </section>
-
-        </main>
-
+            <div class="bp-airo-section-title"><h2>All projects</h2><span class="bp-airo-count">Your saved projects</span></div>
+            <div id="projectsList">Loading projects...</div>
+          </main>
+        </div>
       </div>
     `;
 
@@ -2429,196 +1988,59 @@
   function startProject(
     projectType
   ) {
-    root.innerHTML = `
-      <div class="bp-app">
+    const projectLimit = Math.max(1, Number(activeProfile?.project_limit ?? 2));
+    const modalOld = document.getElementById("bpNewProjectModal");
+    if (modalOld) modalOld.remove();
 
-        <header class="bp-topbar">
-
-          <div class="bp-brand">
-
-            <div class="bp-logo">
-              ⚡
-            </div>
-
-            <span>
-              BuildPilot AI
-            </span>
-
+    const modal = document.createElement("div");
+    modal.id = "bpNewProjectModal";
+    modal.className = "bp-airo-modal-overlay";
+    modal.innerHTML = `
+      <div class="bp-airo-new-project-modal">
+        <button class="bp-airo-modal-close" type="button" onclick="document.getElementById('bpNewProjectModal').remove()">×</button>
+        <div class="bp-airo-new-title">
+          <h2>Create a new project</h2>
+          <p>Describe your idea in simple language and create your first version.</p>
+        </div>
+        <div class="bp-airo-prompt-box">
+          <textarea id="newProjectPrompt" placeholder="Make a portfolio showcasing my photography..."></textarea>
+          <div class="bp-airo-prompt-actions">
+            <button type="button" class="bp-airo-icon-btn" onclick="window.BuildPilot.showToast('File attachment can be added here.')">⌕</button>
+            <button type="button" class="bp-airo-icon-btn" onclick="window.BuildPilot.showToast('Voice input can be connected here.')">♩</button>
+            <button id="createProjectButton" type="button" class="bp-airo-generate" onclick="window.BuildPilot.createProject('${escapeAttribute(projectType)}')">Generate</button>
           </div>
+        </div>
+        <div class="bp-airo-ideas-title">✧ Personalized ideas for you</div>
+        <div class="bp-airo-pills">
+          <button onclick="window.BuildPilot.fillProjectIdea('Online Tutoring Marketplace')">⌁ Online Tutoring Marketplace →</button>
+          <button onclick="window.BuildPilot.fillProjectIdea('Searchable Study Materials Hub')">⌁ Searchable Study Materials Hub →</button>
+          <button onclick="window.BuildPilot.fillProjectIdea('School Operations Management Portal')">⌁ School Operations Management Portal →</button>
+        </div>
+        <div class="bp-airo-ideas-caption">Describe your own idea above, or try one of these:</div>
+        <div class="bp-airo-pills small">
+          <button onclick="window.BuildPilot.fillProjectIdea('Make me a logo')">Make me a logo →</button>
+          <button onclick="window.BuildPilot.fillProjectIdea('Rebuild my site')">Rebuild my site →</button>
+          <button onclick="window.BuildPilot.fillProjectIdea('Restaurant website')">Restaurant →</button>
+          <button onclick="window.BuildPilot.fillProjectIdea('Freelancer portfolio website')">Freelancer Portfolio →</button>
+          <button onclick="window.BuildPilot.fillProjectIdea('Local food truck landing page')">Local Food Truck Landing Page →</button>
+          <button onclick="window.BuildPilot.fillProjectIdea('Pet grooming service website')">Pet Grooming Service →</button>
+          <button onclick="window.BuildPilot.fillProjectIdea('Fitness studio website')">Fitness Studio Website →</button>
+          <button onclick="window.BuildPilot.fillProjectIdea('Small business directory')">Small Business Directory →</button>
+          <button onclick="window.BuildPilot.fillProjectIdea('Creative canvas portfolio')">Creative Canvas Portfolio →</button>
+        </div>
+        <div class="bp-airo-new-fields">
+          <div><label>Project Name</label><input id="newProjectName" class="bp-input" placeholder="My Business Website"></div>
+          <div><label>Frontend</label><select id="frontend" class="bp-select"><option value="html">HTML / CSS / JavaScript</option><option value="react">React</option><option value="nextjs">Next.js</option></select></div>
+          <div><label>Backend</label><select id="backend" class="bp-select"><option value="supabase">Supabase</option><option value="firebase">Firebase</option><option value="github">GitHub</option></select></div>
+        </div>
+        <div class="bp-airo-limit-note">Free account: <strong>${projectLimit}</strong> project${projectLimit === 1 ? '' : 's'}. After reaching the limit, request an upgrade from Admin.</div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
 
-          <button
-            class="bp-btn"
-            style="
-              background:transparent;
-              color:white;
-              border-color:#475569;
-            "
-            onclick="
-              window.BuildPilot.home()
-            "
-          >
-            ← Projects
-          </button>
-
-        </header>
-
-        <main class="bp-main">
-
-          <div style="
-            max-width:850px;
-            margin:auto;
-          ">
-
-            <div class="bp-card">
-
-              <div class="bp-card-icon">
-                ${
-                  projectType ===
-                  "website"
-                    ? "🌐"
-                    : "🚀"
-                }
-              </div>
-
-              <h1 style="
-                margin:0 0 8px;
-              ">
-                Build your project
-              </h1>
-
-              <p style="
-                color:#64748b;
-                margin-top:0;
-              ">
-                Tell BuildPilot AI exactly
-                what you want to create.
-              </p>
-
-              <div class="bp-field">
-
-                <label class="bp-label">
-                  Project Name
-                </label>
-
-                <input
-                  id="newProjectName"
-                  class="bp-input"
-                  placeholder="My Business Website"
-                />
-
-              </div>
-
-              <div class="bp-field">
-
-                <label class="bp-label">
-                  What do you want to build?
-                </label>
-
-                <textarea
-                  id="newProjectPrompt"
-                  class="bp-textarea"
-                  rows="8"
-                  placeholder="
-Example:
-
-Create a modern coaching website for Kartar Classes.
-
-Pages:
-Home
-Courses
-Teachers
-About
-Contact
-
-Add WhatsApp contact button,
-responsive mobile design and
-a professional header.
-                  "
-                ></textarea>
-
-              </div>
-
-              <div class="bp-two-col">
-
-                <div class="bp-field">
-
-                  <label class="bp-label">
-                    Frontend
-                  </label>
-
-                  <select
-                    id="frontend"
-                    class="bp-select"
-                  >
-                    <option value="html">
-                      HTML / CSS / JavaScript
-                    </option>
-
-                    <option value="react">
-                      React
-                    </option>
-
-                    <option value="nextjs">
-                      Next.js
-                    </option>
-                  </select>
-
-                </div>
-
-                <div class="bp-field">
-
-                  <label class="bp-label">
-                    Backend
-                  </label>
-
-                  <select
-                    id="backend"
-                    class="bp-select"
-                  >
-                    <option value="supabase">
-                      Supabase
-                    </option>
-
-                    <option value="firebase">
-                      Firebase
-                    </option>
-
-                    <option value="github">
-                      GitHub
-                    </option>
-                  </select>
-
-                </div>
-
-              </div>
-
-              <button
-                id="createProjectButton"
-                class="bp-btn bp-btn-primary"
-                style="
-                  width:100%;
-                  padding:14px;
-                  margin-top:5px;
-                "
-                onclick="
-                  window.BuildPilot.createProject(
-                    '${escapeAttribute(
-                      projectType
-                    )}'
-                  )
-                "
-              >
-                ✨ Build Project
-              </button>
-
-            </div>
-
-          </div>
-
-        </main>
-
-      </div>
-    `;
+  function fillProjectIdea(text) {
+    const el = document.getElementById("newProjectPrompt");
+    if (el) { el.value = text; el.focus(); }
   }
 
   /* =========================================================
@@ -2660,7 +2082,7 @@ a professional header.
       </h1>
 
       <p>
-        Your website is ready.
+        Your BuildPilot AI project is ready.
       </p>
 
       <button id="helloButton">
@@ -2770,7 +2192,7 @@ body {
         function () {
 
           alert(
-            "Your website is working!"
+            "BuildPilot AI project is working!"
           );
 
         }
@@ -2931,6 +2353,25 @@ body {
         "login"
       );
 
+      return;
+    }
+
+    await ensureProfile();
+
+    const projectLimit = Math.max(1, Number(activeProfile?.project_limit ?? 2));
+    const { count: projectCount, error: projectCountError } = await client
+      .from("projects")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", activeUser.id);
+
+    if (projectCountError) {
+      showToast("Project limit check failed: " + projectCountError.message, "error");
+      return;
+    }
+
+    if ((projectCount || 0) >= projectLimit) {
+      showToast("Project limit reached.", "error");
+      openUpgradeRequest(projectLimit);
       return;
     }
 
@@ -3241,207 +2682,67 @@ body {
      ========================================================= */
 
   async function loadProjects() {
-    const list =
-      document.getElementById(
-        "projectsList"
-      );
+    const list = document.getElementById("projectsList");
+    if (!list) return;
 
-    if (!list) {
-      return;
-    }
+    list.innerHTML = `<div class="bp-airo-empty"><div class="bp-airo-empty-icon">⏳</div><p>Loading projects...</p></div>`;
 
-    list.innerHTML = `
-      <div class="bp-card">
-        Loading projects...
-      </div>
-    `;
-
-    const {
-      data,
-      error,
-    } =
-      await client
-        .from("projects")
-        .select(
-          `
-          id,
-          name,
-          description,
-          status,
-          frontend,
-          backend,
-          public_id,
-          public_enabled,
-          published_at,
-          created_at
-          `
-        )
-        .eq(
-          "user_id",
-          activeUser.id
-        )
-        .order(
-          "created_at",
-          {
-            ascending:
-              false,
-          }
-        );
+    const { data, error } = await client
+      .from("projects")
+      .select(`id,name,description,status,frontend,backend,public_id,public_enabled,published_at,created_at`)
+      .eq("user_id", activeUser.id)
+      .order("created_at", { ascending:false });
 
     if (error) {
-      list.innerHTML = `
-        <div class="bp-card">
-          <strong>
-            Could not load projects
-          </strong>
-
-          <p style="
-            color:#dc2626;
-            margin-bottom:0;
-          ">
-            ${escapeHtml(
-              error.message
-            )}
-          </p>
-        </div>
-      `;
-
+      list.innerHTML = `<div class="bp-airo-empty"><div class="bp-airo-empty-icon">!</div><h3>Could not load projects</h3><p style="color:#dc2626">${escapeHtml(error.message)}</p></div>`;
       return;
     }
+
+    const projectLimit = Math.max(1, Number(activeProfile?.project_limit ?? 2));
+    const limitBadge = document.querySelector(".bp-airo-count");
+    if (limitBadge) limitBadge.textContent = `${data?.length || 0} / ${projectLimit} projects used`;
 
     if (!data?.length) {
       list.innerHTML = `
-        <div class="bp-card" style="
-          text-align:center;
-          padding:45px;
-        ">
-
-          <div style="
-            font-size:42px;
-          ">
-            🛠️
-          </div>
-
-          <h3>
-            No projects yet
-          </h3>
-
-          <p style="
-            color:#64748b;
-          ">
-            Create your first project above.
-          </p>
-
-        </div>
-      `;
-
+        <div class="bp-airo-empty">
+          <div class="bp-airo-empty-icon">✦</div>
+          <h3>No projects yet</h3>
+          <p>Create your first project using the button above.</p>
+        </div>`;
       return;
     }
 
-    list.innerHTML =
-      data
-        .map(
-          (project) => `
-            <div class="bp-project">
-
-              <div class="bp-project-main">
-
-                <div class="bp-project-info">
-
-                  <h3 class="bp-project-title">
-                    ${escapeHtml(
-                      project.name
-                    )}
-                  </h3>
-
-                  <p class="bp-project-description">
-                    ${escapeHtml(
-                      project.description ||
-                        "No description"
-                    )}
-                  </p>
-
-                  <div style="
-                    display:flex;
-                    gap:7px;
-                    margin-top:10px;
-                    flex-wrap:wrap;
-                  ">
-
-                    <span style="
-                      background:#f1f5f9;
-                      padding:5px 9px;
-                      border-radius:999px;
-                      font-size:12px;
-                    ">
-                      ${escapeHtml(
-                        project.status ||
-                          "draft"
-                      )}
-                    </span>
-
-                    ${
-                      project.public_enabled
-                        ? `
-                          <span style="
-                            background:#dcfce7;
-                            color:#166534;
-                            padding:5px 9px;
-                            border-radius:999px;
-                            font-size:12px;
-                          ">
-                            ● Public
-                          </span>
-                        `
-                        : ""
-                    }
-
-                  </div>
-
-                </div>
-
-                <div class="bp-actions">
-
-                  <button
-                    class="bp-btn bp-btn-primary"
-                    onclick="
-                      window.BuildPilot.openProject(
-                        '${escapeAttribute(
-                          project.id
-                        )}'
-                      )
-                    "
-                  >
-                    Open
-                  </button>
-
-                  ${
-                    project.public_enabled
-                      ? `
-                        <button
-                          class="bp-btn"
-                          onclick="
-                            window.BuildPilot.copyPublicLink(
-                              '${escapeAttribute(
-                                project.public_id
-                              )}'
-                            )
-                          "
-                        >
-                          🔗 Public Link
-                        </button>
-                      `
-                      : ""
-                  }
-
-                </div>
-
+    list.innerHTML = data.map(project => {
+      const status = project.status || "draft";
+      const date = project.created_at ? new Date(project.created_at).toLocaleDateString() : "";
+      return `
+        <article class="bp-airo-project-card">
+          <div class="bp-airo-preview">
+            <div class="bp-airo-status">${project.public_enabled ? "● Published" : escapeHtml(status)}</div>
+            <div class="bp-airo-browser">
+              <div class="bp-airo-browser-bar"><i class="bp-airo-dot"></i><i class="bp-airo-dot"></i><i class="bp-airo-dot"></i></div>
+              <div class="bp-airo-browser-body">
+                <div class="bp-airo-line"></div><div class="bp-airo-line short"></div>
+                <div class="bp-airo-blocks"><div class="bp-airo-block"></div><div class="bp-airo-block"></div><div class="bp-airo-block"></div></div>
               </div>
-
             </div>
-          `
-        )
-        .join("");
+          </div>
+          <div class="bp-airo-project-body">
+            <div class="bp-airo-project-head">
+              <h3 class="bp-airo-project-name" title="${escapeAttribute(project.name || "Untitled Project")}">${escapeHtml(project.name || "Untitled Project")}</h3>
+              <button class="bp-airo-menu" title="Open project" onclick="window.BuildPilot.openProject('${escapeAttribute(project.id)}')">⋯</button>
+            </div>
+            <p class="bp-airo-description">${escapeHtml(project.description || "No description added yet.")}</p>
+            <div class="bp-airo-meta">
+              <span>${escapeHtml(date)} ${project.public_enabled ? '<b class="bp-airo-public"> · Public</b>' : ''}</span>
+              <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+                <button class="bp-airo-open" onclick="window.BuildPilot.openProject('${escapeAttribute(project.id)}')">Open →</button>
+                <button class="bp-airo-btn" style="padding:7px 10px;font-size:11px" onclick="window.BuildPilot.openCustomerRequests('${escapeAttribute(project.id)}')">Customer Requests</button>
+              </div>
+            </div>
+          </div>
+        </article>`;
+    }).join("");
   }
 
   /* =========================================================
@@ -3548,8 +2849,9 @@ body {
                 border-color:#475569;
                 margin-right:5px;
               "
-              onclick="window.BuildPilot.home()"
-              title="Projects"
+              onclick="
+                window.BuildPilot.home()
+              "
             >
               ←
             </button>
@@ -3568,6 +2870,7 @@ body {
           </div>
 
           <div class="bp-actions">
+
             <button
               class="bp-btn"
               style="
@@ -3575,15 +2878,26 @@ body {
                 color:white;
                 border-color:#475569;
               "
-              onclick="window.BuildPilot.refreshFiles()"
+              onclick="
+                window.BuildPilot.refreshFiles()
+              "
             >
               ↻ Refresh
             </button>
 
             <button
+              class="bp-btn"
+              onclick="window.BuildPilot.openCustomerRequests('${escapeAttribute(activeProject?.id || '')}')"
+            >
+              📩 Customer Requests
+            </button>
+
+            <button
               id="publishButton"
               class="bp-btn bp-btn-success"
-              onclick="window.BuildPilot.togglePublish()"
+              onclick="
+                window.BuildPilot.togglePublish()
+              "
             >
               ${
                 activeProject?.public_enabled
@@ -3591,239 +2905,137 @@ body {
                   : "🚀 Publish"
               }
             </button>
+
           </div>
 
         </header>
 
-        <main class="bp-airo-workspace">
+        <main class="bp-workspace">
 
-          <div class="bp-airo-topbar">
+          <div class="bp-workspace-grid">
 
-            <div class="bp-airo-tabs">
-              <button class="bp-airo-tab active" type="button">
-                ▣&nbsp; Website
-              </button>
+            <aside class="bp-sidebar">
 
-              <button
-                class="bp-airo-tab"
-                type="button"
-                onclick="window.BuildPilot.showToast('Domain settings are ready for the published site.')"
-              >
-                ◉&nbsp; Domain
-              </button>
-            </div>
+              <div class="bp-sidebar-header">
 
-            <div class="bp-airo-top-actions">
-              <button
-                class="bp-icon-btn"
-                type="button"
-                title="Share"
-                onclick="window.BuildPilot.shareProject()"
-              >
-                ⤴
-              </button>
+                <span>
+                  Project Files
+                </span>
 
-              <button
-                class="bp-btn bp-btn-success"
-                type="button"
-                onclick="window.BuildPilot.togglePublish()"
-              >
-                ${
-                  activeProject?.public_enabled
-                    ? "Published"
-                    : "Publish"
+                <span style="
+                  color:#64748b;
+                  font-size:12px;
+                ">
+                  ${
+                    activeFiles.length
+                  }
                 }
-              </button>
-            </div>
-
-          </div>
-
-          <div class="bp-airo-banner">
-            <span>●</span>
-            <span>
-              You currently have a free site. Pick a plan to use premium features.
-            </span>
-            <a href="#" onclick="event.preventDefault();window.BuildPilot.showToast('Plans will be available here.')">
-              View Plans →
-            </a>
-          </div>
-
-          <div class="bp-airo-body">
-
-            <aside class="bp-airo-left">
-
-              <div class="bp-airo-left-head">
-                <div class="bp-airo-brand">
-                  AI Builder
-                </div>
-
-                <button
-                  class="bp-icon-btn"
-                  type="button"
-                  title="Project files"
-                  onclick="window.BuildPilot.switchBuilderTab('files')"
-                >
-                  ☷
-                </button>
-              </div>
-
-              <div class="bp-builder-tabs">
-                <button
-                  id="builderAiTab"
-                  class="bp-builder-tab active"
-                  type="button"
-                  onclick="window.BuildPilot.switchBuilderTab('ai')"
-                >
-                  ✨ AI Builder
-                </button>
-
-                <button
-                  id="builderFilesTab"
-                  class="bp-builder-tab"
-                  type="button"
-                  onclick="window.BuildPilot.switchBuilderTab('files')"
-                >
-                  Files (${activeFiles.length})
-                </button>
-              </div>
-
-              <div class="bp-builder-content">
-
-                <section
-                  id="builderAiView"
-                  class="bp-builder-view active"
-                >
-
-                  <div class="bp-airo-chat-title">
-                    Continue building
-                  </div>
-
-                  <div class="bp-airo-chat-subtitle">
-                    Ask AI to change anything in your website.
-                  </div>
-
-                  <div
-                    id="chatMessages"
-                    class="bp-chat-messages"
-                    style="flex:1;overflow:auto;padding:10px 14px;"
-                  >
-                    <div class="bp-chat-message bp-chat-ai">
-                      <strong>AI Builder</strong>
-                      <div style="margin-top:5px;">
-                        Tell me what you want to change in your website.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="bp-airo-input-wrap">
-                    <form id="aiChatForm">
-
-                      <textarea
-                        id="aiInstruction"
-                        class="bp-textarea"
-                        rows="4"
-                        placeholder="Ask AI to edit your website..."
-                      ></textarea>
-
-                      <div class="bp-airo-input-bottom">
-                        <div class="bp-airo-input-tools">
-                          <button
-                            class="bp-mini-btn"
-                            type="button"
-                            title="Add file"
-                            onclick="window.BuildPilot.switchBuilderTab('files')"
-                          >
-                            ＋
-                          </button>
-
-                          <button
-                            class="bp-mini-btn"
-                            type="button"
-                            title="Voice"
-                            onclick="window.BuildPilot.showToast('Voice input can be connected here.')"
-                          >
-                            ♫
-                          </button>
-                        </div>
-
-                        <button
-                          id="aiSendButton"
-                          class="bp-send-btn"
-                          type="submit"
-                          title="Send"
-                        >
-                          ↑
-                        </button>
-                      </div>
-
-                    </form>
-                  </div>
-
-                </section>
-
-                <section
-                  id="builderFilesView"
-                  class="bp-builder-view"
-                >
-
-                  <div style="padding:12px 14px;border-bottom:1px solid #e5e7eb;background:#fff;display:flex;justify-content:space-between;align-items:center;">
-                    <strong>Project Files</strong>
-                    <button class="bp-mini-btn" type="button" onclick="window.BuildPilot.newFile()">＋</button>
-                  </div>
-
-                  <div
-                    id="filesList"
-                    class="bp-airo-files"
-                  ></div>
-
-                </section>
+                </span>
 
               </div>
+
+              <div
+                id="filesList"
+                class="bp-files"
+              ></div>
 
             </aside>
 
-            <section class="bp-airo-preview">
+            <section class="bp-workspace-main">
 
-              <div class="bp-airo-preview-head">
+              <div class="bp-panel">
 
-                <div style="font-size:13px;color:#64748b;font-weight:700;">
-                  Live Preview
+                <div class="bp-panel-header">
+
+                  <span>
+                    Live Preview
+                  </span>
+
+                  <button
+                    class="bp-btn"
+                    onclick="
+                      window.BuildPilot.updatePreview()
+                    "
+                  >
+                    Refresh
+                  </button>
+
                 </div>
 
-                <div class="bp-device-tools">
-                  <button class="bp-icon-btn" type="button" title="Refresh preview" onclick="window.BuildPilot.updatePreview()">
-                    ↻
-                  </button>
-
-                  <button class="bp-icon-btn" type="button" title="Desktop" onclick="window.BuildPilot.setPreviewWidth('desktop')">
-                    ▣
-                  </button>
-
-                  <button class="bp-icon-btn" type="button" title="Mobile" onclick="window.BuildPilot.setPreviewWidth('mobile')">
-                    ▯
-                  </button>
-
-                  <button class="bp-icon-btn" type="button" title="Open preview" onclick="window.BuildPilot.openPreviewNewTab()">
-                    ↗
-                  </button>
+                <div id="previewContent">
+                  Loading...
                 </div>
 
               </div>
 
-              <div class="bp-preview-relative">
-                <div
-                  id="previewContent"
-                  class="bp-preview-canvas"
-                >
-                  Loading...
+              <div class="bp-panel bp-chat">
+
+                <div class="bp-panel-header">
+                  <span>
+                    ✨ AI Builder
+                  </span>
                 </div>
 
-                <div class="bp-preview-floating">
-                  <button class="bp-icon-btn" type="button" title="Edit with AI" onclick="window.BuildPilot.switchBuilderTab('ai')">✦</button>
-                  <button class="bp-icon-btn" type="button" title="Refresh" onclick="window.BuildPilot.updatePreview()">↻</button>
-                  <button class="bp-icon-btn" type="button" title="Open" onclick="window.BuildPilot.openPreviewNewTab()">↗</button>
-                  <button class="bp-icon-btn" type="button" title="Fullscreen" onclick="window.BuildPilot.fullscreenPreview()">⛶</button>
+                <div
+                  id="chatMessages"
+                  class="bp-chat-messages"
+                >
+
+                  <div class="
+                    bp-chat-message
+                    bp-chat-ai
+                  ">
+                    <strong>
+                      BuildPilot AI
+                    </strong>
+
+                    <div style="
+                      margin-top:5px;
+                    ">
+                      Tell me what you want
+                      to change in your project.
+                    </div>
+                  </div>
+
                 </div>
+
+                <div class="bp-chat-input">
+
+                  <form id="aiChatForm">
+
+                    <textarea
+                      id="aiInstruction"
+                      class="bp-textarea"
+                      rows="4"
+                      placeholder="
+Example:
+Header ka color blue kar do
+
+Contact section add karo
+
+WhatsApp button laga do
+
+Logo header me add karo
+                      "
+                    ></textarea>
+
+                    <button
+                      id="aiSendButton"
+                      class="bp-btn bp-btn-primary"
+                      style="
+                        width:100%;
+                        margin-top:8px;
+                        padding:12px;
+                      "
+                      type="submit"
+                    >
+                      ✨ Build / Modify
+                    </button>
+
+                  </form>
+
+                </div>
+
               </div>
 
             </section>
@@ -3836,84 +3048,17 @@ body {
     `;
 
     document
-      .getElementById("aiChatForm")
+      .getElementById(
+        "aiChatForm"
+      )
       .addEventListener(
         "submit",
         submitAIInstruction
       );
 
     renderFilesList();
+
     updatePreview();
-  }
-
-  /* =========================================================
-     BUILDER TABS / PREVIEW CONTROLS
-     ========================================================= */
-
-  function switchBuilderTab(tab) {
-    const aiView = document.getElementById("builderAiView");
-    const filesView = document.getElementById("builderFilesView");
-    const aiTab = document.getElementById("builderAiTab");
-    const filesTab = document.getElementById("builderFilesTab");
-
-    if (!aiView || !filesView) return;
-
-    const ai = tab !== "files";
-
-    aiView.classList.toggle("active", ai);
-    filesView.classList.toggle("active", !ai);
-
-    aiTab?.classList.toggle("active", ai);
-    filesTab?.classList.toggle("active", !ai);
-  }
-
-  function shareProject() {
-    if (activeProject?.public_enabled && activeProject?.public_id) {
-      copyPublicLink(activeProject.public_id);
-      return;
-    }
-
-    showToast(
-      "Publish the site first to create a shareable public link.",
-      "info"
-    );
-  }
-
-  function setPreviewWidth(mode) {
-    const browser = document.querySelector(".bp-preview-browser");
-    if (!browser) return;
-
-    browser.style.maxWidth =
-      mode === "mobile" ? "430px" : "1500px";
-  }
-
-  function openPreviewNewTab() {
-    const html = buildPreviewHTML();
-    if (!html) {
-      showToast("Nothing to preview yet.", "error");
-      return;
-    }
-
-    const blob = new Blob([html], {
-      type: "text/html",
-    });
-
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank", "noopener,noreferrer");
-
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  }
-
-  function fullscreenPreview() {
-    const browser = document.querySelector(".bp-preview-browser");
-    if (!browser) return;
-
-    if (document.fullscreenElement) {
-      document.exitFullscreen?.();
-      return;
-    }
-
-    browser.requestFullscreen?.();
   }
 
   /* =========================================================
@@ -4874,6 +4019,83 @@ ${js}
     );
   }
 
+
+  /* =========================================================
+     UPGRADE + CUSTOMER REQUESTS
+     ========================================================= */
+
+  function openUpgradeRequest(currentLimit) {
+    const old = document.getElementById("bpUpgradeModal");
+    if (old) old.remove();
+    const limit = Math.max(1, Number(currentLimit || activeProfile?.project_limit || 2));
+    const modal = document.createElement("div");
+    modal.id = "bpUpgradeModal";
+    modal.className = "bp-airo-modal-overlay";
+    modal.innerHTML = `
+      <div class="bp-airo-upgrade-modal">
+        <button class="bp-airo-modal-close" onclick="document.getElementById('bpUpgradeModal').remove()">×</button>
+        <h2>Project limit reached</h2>
+        <p>Your current limit is <strong>${limit} projects</strong>. Send a request to Admin for a higher limit.</p>
+        <div class="bp-airo-upgrade-grid">
+          <div><label>Full Name</label><input id="upgradeFullName" class="bp-input" value="${escapeAttribute(activeProfile?.full_name || activeUser?.email || '')}"></div>
+          <div><label>Mobile Number</label><input id="upgradeMobile" class="bp-input" placeholder="10 digit mobile"></div>
+          <div><label>Email</label><input id="upgradeEmail" class="bp-input" value="${escapeAttribute(activeUser?.email || '')}"></div>
+          <div><label>Requested Project Limit</label><input id="upgradeLimit" class="bp-input" type="number" min="${limit+1}" value="${limit+3}"></div>
+        </div>
+        <label>Reason / Description</label>
+        <textarea id="upgradeMessage" class="bp-textarea" rows="5" placeholder="Tell Admin why you need more projects..."></textarea>
+        <div class="bp-airo-upgrade-actions"><button class="bp-airo-btn" onclick="document.getElementById('bpUpgradeModal').remove()">Cancel</button><button id="upgradeSendButton" class="bp-airo-btn primary" onclick="window.BuildPilot.sendUpgradeRequest()">Send to Admin</button></div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  async function sendUpgradeRequest() {
+    const button = document.getElementById("upgradeSendButton");
+    const current = Math.max(1, Number(activeProfile?.project_limit || 2));
+    const requested = Number(document.getElementById("upgradeLimit")?.value || 0);
+    if (requested <= current) { showToast("Requested limit must be higher than current limit.", "error"); return; }
+    setButtonLoading(button, true, "Sending...");
+    try {
+      const { error } = await client.from("upgrade_requests").insert({
+        user_id: activeUser.id,
+        request_type: "project_limit",
+        message: (document.getElementById("upgradeMessage")?.value || "Please increase my project limit.").trim(),
+        status: "pending",
+        full_name: (document.getElementById("upgradeFullName")?.value || "").trim(),
+        mobile_number: (document.getElementById("upgradeMobile")?.value || "").trim(),
+        email: (document.getElementById("upgradeEmail")?.value || "").trim(),
+        requested_limit: requested
+      });
+      if (error) throw error;
+      document.getElementById("bpUpgradeModal")?.remove();
+      showToast("Upgrade request sent to Admin.", "success");
+    } catch (e) { showToast(e.message || "Upgrade request failed.", "error"); }
+    finally { setButtonLoading(button, false); }
+  }
+
+  async function openCustomerRequests(projectId) {
+    if (!projectId) return;
+    const old = document.getElementById("bpCustomerRequestsModal");
+    if (old) old.remove();
+    const modal = document.createElement("div");
+    modal.id = "bpCustomerRequestsModal";
+    modal.className = "bp-airo-modal-overlay";
+    modal.innerHTML = `<div class="bp-airo-requests-modal"><button class="bp-airo-modal-close" onclick="document.getElementById('bpCustomerRequestsModal').remove()">×</button><h2>Customer Requests</h2><p>Requests received from this project's public website.</p><div id="bpCustomerRequestsList">Loading...</div></div>`;
+    document.body.appendChild(modal);
+    const box = document.getElementById("bpCustomerRequestsList");
+    const { data, error } = await client.from("customer_requests").select("id,customer_name,mobile_number,email,message,status,created_at").eq("project_id", projectId).order("created_at", { ascending:false });
+    if (error) { box.innerHTML = `<div class="bp-airo-error">${escapeHtml(error.message)}</div>`; return; }
+    if (!data?.length) { box.innerHTML = `<div class="bp-airo-empty"><div class="bp-airo-empty-icon">📩</div><h3>No customer requests yet</h3><p>Requests submitted from your public website will appear here.</p></div>`; return; }
+    box.innerHTML = data.map(r => `<article class="bp-airo-request-card"><div><strong>${escapeHtml(r.customer_name || 'Customer')}</strong><span>${escapeHtml(new Date(r.created_at).toLocaleString())}</span></div><p>${r.mobile_number ? '📱 '+escapeHtml(r.mobile_number)+' ' : ''}${r.email ? ' · ✉ '+escapeHtml(r.email) : ''}</p><div>${escapeHtml(r.message || '')}</div><small>Status: ${escapeHtml(r.status || 'new')}</small></article>`).join('');
+  }
+
+  function addCustomerRequestWidget(html, projectId) {
+    const widget = `<style>
+#bpCustomerRequestButton{position:fixed;right:22px;bottom:22px;z-index:2147483000;border:0;border-radius:999px;padding:13px 18px;background:#111827;color:#fff;font:700 14px system-ui;box-shadow:0 10px 30px rgba(0,0,0,.2);cursor:pointer}#bpCustomerRequestModal{display:none;position:fixed;inset:0;z-index:2147483001;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:18px}#bpCustomerRequestModal .box{width:min(440px,100%);background:#fff;border-radius:18px;padding:22px;box-shadow:0 25px 80px rgba(0,0,0,.25);font-family:system-ui}#bpCustomerRequestModal input,#bpCustomerRequestModal textarea{width:100%;box-sizing:border-box;padding:11px;margin:6px 0 10px;border:1px solid #d1d5db;border-radius:10px}#bpCustomerRequestModal .row{display:flex;justify-content:flex-end;gap:8px}#bpCustomerRequestSubmit{background:#111827;color:#fff;border:0;border-radius:9px;padding:10px 14px}</style>
+<button id="bpCustomerRequestButton">Customer Request</button><div id="bpCustomerRequestModal"><div class="box"><h3>Send a request</h3><p>Fill your details and the project owner will receive your request.</p><input id="bpReqName" placeholder="Your name"><input id="bpReqMobile" placeholder="Mobile number"><input id="bpReqEmail" type="email" placeholder="Email"><textarea id="bpReqMessage" rows="4" placeholder="How can we help?"></textarea><div class="row"><button onclick="document.getElementById('bpCustomerRequestModal').style.display='none'">Cancel</button><button id="bpCustomerRequestSubmit">Send Request</button></div></div></div><script>(function(){var pid=${JSON.stringify(String(projectId||''))},url=${JSON.stringify(SUPABASE_URL)},key=${JSON.stringify(SUPABASE_KEY)};var b=document.getElementById('bpCustomerRequestButton'),m=document.getElementById('bpCustomerRequestModal');b.onclick=function(){m.style.display='flex'};document.getElementById('bpCustomerRequestSubmit').onclick=async function(){var n=document.getElementById('bpReqName').value.trim(),mo=document.getElementById('bpReqMobile').value.trim(),e=document.getElementById('bpReqEmail').value.trim(),msg=document.getElementById('bpReqMessage').value.trim();if(!n||!msg){alert('Name and message are required.');return}var btn=this;btn.disabled=true;btn.textContent='Sending...';try{var r=await fetch(url+'/rest/v1/customer_requests',{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({project_id:pid,customer_name:n,mobile_number:mo,email:e,message:msg,status:'new'})});if(!r.ok)throw new Error(await r.text());alert('Request sent successfully.');m.style.display='none'}catch(err){alert('Request could not be sent.')}finally{btn.disabled=false;btn.textContent='Send Request'}}})();</script>`;
+    return /<\/body>/i.test(html) ? html.replace(/<\/body>/i, widget + '</body>') : html + widget;
+  }
+
   /* =========================================================
      PUBLIC PROJECT
      ========================================================= */
@@ -4882,37 +4104,28 @@ ${js}
     publicId
   ) {
     root.innerHTML = `
-      <div
-        style="
-          position:fixed;
-          inset:0;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          background:#ffffff;
-          font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-        "
-      >
-        <div
+      <div class="bp-auth-page">
+
+        <div class="bp-auth-card"
           style="
             text-align:center;
-            color:#475569;
           "
         >
-          <div
-            style="
-              width:28px;
-              height:28px;
-              border:3px solid #e2e8f0;
-              border-top-color:#64748b;
-              border-radius:50%;
-              animation:bpPublicSpin .8s linear infinite;
-              margin:0 auto 14px;
-            "
-          ></div>
-          <div style="font-size:14px;font-weight:600;">Loading website…</div>
+
+          <div class="bp-auth-logo">
+            ⚡
+          </div>
+
+          <h2 class="bp-auth-title">
+            Loading...
+          </h2>
+
+          <p class="bp-auth-subtitle">
+            Loading public project...
+          </p>
+
         </div>
-        <style>@keyframes bpPublicSpin{to{transform:rotate(360deg)}}</style>
+
       </div>
     `;
 
@@ -4960,9 +4173,10 @@ ${js}
       }
 
       /*
-       * PUBLIC MODE:
-       * Render only the client's generated website.
-       * The editor UI is never placed around it.
+       * IMPORTANT:
+       * Do NOT replace the complete document here.
+       * Keep BuildPilot wrapper and put the project
+       * into an iframe.
        */
       renderPublicPreview(
         data
@@ -5018,46 +4232,79 @@ ${js}
     }
   }
 
-  function cleanPublicHTML(html) {
-    return String(html || "")
-      .replaceAll("Your BuildPilot AI project is ready.", "Your website is ready.")
-      .replaceAll("BuildPilot AI project is working!", "Your website is working!")
-      .replaceAll("Published with BuildPilot AI", "")
-      .replaceAll("Powered by BuildPilot AI", "")
-      .replaceAll("Powered by BuildPilot", "")
-      .replaceAll("Build with BuildPilot AI", "")
-      .replaceAll("BuildPilot AI", "")
-      .replaceAll("BuildPilot", "")
-      .replaceAll("AI Builder", "")
-      .replaceAll("Airo", "");
-  }
-
   function renderPublicPreview(
     data
   ) {
-    const html =
-      cleanPublicHTML(
-        data?.html || ""
-      );
+    const project =
+      data.project || {};
 
-    /*
-     * PUBLIC MODE:
-     * The visitor must see ONLY the generated website.
-     * No BuildPilot/Airo header, no AI panel,
-     * no login UI, no editor controls and no ads.
-     */
-    document.title =
-      data?.project?.name ||
-      "Website";
+    let html = data.html || "";
+    html = addCustomerRequestWidget(html, project.id || data.project_id || "");
 
     root.innerHTML = `
-      <div class="bp-public-site-shell">
-        <iframe
-          id="publicPreviewFrame"
-          class="bp-public-site-frame"
-          title="Website Preview"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads allow-presentation"
-        ></iframe>
+      <div class="bp-app">
+
+        <header class="bp-topbar">
+
+          <div class="bp-brand">
+
+            <div class="bp-logo">
+              ⚡
+            </div>
+
+            <span>
+              ${escapeHtml(
+                project.name ||
+                  "BuildPilot Project"
+              )}
+            </span>
+
+          </div>
+
+          <div style="
+            color:#cbd5e1;
+            font-size:13px;
+          ">
+            
+          </div>
+
+        </header>
+
+        <main style="
+          padding:15px;
+          background:#f1f5f9;
+          min-height:
+            calc(100vh - 70px);
+        ">
+
+          <div style="
+            background:white;
+            border:1px solid #e2e8f0;
+            border-radius:16px;
+            overflow:hidden;
+            max-width:1500px;
+            margin:auto;
+          ">
+
+            <iframe
+              id="publicPreviewFrame"
+              class="bp-preview-frame"
+              style="
+                height:calc(100vh - 110px);
+                min-height:700px;
+              "
+              sandbox="
+                allow-scripts
+                allow-forms
+                allow-modals
+                allow-popups
+              "
+            ></iframe>
+
+          </div>
+
+        </main>
+
       </div>
     `;
 
@@ -5068,16 +4315,7 @@ ${js}
 
     if (iframe) {
       iframe.srcdoc =
-        html ||
-        `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Website</title>
-</head>
-<body></body>
-</html>`;
+        html;
     }
   }
 
@@ -5160,23 +4398,17 @@ ${js}
     copyCurrentPublicLink:
       copyCurrentPublicLink,
 
-    switchBuilderTab:
-      switchBuilderTab,
+    openUpgradeRequest:
+      openUpgradeRequest,
 
-    shareProject:
-      shareProject,
+    sendUpgradeRequest:
+      sendUpgradeRequest,
 
-    setPreviewWidth:
-      setPreviewWidth,
+    fillProjectIdea:
+      fillProjectIdea,
 
-    openPreviewNewTab:
-      openPreviewNewTab,
-
-    fullscreenPreview:
-      fullscreenPreview,
-
-    showToast:
-      showToast,
+    openCustomerRequests:
+      openCustomerRequests,
   };
 
   /* =========================================================
